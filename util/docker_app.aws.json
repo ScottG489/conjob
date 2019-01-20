@@ -1,0 +1,6 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "scottg489/docker-ci-prototype:latest"
+  }
+}
