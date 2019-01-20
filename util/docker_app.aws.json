@@ -8,5 +8,11 @@
       "ContainerPort": 8080,
       "HostPort": 8000
     }
+  ],
+  "Volumes": [
+    {
+      "HostDirectory": "/var/run/docker.sock",
+      "ContainerDirectory": "/var/run/docker.sock"
+    }
   ]
 }
