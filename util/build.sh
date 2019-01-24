@@ -5,6 +5,7 @@ chmod 400 /root/.ssh/id_rsa
 
 git clone git@github.com:ScottG489/docker-ci-prototype.git
 cd docker-ci-prototype
+./gradlew build fatCapsule
 
 docker build -t scottg489/docker-ci-prototype:latest .
 docker push scottg489/docker-ci-prototype:latest
