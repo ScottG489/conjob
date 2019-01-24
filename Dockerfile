@@ -1,11 +1,7 @@
-FROM ubuntu:18.10
+#FROM ubuntu:latest
+FROM java:8
 
-RUN apt-get update
-RUN apt-get install -y docker.io
+RUN mkdir /opt/docker-ci-prototype/
+COPY build/libs/docker-ci-prototype-capsule.jar /opt/docker-ci-prototype/
+CMD ["java", "-jar", "/opt/docker-ci-prototype/docker-ci-prototype-capsule.jar", "server"]
 
-RUN echo 'FROM ubuntu:18.10' > /opt/Dockerfile
-
-COPY build.sh /opt/build.sh
-
-WORKDIR /opt
-CMD ["./build.sh"]
