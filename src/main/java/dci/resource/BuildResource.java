@@ -23,11 +23,16 @@ public class BuildResource {
 //        log.invokeMethod("info", new Object[]{"Info resource triggered."});
 
         final DockerClient docker = DefaultDockerClient.fromEnv().build();
+
+        docker.pull(imageName);
+
         final ContainerConfig containerConfig = ContainerConfig.builder()
                 .image(imageName)
                 .build();
         final ContainerCreation container = docker.createContainer(containerConfig);
+
         docker.startContainer(container.id());
+        
         LogStream logs = docker.logs(container.id(), DockerClient.LogsParam.stdout());
 
         return Response.ok()
