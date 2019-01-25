@@ -8,8 +8,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y awscli
 # TODO: Remove this
 RUN pip install awsebcli
 
-RUN apt-get install -y openjdk-8-jre
 RUN apt-get install -y docker.io
+RUN apt-get install -y openjdk-11-jre
 
 RUN mkdir /root/.ssh
 COPY known_hosts /root/.ssh/known_hosts
