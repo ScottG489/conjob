@@ -11,3 +11,4 @@ out
 /.blackbox/pubring.kbx~
 /.blackbox/secring.gpg
 /util/config.json
+/util/credentials
