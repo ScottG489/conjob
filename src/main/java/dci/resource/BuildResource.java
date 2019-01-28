@@ -19,7 +19,7 @@ import javax.ws.rs.core.Response;
 //@Slf4j
 public class BuildResource {
     @GET
-    public Response doAction(@NotEmpty @QueryParam("image") String imageName) throws DockerCertificateException, DockerException, InterruptedException {
+    public Response doAction(@NotEmpty @QueryParam("image") String imageName, @QueryParam("secretKey") String secretKey) throws DockerCertificateException, DockerException, InterruptedException {
 //        log.invokeMethod("info", new Object[]{"Info resource triggered."});
 
         final DockerClient docker = DefaultDockerClient.fromEnv().build();
@@ -28,6 +28,7 @@ public class BuildResource {
 
         final ContainerConfig containerConfig = ContainerConfig.builder()
                 .image(imageName)
+                .cmd(secretKey)
                 .build();
         final ContainerCreation container = docker.createContainer(containerConfig);
 
