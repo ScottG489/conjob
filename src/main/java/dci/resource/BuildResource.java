@@ -34,7 +34,7 @@ public class BuildResource {
 
         docker.startContainer(container.id());
         
-        LogStream logs = docker.logs(container.id(), DockerClient.LogsParam.stdout());
+        LogStream logs = docker.logs(container.id(), DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr(), DockerClient.LogsParam.follow());
 
         return Response.ok()
                 .header("Access-Control-Allow-Origin", "*")
