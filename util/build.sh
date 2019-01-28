@@ -1,6 +1,15 @@
 #!/bin/bash
 set -e
 
+GPG_KEY=$1
+
+printf -- "$GPG_KEY" > /root/private_key.asc
+gpg --import /root/private_key.asc
+
+gpg --output /root/.ssh/id_rsa --decrypt /root/.ssh/id_rsa.gpg
+gpg --output /root/.aws/credentials --decrypt /root/.aws/credentials.gpg
+gpg --output /root/.docker/config.json --decrypt /root/.docker/config.json.gpg
+
 chmod 400 /root/.ssh/id_rsa
 
 git clone git@github.com:ScottG489/docker-ci-prototype.git
