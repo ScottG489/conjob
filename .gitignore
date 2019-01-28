@@ -7,3 +7,7 @@ out
 *.ipr
 *.iws
 
+/.blackbox/pubring.gpg~
+/.blackbox/pubring.kbx~
+/.blackbox/secring.gpg
+/util/config.json
