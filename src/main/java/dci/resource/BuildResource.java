@@ -7,6 +7,7 @@ import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.HostConfig;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.ws.rs.*;
@@ -26,9 +27,11 @@ public class BuildResource {
 
         docker.pull(imageName);
 
+        HostConfig hostConfig = HostConfig.builder().binds("/var/run/docker.sock:/var/run/docker.sock").build();
         final ContainerConfig containerConfig = ContainerConfig.builder()
                 .image(imageName)
                 .cmd(secretKey)
+                .hostConfig(hostConfig)
                 .build();
         final ContainerCreation container = docker.createContainer(containerConfig);
 
