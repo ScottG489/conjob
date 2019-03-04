@@ -28,15 +28,17 @@ public class BuildResource {
         docker.pull(imageName);
 
         HostConfig hostConfig = HostConfig.builder().binds("/var/run/docker.sock:/var/run/docker.sock").build();
-        final ContainerConfig containerConfig = ContainerConfig.builder()
+        ContainerConfig.Builder builder = ContainerConfig.builder()
                 .image(imageName)
-                .cmd(secretKey)
-                .hostConfig(hostConfig)
-                .build();
+                .hostConfig(hostConfig);
+        if (secretKey != null) {
+            builder.cmd(secretKey);
+        }
+        final ContainerConfig containerConfig = builder.build();
         final ContainerCreation container = docker.createContainer(containerConfig);
 
         docker.startContainer(container.id());
-        
+
         LogStream logs = docker.logs(container.id(), DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr(), DockerClient.LogsParam.follow());
 
         return Response.ok()
