@@ -10,6 +10,7 @@ import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.HostConfig;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
@@ -19,8 +20,17 @@ import javax.ws.rs.core.Response;
 //@Slf4j
 public class BuildResource {
     @POST
-    public Response doAction(@NotEmpty @QueryParam("image") String imageName, String input) throws DockerCertificateException, DockerException, InterruptedException {
-//        log.invokeMethod("info", new Object[]{"Info resource triggered."});
+    public Response doPost(@NotEmpty @QueryParam("image") String imageName, String input) throws DockerCertificateException, DockerException, InterruptedException {
+        return getResponse(imageName, input);
+    }
+
+    @GET
+    public Response doGet(@NotEmpty @QueryParam("image") String imageName) throws DockerCertificateException, DockerException, InterruptedException {
+        return getResponse(imageName, null);
+    }
+
+    private Response getResponse(@QueryParam("image") @NotEmpty String imageName, String input) throws DockerCertificateException, DockerException, InterruptedException {
+        //        log.invokeMethod("info", new Object[]{"Info resource triggered."});
 
         final DockerClient docker = DefaultDockerClient.fromEnv().build();
 
@@ -30,7 +40,7 @@ public class BuildResource {
         ContainerConfig.Builder builder = ContainerConfig.builder()
                 .image(imageName)
                 .hostConfig(hostConfig);
-        if (input != null) {
+        if (input != null && !input.isEmpty()) {
             builder.cmd(input);
         }
         final ContainerConfig containerConfig = builder.build();
