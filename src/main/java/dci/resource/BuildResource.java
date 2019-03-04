@@ -10,17 +10,16 @@ import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.HostConfig;
 import org.hibernate.validator.constraints.NotEmpty;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Path("/build")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.TEXT_PLAIN)
 //@Slf4j
 public class BuildResource {
-    @GET
-    public Response doAction(@NotEmpty @QueryParam("image") String imageName, @QueryParam("secretKey") String secretKey) throws DockerCertificateException, DockerException, InterruptedException {
+    @POST
+    public Response doAction(@NotEmpty @QueryParam("image") String imageName, String input) throws DockerCertificateException, DockerException, InterruptedException {
 //        log.invokeMethod("info", new Object[]{"Info resource triggered."});
 
         final DockerClient docker = DefaultDockerClient.fromEnv().build();
@@ -31,8 +30,8 @@ public class BuildResource {
         ContainerConfig.Builder builder = ContainerConfig.builder()
                 .image(imageName)
                 .hostConfig(hostConfig);
-        if (secretKey != null) {
-            builder.cmd(secretKey);
+        if (input != null) {
+            builder.cmd(input);
         }
         final ContainerConfig containerConfig = builder.build();
         final ContainerCreation container = docker.createContainer(containerConfig);
