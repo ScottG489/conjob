@@ -15,6 +15,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 
 @Path("/build")
 //@Slf4j
@@ -49,10 +50,10 @@ public class BuildResource {
         docker.startContainer(container.id());
 
         LogStream logs = docker.logs(container.id(), DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr(), DockerClient.LogsParam.follow());
+        StreamingOutput stream = os -> logs.attach(os, os);
 
-        return Response.ok()
+        return Response.ok(stream)
                 .header("Access-Control-Allow-Origin", "*")
-                .entity(logs.readFully())
                 .build();
     }
 }

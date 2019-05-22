@@ -4,6 +4,7 @@ import dci.resource.BuildResource;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.glassfish.jersey.server.ServerProperties;
 
 public class DockerCiPrototypeApplication extends Application<DockerCiPrototypeConfiguration> {
     public static void main(String[] args) throws Exception {
@@ -21,6 +22,8 @@ public class DockerCiPrototypeApplication extends Application<DockerCiPrototypeC
 
     @Override
     public void run(DockerCiPrototypeConfiguration configuration, Environment environment) {
+        // TODO: We probably want to make this something higher than 0, though not too high
+        environment.jersey().property(ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, 0);
         environment.jersey().register(new BuildResource());
 
 //        final HealthyHealthCheck healthCheck =
