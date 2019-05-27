@@ -48,6 +48,7 @@ public class BuildResource {
         final ContainerCreation container = docker.createContainer(containerConfig);
 
         docker.startContainer(container.id());
+        docker.stopContainer(container.id(), 600);  // 10 minutes
 
         LogStream logs = docker.logs(container.id(), DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr(), DockerClient.LogsParam.follow());
         StreamingOutput stream = os -> logs.attach(os, os);
