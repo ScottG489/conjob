@@ -1,14 +1,13 @@
 #!/bin/bash
 set -e
 
-GPG_KEY=$1
+ID_RSA_CONTENTS=$(echo -n $1 | jq -r .ID_RSA | base64 --decode)
+AWS_CREDENTIALS_CONTENTS=$(echo -n $1 | jq -r .AWS_CREDENTIALS | base64 --decode)
+DOCKER_CONFIG_CONTENTS=$(echo -n $1 | jq -r .DOCKER_CONFIG | base64 --decode)
 
-printf -- "$GPG_KEY" > /root/private_key.asc
-gpg --import /root/private_key.asc
-
-gpg --output /root/.ssh/id_rsa --decrypt /root/.ssh/id_rsa.gpg
-gpg --output /root/.aws/credentials --decrypt /root/.aws/credentials.gpg
-gpg --output /root/.docker/config.json --decrypt /root/.docker/config.json.gpg
+printf -- "$ID_RSA_CONTENTS" > /root/.ssh/id_rsa
+printf -- "$AWS_CREDENTIALS_CONTENTS" > /root/.aws/credentials
+printf -- "$DOCKER_CONFIG_CONTENTS" > /root/.docker/config.json
 
 chmod 400 /root/.ssh/id_rsa
 

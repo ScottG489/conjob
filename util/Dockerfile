@@ -13,14 +13,11 @@ RUN apt-get install -y openjdk-8-jdk
 
 RUN mkdir /root/.ssh
 COPY known_hosts /root/.ssh/known_hosts
-COPY id_rsa.gpg /root/.ssh/id_rsa.gpg
 
 RUN mkdir /root/.aws
 COPY config /root/.aws/config
-COPY credentials.gpg /root/.aws/credentials.gpg
 
 RUN mkdir /root/.docker
-COPY config.json.gpg /root/.docker/config.json.gpg
 
 RUN mkdir -p /opt/build
 COPY build.sh /opt/build/build.sh
