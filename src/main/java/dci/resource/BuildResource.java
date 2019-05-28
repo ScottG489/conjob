@@ -10,10 +10,7 @@ import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.HostConfig;
 import org.hibernate.validator.constraints.NotEmpty;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
@@ -21,21 +18,28 @@ import javax.ws.rs.core.StreamingOutput;
 //@Slf4j
 public class BuildResource {
     @POST
-    public Response doPost(@NotEmpty @QueryParam("image") String imageName, String input) throws DockerCertificateException, DockerException, InterruptedException {
-        return getResponse(imageName, input);
+    public Response doPost(@NotEmpty @QueryParam("image") String imageName,
+                           @QueryParam("pull") @DefaultValue("true") boolean shouldPull,
+                           String input) throws DockerCertificateException, DockerException, InterruptedException {
+        return getResponse(imageName, shouldPull, input);
     }
 
     @GET
-    public Response doGet(@NotEmpty @QueryParam("image") String imageName) throws DockerCertificateException, DockerException, InterruptedException {
-        return getResponse(imageName, null);
+    public Response doGet(@NotEmpty @QueryParam("image") String imageName,
+                          @QueryParam("pull") @DefaultValue("true") boolean shouldPull) throws DockerCertificateException, DockerException, InterruptedException {
+        return getResponse(imageName, shouldPull, null);
     }
 
-    private Response getResponse(@QueryParam("image") @NotEmpty String imageName, String input) throws DockerCertificateException, DockerException, InterruptedException {
+    private Response getResponse(@QueryParam("image") @NotEmpty String imageName,
+                                 boolean shouldPull,
+                                 String input) throws DockerCertificateException, DockerException, InterruptedException {
         //        log.invokeMethod("info", new Object[]{"Info resource triggered."});
 
         final DockerClient docker = DefaultDockerClient.fromEnv().build();
 
-        docker.pull(imageName);
+        if (shouldPull) {
+            docker.pull(imageName);
+        }
 
         HostConfig hostConfig = HostConfig.builder().binds("/var/run/docker.sock:/var/run/docker.sock").build();
         ContainerConfig.Builder builder = ContainerConfig.builder()
