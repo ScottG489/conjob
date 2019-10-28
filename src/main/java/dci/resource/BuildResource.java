@@ -8,14 +8,19 @@ import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.HostConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-import javax.ws.rs.*;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 @Path("/build")
-//@Slf4j
+@Slf4j
 public class BuildResource {
     @POST
     public Response doPost(@NotEmpty @QueryParam("image") String imageName,
@@ -33,8 +38,7 @@ public class BuildResource {
     private Response getResponse(@QueryParam("image") @NotEmpty String imageName,
                                  boolean shouldPull,
                                  String input) throws DockerCertificateException, DockerException, InterruptedException {
-        //        log.invokeMethod("info", new Object[]{"Info resource triggered."});
-
+        log.info("Running image: '{}'", imageName);
         final DockerClient docker = DefaultDockerClient.fromEnv().build();
 
         if (shouldPull) {
