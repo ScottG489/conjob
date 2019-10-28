@@ -1,0 +1,13 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build and deploy
+      run: ./build.sh ${{ secrets.ID_RSA_CONTENTS_BASE64 }} ${{ secrets.DOCKER_CONFIG_CONTENTS_BASE64 }} ${{ secrets.AWS_CREDENTIALS_CONTENTS_BASE64 }}
