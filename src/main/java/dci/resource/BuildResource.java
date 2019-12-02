@@ -1,9 +1,7 @@
 package dci.resource;
 
-import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
@@ -22,30 +20,35 @@ import javax.ws.rs.core.StreamingOutput;
 @Path("/build")
 @Slf4j
 public class BuildResource {
+    private final HostConfig hostConfig;
+    private final DockerClient docker;
+
+    public BuildResource(DockerClient docker, HostConfig hostConfig) {
+        this.docker = docker;
+        this.hostConfig = hostConfig;
+    }
+
     @POST
     public Response doPost(@NotEmpty @QueryParam("image") String imageName,
                            @QueryParam("pull") @DefaultValue("true") boolean shouldPull,
-                           String input) throws DockerCertificateException, DockerException, InterruptedException {
+                           String input) throws DockerException, InterruptedException {
         return getResponse(imageName, shouldPull, input);
     }
 
     @GET
     public Response doGet(@NotEmpty @QueryParam("image") String imageName,
-                          @QueryParam("pull") @DefaultValue("true") boolean shouldPull) throws DockerCertificateException, DockerException, InterruptedException {
+                          @QueryParam("pull") @DefaultValue("true") boolean shouldPull) throws DockerException, InterruptedException {
         return getResponse(imageName, shouldPull, null);
     }
 
     private Response getResponse(@QueryParam("image") @NotEmpty String imageName,
                                  boolean shouldPull,
-                                 String input) throws DockerCertificateException, DockerException, InterruptedException {
+                                 String input) throws DockerException, InterruptedException {
         log.info("Running image: '{}'", imageName);
-        final DockerClient docker = DefaultDockerClient.fromEnv().build();
-
         if (shouldPull) {
             docker.pull(imageName);
         }
 
-        HostConfig hostConfig = HostConfig.builder().binds("/var/run/docker.sock:/var/run/docker.sock").build();
         ContainerConfig.Builder builder = ContainerConfig.builder()
                 .image(imageName)
                 .hostConfig(hostConfig);
