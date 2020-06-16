@@ -2,6 +2,8 @@
 build
 out
 
+*.swp
+
 .idea/
 *.iml
 *.ipr
