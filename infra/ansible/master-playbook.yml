@@ -18,7 +18,6 @@
     package:
       name:
         - docker.io
-        - vim
 
   # TODO: We're going to do it this way because the ansible docker module was a pain to set up
   # TODO:   because it needs to be installed via pip (python2) which was a pain to install
