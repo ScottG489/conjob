@@ -2,6 +2,14 @@ provider "aws" {
   region = "us-west-2"
 }
 
+terraform {
+  backend "s3" {
+    bucket = "tfstate-docker-ci-prototype"
+    key    = "docker-ci-prototype.tfstate"
+    region = "us-west-2"
+  }
+}
+
 resource "aws_instance" "docker_ci_prototype_instance" {
   ami           = "ami-09dd2e08d601bff67"
   instance_type = "t2.small"
