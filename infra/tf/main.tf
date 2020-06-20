@@ -42,3 +42,17 @@ resource "aws_key_pair" "docker_ci_prototype_key" {
   key_name   = "docker-ci-prototype-key"
   public_key = var.public_key
 }
+
+resource "aws_route53_zone" "docker_ci_prototype_r53_zone" {
+    name         = "simple-ci.com"
+}
+
+resource "aws_route53_record" "docker_ci_prototype_r53_record_A" {
+    zone_id = aws_route53_zone.docker_ci_prototype_r53_zone.id
+    name    = ""
+    records = [
+        "${aws_instance.docker_ci_prototype_instance.public_ip}",
+    ]
+    ttl     = 300
+    type    = "A"
+}
