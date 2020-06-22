@@ -1,5 +1,5 @@
 #FROM ubuntu:latest
-FROM java:8
+FROM openjdk:11
 
 RUN mkdir /opt/docker-ci-prototype/
 COPY build/libs/docker-ci-prototype-capsule.jar /opt/docker-ci-prototype/
