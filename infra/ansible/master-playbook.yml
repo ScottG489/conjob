@@ -24,7 +24,7 @@
   - name: Run docker-ci-prototype container
     become: yes
     shell: |
-      docker rm --force docker-ci-prototype || true
+      docker rm --force docker-ci-prototype
       docker run --detach -v /var/run/docker.sock:/var/run/docker.sock -p 8080:8080 --name docker-ci-prototype scottg489/docker-ci-prototype:latest
 
   # TODO: Will use the above method to run the container until I can figure out how to install
