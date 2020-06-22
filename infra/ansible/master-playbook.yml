@@ -25,7 +25,7 @@
     become: yes
     shell: |
       docker rm --force docker-ci-prototype || true
-      docker run --detach -p 8080:8080 --name docker-ci-prototype scottg489/docker-ci-prototype:latest
+      docker run --detach -v /var/run/docker.sock:/var/run/docker.sock -p 8080:8080 --name docker-ci-prototype scottg489/docker-ci-prototype:latest
 
   # TODO: Will use the above method to run the container until I can figure out how to install
   # TODO:   all of the dependencies that this ansible module needs
