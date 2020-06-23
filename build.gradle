@@ -15,6 +15,7 @@ dependencies {
 }
 
 apply from: 'gradle/unit-test.gradle'
+apply from: 'gradle/acceptance-test.gradle'
 
 repositories {
     jcenter()

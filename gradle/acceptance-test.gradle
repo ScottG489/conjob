@@ -1,0 +1,20 @@
+sourceSets {
+    acceptanceTest {
+        java.srcDirs = ['src/test/acceptance/java']
+        resources.srcDir file('src/test/acceptance/resources')
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+task acceptanceTest(type: Test) {
+    testClassesDirs = sourceSets.acceptanceTest.output.classesDirs
+    classpath = sourceSets.acceptanceTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+
+    mustRunAfter build
+}
+
+dependencies {
+    testImplementation 'io.rest-assured:rest-assured:4.3.0'
+}
