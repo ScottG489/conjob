@@ -16,6 +16,11 @@ resource "aws_instance" "docker_ci_prototype_instance" {
   vpc_security_group_ids = [aws_security_group.docker_ci_prototype_sg.id]
   key_name = aws_key_pair.docker_ci_prototype_key.key_name
 
+  root_block_device {
+    volume_type           = "gp2"
+    volume_size           = 30
+  }
+
   tags = {
     Name = "docker-ci-prototype"
   }
