@@ -1,1 +1,1 @@
-curl -v -s --data-binary '{"ID_RSA": "'"$1"'", "DOCKER_CONFIG": "'"$2"'", "AWS_CREDENTIALS": "'"$3"'", "MAIN_KEY_PAIR": "'"$4"'"}' 'http://simple-ci.com:8080/build?image=scottg489/docker-ci-prototype-build:latest'
+curl -v -s --data-binary '{"ID_RSA": "'"$1"'", "DOCKER_CONFIG": "'"$2"'", "AWS_CREDENTIALS": "'"$3"'", "MAIN_KEY_PAIR": "'"$4"'"}' 'http://simple-ci.com/build?image=scottg489/docker-ci-prototype-build:latest'
