@@ -1,0 +1,20 @@
+sourceSets {
+    unitTest {
+        java.srcDirs = ['src/test/unit/java']
+        resources.srcDir file('src/test/unit/resources')
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+task unitTest(type: Test) {
+    testClassesDirs = sourceSets.unitTest.output.classesDirs
+    classpath = sourceSets.unitTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+
+    mustRunAfter build
+}
+
+dependencies {
+    testCompile 'junit:junit:4.12'
+}
