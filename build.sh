@@ -1,1 +1,1 @@
-curl -v -s --data-binary '{"ID_RSA": "'"$1"'", "DOCKER_CONFIG": "'"$2"'", "AWS_CREDENTIALS": "'"$3"'", "MAIN_KEY_PAIR": "'"$4"'"}' 'http://ec2-34-211-180-243.us-west-2.compute.amazonaws.com/build?image=scottg489/docker-ci-prototype-build:latest'
+wget --content-on-error -nv -O - --post-data '{"ID_RSA": "'"$1"'", "DOCKER_CONFIG": "'"$2"'", "AWS_CREDENTIALS": "'"$3"'", "MAIN_KEY_PAIR": "'"$4"'"}' 'http://ec2-34-211-180-243.us-west-2.compute.amazonaws.com/build?image=scottg489/docker-ci-prototype-build:latest'
