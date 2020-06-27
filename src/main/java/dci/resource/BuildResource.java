@@ -62,10 +62,25 @@ public class BuildResource {
 //        docker.stopContainer(container.id(), 600);  // 10 minutes
 
         LogStream logs = docker.logs(container.id(), DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr(), DockerClient.LogsParam.follow());
+        String output = logs.readFully();
 
-        return Response.ok()
+        return getResponseBuilderWithExitStatus(container)
                 .header("Access-Control-Allow-Origin", "*")
-                .entity(logs.readFully())
+                .entity(output)
                 .build();
+    }
+
+    private Response.ResponseBuilder getResponseBuilderWithExitStatus(ContainerCreation container) throws DockerException, InterruptedException {
+        Response.ResponseBuilder responseBuilder;
+
+        Long exitCode = docker.inspectContainer(container.id()).state().exitCode();
+
+        if (exitCode == 0) {
+            responseBuilder = Response.ok();
+        } else {
+            responseBuilder = Response.status(Response.Status.BAD_REQUEST);
+        }
+
+        return responseBuilder;
     }
 }
