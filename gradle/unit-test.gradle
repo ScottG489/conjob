@@ -10,7 +10,6 @@ sourceSets {
 task unitTest(type: Test) {
     testClassesDirs = sourceSets.unitTest.output.classesDirs
     classpath = sourceSets.unitTest.runtimeClasspath
-    outputs.upToDateWhen { false }
 
     mustRunAfter build
 }
