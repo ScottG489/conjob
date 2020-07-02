@@ -4,6 +4,7 @@ import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.messages.HostConfig;
+import dci.healthcheck.VersionCheck;
 import dci.resource.BuildResource;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
@@ -33,8 +34,6 @@ public class DockerCiPrototypeApplication extends Application<DockerCiPrototypeC
         HostConfig hostConfig = HostConfig.builder().binds("/var/run/docker.sock:/var/run/docker.sock").build();
         environment.jersey().register(new BuildResource(docker, hostConfig));
 
-//        final HealthyHealthCheck healthCheck =
-//                new HealthyHealthCheck(configuration.getTemplate());
-//        environment.healthChecks().register("template", healthCheck);
+        environment.healthChecks().register("version", new VersionCheck());
     }
 }
