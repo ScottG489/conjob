@@ -1,0 +1,11 @@
+version = grgit.describe(longDescr: true, always: true)
+ext.generatedResourceDir = file("$buildDir/generated-resources")
+
+task generateVersionResourceFile {
+    ext.outputFile = file("$generatedResourceDir/version.properties")
+    outputs.file(outputFile)
+    doLast {
+        outputFile.text = "version=${version}"
+    }
+}
+sourceSets.main.output.dir generatedResourceDir, builtBy: generateVersionResourceFile

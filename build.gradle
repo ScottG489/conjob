@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'org.ajoberstar.grgit' version '4.0.2'
 }
 
 mainClassName = 'dci.DockerCiPrototypeApplication'
@@ -14,6 +15,7 @@ dependencies {
     compile 'com.spotify:docker-client:8.16.0:shaded'
 }
 
+apply from: 'gradle/version.gradle'
 apply from: 'gradle/unit-test.gradle'
 apply from: 'gradle/acceptance-test.gradle'
 
