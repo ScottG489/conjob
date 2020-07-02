@@ -1,15 +1,17 @@
-package dci;
+package dci.resource;
 
 import io.restassured.RestAssured;
+import org.junit.Before;
 import org.junit.Test;
 
-import static dci.util.ConfigUtil.getFromConfig;
-import static org.hamcrest.Matchers.*;
+import static dci.util.RestAssuredUtil.setBaseUri;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
 public class BuildTest {
-    static {
-        RestAssured.baseURI = getFromConfig("baseUri");
+    @Before
+    public void setup() {
+        setBaseUri();
     }
 
     @Test
