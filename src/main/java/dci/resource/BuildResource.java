@@ -65,7 +65,6 @@ public class BuildResource {
         String output = logs.readFully();
 
         return getResponseBuilderWithExitStatus(container)
-                .header("Access-Control-Allow-Origin", "*")
                 .entity(output)
                 .build();
     }
