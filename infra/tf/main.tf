@@ -18,7 +18,7 @@ resource "aws_instance" "docker_ci_prototype_instance" {
 
   root_block_device {
     volume_type           = "gp2"
-    volume_size           = 35
+    volume_size           = 40
   }
 
   tags = {
