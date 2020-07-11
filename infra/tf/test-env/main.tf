@@ -4,7 +4,7 @@ provider "aws" {
 
 module "spot_instance_ssh" {
   source = "../modules/spot_instance_ssh"
-  name = random_id.name_prefix.hex
+  name = "${random_id.name_prefix.hex}.com"
   public_key = var.public_key
 }
 
@@ -16,5 +16,5 @@ module "api_route53_zone" {
 
 resource "random_id" "name_prefix" {
   byte_length = 4
-  prefix = "${var.name}-"
+  prefix = "${var.name_prefix}-"
 }
