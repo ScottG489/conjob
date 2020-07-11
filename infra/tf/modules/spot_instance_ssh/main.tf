@@ -5,7 +5,7 @@ resource "aws_spot_instance_request" "spot_instance_request" {
   key_name = aws_key_pair.key_pair.key_name
 
   spot_type = "one-time"
-  spot_price    = "0.03"
+  spot_price    = "0.015"
   wait_for_fulfillment = true
 
   root_block_device {
