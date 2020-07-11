@@ -22,4 +22,4 @@ tf_backend_init $_TFSTATE_BUCKET_NAME
 
 tf_apply "infra/tf"
 
-ansible_deploy "infra/tf"
+ansible_deploy_prod "infra/tf"
