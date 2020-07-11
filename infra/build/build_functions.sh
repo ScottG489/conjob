@@ -126,9 +126,5 @@ run_tests() {
   echo "baseUri=http://${PUBLIC_IP}:80" >"$ROOT_DIR/src/test/acceptance/resource/config.properties"
   echo "adminBaseUri=http://${PUBLIC_IP}:8081" >>"$ROOT_DIR/src/test/acceptance/resource/config.properties"
 
-  # Wait for service to come up before running tests against it
-  # IPv4 flag is required due to docker weirdness: https://github.com/appropriate/docker-curl/issues/5
-  curl -sS --ipv4 --retry-connrefused --retry 5 "$PUBLIC_IP"
-
   ./gradlew --info acceptanceTest
 }
