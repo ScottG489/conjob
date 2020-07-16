@@ -11,6 +11,6 @@ cleanup() {
 
 tf_apply "infra/tf/test-env"
 
-ansible_deploy_test "infra/tf/test-env"
+ansible_deploy "infra/tf/test-env"
 
 run_tests "infra/tf/test-env"

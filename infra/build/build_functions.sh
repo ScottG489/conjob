@@ -71,43 +71,19 @@ tf_apply() {
 
 ansible_deploy() {
   local ROOT_DIR
+  local RELATIVE_PATH_TO_TF_DIR
   local PUBLIC_IP
 
   readonly ROOT_DIR=$(get_git_root_dir)
-  readonly PUBLIC_IP=$1
+  readonly RELATIVE_PATH_TO_TF_DIR=$1
+
+  cd "$ROOT_DIR/$RELATIVE_PATH_TO_TF_DIR"
+
+  readonly PUBLIC_IP=$(terraform show --json | jq --raw-output '.values.outputs.instance_public_ip.value')
+  [[ -n $PUBLIC_IP ]]
 
   cd "$ROOT_DIR/infra/ansible"
   ansible-playbook -v -u ubuntu -e ansible_ssh_private_key_file=/root/.ssh/mainkeypair.pem --inventory "$PUBLIC_IP", master-playbook.yml
-}
-
-ansible_deploy_test() {
-  local ROOT_DIR
-  local RELATIVE_PATH_TO_TF_DIR
-  local PUBLIC_IP
-
-  readonly ROOT_DIR=$(get_git_root_dir)
-  readonly RELATIVE_PATH_TO_TF_DIR=$1
-
-  cd "$ROOT_DIR/$RELATIVE_PATH_TO_TF_DIR"
-
-  readonly PUBLIC_IP=$(terraform show --json | jq --raw-output '.values.root_module.child_modules[].resources[] | select(.address == "aws_spot_instance_request.spot_instance_request") | .values.public_ip')
-
-  ansible_deploy "$PUBLIC_IP"
-}
-
-ansible_deploy_prod() {
-  local ROOT_DIR
-  local RELATIVE_PATH_TO_TF_DIR
-  local PUBLIC_IP
-
-  readonly ROOT_DIR=$(get_git_root_dir)
-  readonly RELATIVE_PATH_TO_TF_DIR=$1
-
-  cd "$ROOT_DIR/$RELATIVE_PATH_TO_TF_DIR"
-
-  readonly PUBLIC_IP=$(terraform show --json | jq --raw-output '.values.root_module.child_modules[].resources[] | select(.address == "aws_instance.instance") | .values.public_ip')
-
-  ansible_deploy "$PUBLIC_IP"
 }
 
 run_tests() {
@@ -119,7 +95,8 @@ run_tests() {
   readonly ROOT_DIR=$(get_git_root_dir)
 
   cd "$ROOT_DIR/$RELATIVE_PATH_TO_TF_DIR"
-  readonly PUBLIC_IP=$(terraform show --json | jq --raw-output '.values.root_module.child_modules[].resources[] | select(.address == "aws_spot_instance_request.spot_instance_request") | .values.public_ip')
+  readonly PUBLIC_IP=$(terraform show --json | jq --raw-output '.values.outputs.instance_public_ip.value')
+  [[ -n $PUBLIC_IP ]]
 
   cd "$ROOT_DIR"
 
