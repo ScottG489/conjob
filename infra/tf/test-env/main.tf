@@ -4,7 +4,7 @@ provider "aws" {
 
 module "helpers_spot_instance_ssh" {
   source = "ScottG489/helpers/aws//modules/spot_instance_ssh"
-  version = "0.0.1"
+  version = "0.0.4"
   name = "${random_id.name_prefix.hex}.com"
   instance_type = var.instance_type
   spot_type = var.spot_type
@@ -13,9 +13,9 @@ module "helpers_spot_instance_ssh" {
   public_key = var.public_key
 }
 
-module "helpers_api_route53_zone" {
-  source = "ScottG489/helpers/aws//modules/api_route53_zone"
-  name = "${random_id.name_prefix.hex}.com"
+module "simple_ci" {
+  source = "../modules/simple_ci_core"
+  domain_name = "${random_id.name_prefix.hex}.com"
   public_ip = module.helpers_spot_instance_ssh.public_ip
 }
 
