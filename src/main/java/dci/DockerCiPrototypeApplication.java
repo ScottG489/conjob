@@ -6,6 +6,7 @@ import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.messages.HostConfig;
 import dci.healthcheck.VersionCheck;
 import dci.resource.BuildResource;
+import dci.resource.SecretResource;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -34,6 +35,7 @@ public class DockerCiPrototypeApplication extends Application<DockerCiPrototypeC
         final DockerClient docker = DefaultDockerClient.fromEnv().build();
         HostConfig hostConfig = HostConfig.builder().binds("/var/run/docker.sock:/var/run/docker.sock").build();
         environment.jersey().register(new BuildResource(docker, hostConfig));
+        environment.jersey().register(new SecretResource(docker));
 
         environment.healthChecks().register("version", new VersionCheck());
     }
