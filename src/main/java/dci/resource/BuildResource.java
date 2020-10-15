@@ -19,12 +19,13 @@ import javax.ws.rs.core.Response;
 @Path("/build")
 @Slf4j
 public class BuildResource {
-    private final HostConfig hostConfig;
+    private static final String SECRETS_VOLUME_MOUNT_PATH = "/run/build/secrets";
+    private static final String SECRETS_VOLUME_MOUNT_OPTIONS = "ro";
+
     private final DockerClient docker;
 
-    public BuildResource(DockerClient docker, HostConfig hostConfig) {
+    public BuildResource(DockerClient docker) {
         this.docker = docker;
-        this.hostConfig = hostConfig;
     }
 
     @POST
@@ -48,6 +49,8 @@ public class BuildResource {
             docker.pull(imageName);
         }
 
+        String secretsVolumeName = translateToVolumeName(imageName);
+        HostConfig hostConfig = getHostConfig(secretsVolumeName);
         ContainerConfig.Builder builder = ContainerConfig.builder()
                 .image(imageName)
                 .hostConfig(hostConfig);
@@ -81,5 +84,31 @@ public class BuildResource {
         }
 
         return responseBuilder;
+    }
+
+    private String translateToVolumeName(String imageName) {
+        int usernameSeparatorIndex = imageName.indexOf('/');
+        int tagSeparatorIndex = imageName.lastIndexOf(':');
+        StringBuilder sb = new StringBuilder(imageName);
+        sb.setCharAt(usernameSeparatorIndex, '-');
+        if (tagSeparatorIndex != -1) {
+            sb.setCharAt(tagSeparatorIndex, '-');
+        }
+
+        return sb.toString();
+    }
+
+    private HostConfig getHostConfig(String secretsVolumeName) throws DockerException, InterruptedException {
+        HostConfig.Builder builder = HostConfig.builder()
+                .appendBinds("/var/run/docker.sock:/var/run/docker.sock");
+
+        docker.listVolumes().volumes().stream()
+                .filter(volume -> volume.name().equals(secretsVolumeName))
+                .limit(1)
+                .forEach(volume -> {
+                    builder.appendBinds(secretsVolumeName + ":" + SECRETS_VOLUME_MOUNT_PATH + ":" + SECRETS_VOLUME_MOUNT_OPTIONS);
+                });
+
+        return builder.build();
     }
 }
