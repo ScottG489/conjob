@@ -24,3 +24,24 @@ docker run -it --volume "$PWD:/opt/build/docker-ci-prototype" -v /var/run/docker
 3. Run the image with the path to your local repository mounted where the code would normally be cloned to
 
 Note that you'll need to comment out the `git clone` in the build otherwise it will fail since you've mounted a directory there
+
+### Creating alt/bootstrap server
+In order for the service to deploy itself there needs to be a service already running it can build on.
+Otherwise, it will shut itself down mid-deploy. In order to create this alternate server, run the same command
+above but change the docker build directory to `infra/alt-env/build`.
+
+### Development troubleshooting
+```
++ terraform import aws_s3_bucket.backend_bucket tfstate--docker-ci-prototype
+aws_s3_bucket.backend_bucket: Importing from ID "tfstate--docker-ci-prototype"...
+aws_s3_bucket.backend_bucket: Import prepared!
+  Prepared aws_s3_bucket for import
+
+Error: Resource already managed by Terraform
+
+Terraform is already managing a remote object for
+aws_s3_bucket.backend_bucket. To import to this address you must first remove
+the existing object from the state.
+```
+
+To remediate this issue you'll have to clean up the tfstate files in the appropriate backend-init directory

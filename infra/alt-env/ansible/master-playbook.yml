@@ -1,0 +1,53 @@
+- hosts: all
+  become: yes
+  #sudo: yes
+  #remote_user: root
+  gather_facts: no
+  pre_tasks:
+    - name: Update apt
+      raw: apt update && apt update
+    - name: Install python2 (needed for ansible) and acl for timezone setup
+      raw: apt install -y python acl
+
+  tasks:
+  # Necessary because we turn it off for python install pre_task
+  - name: Gathering facts
+    setup:
+
+  - name: Resize filesystem if it has grown
+    become: yes
+    shell: |
+      sudo growpart /dev/xvda 1
+      sudo resize2fs /dev/xvda1
+
+  - name: Install packages
+    package:
+      name:
+        - docker.io
+
+  # TODO: We're going to do it this way because the ansible docker module was a pain to set up
+  # TODO:   because it needs to be installed via pip (python2) which was a pain to install
+  # TODO: I'm not sure why I need to manually pull here but it doesn't seem to pick up the latest
+  # TODO:   change otherwise.
+  - name: Run docker-ci-prototype container
+    become: yes
+    shell: |
+      docker rm --force docker-ci-prototype
+      docker pull scottg489/docker-ci-prototype:latest
+      docker run --detach -v /var/run/docker.sock:/var/run/docker.sock -p 80:8080 -p 8081:8081 --name docker-ci-prototype scottg489/docker-ci-prototype:latest
+
+  - name: Wait for service to be healthy
+    uri:
+      url: "http://localhost:8081/healthcheck"
+      status_code: 200
+    register: result
+    until: result.status == 200
+    retries: 30
+    delay: 1
+
+  # TODO: Will use the above method to run the container until I can figure out how to install
+  # TODO:   all of the dependencies that this ansible module needs
+#  - name: Create a data container
+#    docker_container:
+#      name: docker-ci-prototype
+#      image: scottg489/docker-ci-prototype
