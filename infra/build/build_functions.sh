@@ -40,16 +40,19 @@ build_push_application() {
 tf_backend_init() {
   local ROOT_DIR
   local TFSTATE_BACKEND_BUCKET_NAME
+  local RELATIVE_PATH_TO_TF_DIR
 
   readonly ROOT_DIR=$(get_git_root_dir)
   readonly TFSTATE_BACKEND_BUCKET_NAME=$1
+  readonly RELATIVE_PATH_TO_TF_DIR=$2
 
-  cd "$ROOT_DIR/infra/tf/backend-init"
+  cd "$ROOT_DIR/$RELATIVE_PATH_TO_TF_DIR/backend-init"
 
   # Initialize terraform backend on first deploy
   aws s3 ls "$TFSTATE_BACKEND_BUCKET_NAME" &&
     (terraform init &&
       terraform import aws_s3_bucket.backend_bucket "$TFSTATE_BACKEND_BUCKET_NAME")
+
   terraform init
   terraform plan
   terraform apply --auto-approve
@@ -58,6 +61,7 @@ tf_backend_init() {
 tf_apply() {
   local ROOT_DIR
   local RELATIVE_PATH_TO_TF_DIR
+  local HOSTED_ZONE_DNS_NAME
 
   readonly ROOT_DIR=$(get_git_root_dir)
   readonly RELATIVE_PATH_TO_TF_DIR=$1
@@ -65,6 +69,14 @@ tf_apply() {
   cd "$ROOT_DIR/$RELATIVE_PATH_TO_TF_DIR"
 
   terraform init
+
+  # We need to import the zone because it is a shared resource and may already exist
+  readonly HOSTED_ZONE_DNS_NAME=$(echo var.domain_name | terraform console)
+  [[ -n $HOSTED_ZONE_DNS_NAME ]]
+  readonly EXISTING_ZONE_ID=$(aws route53 list-hosted-zones-by-name |
+    jq --raw-output --arg name "$HOSTED_ZONE_DNS_NAME" '.HostedZones | .[] | select(.Name == "\($name)") | .Id')
+  terraform import module.simple_ci.aws_route53_zone.r53_zone "$EXISTING_ZONE_ID" || true
+
   terraform plan
   terraform apply --auto-approve
 }

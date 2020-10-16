@@ -1,4 +1,4 @@
-variable "name_prefix" {}
+variable "domain_name" {}
 variable "instance_type" {}
 variable "spot_type" {}
 variable "spot_price" {}

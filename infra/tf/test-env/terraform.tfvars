@@ -1,4 +1,4 @@
-name_prefix = "simple-ci-test"
+domain_name = "simple-ci-test.com"
 instance_type = "t2.small"
 spot_type = "one-time"
 spot_price = "0.008"

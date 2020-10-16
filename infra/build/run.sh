@@ -18,7 +18,7 @@ build_push_application
 
 /opt/build/run-test.sh
 
-tf_backend_init $_TFSTATE_BUCKET_NAME
+tf_backend_init $_TFSTATE_BUCKET_NAME "infra/tf"
 
 tf_apply "infra/tf"
 

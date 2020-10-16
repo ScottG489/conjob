@@ -21,5 +21,5 @@ module "simple_ci" {
 
 resource "random_id" "name_prefix" {
   byte_length = 4
-  prefix = "${var.name_prefix}-"
+  prefix = "${var.domain_name}-"
 }
