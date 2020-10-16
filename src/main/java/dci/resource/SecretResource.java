@@ -17,10 +17,13 @@ import java.nio.file.Files;
 @Path("/secret")
 @Slf4j
 public class SecretResource {
+    private static final String INTERMEDIARY_CONTAINER_IMAGE = "tianon/true";
     private final DockerClient docker;
 
-    public SecretResource(DockerClient docker) {
+    public SecretResource(DockerClient docker) throws DockerException, InterruptedException {
         this.docker = docker;
+        // This image is required to be on the build server to create secrets
+        docker.pull(INTERMEDIARY_CONTAINER_IMAGE);
     }
 
     @POST
@@ -28,11 +31,14 @@ public class SecretResource {
                            String input) throws DockerException, InterruptedException, IOException {
 
         String secretsVolumeName = translateToVolumeName(imageName);
-        String intermediaryContainerImage = "tianon/true";
         String intermediaryContainerName = "temp-container";
         String destinationPath = "/temp";
 
-        ContainerCreation container = createIntermediaryContainer(intermediaryContainerName, intermediaryContainerImage, secretsVolumeName, destinationPath);
+        ContainerCreation container = createIntermediaryContainer(
+                intermediaryContainerName,
+                INTERMEDIARY_CONTAINER_IMAGE,
+                secretsVolumeName,
+                destinationPath);
 
         String secretsTempDir = "secrets-temp-dir";
         String secretsFileName = "secrets";
