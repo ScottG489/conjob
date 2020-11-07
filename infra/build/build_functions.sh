@@ -16,6 +16,10 @@ setup_credentials() {
   readonly MAINKEYPAIR_CONTENTS=$(echo -n $1 | jq -r .MAIN_KEY_PAIR | base64 --decode)
   readonly AWS_CREDENTIALS_CONTENTS=$(echo -n $1 | jq -r .AWS_CREDENTIALS | base64 --decode)
   readonly DOCKER_CONFIG_CONTENTS=$(echo -n $1 | jq -r .DOCKER_CONFIG | base64 --decode)
+  [[ -n $ID_RSA_CONTENTS ]]
+  [[ -n $MAINKEYPAIR_CONTENTS ]]
+  [[ -n $AWS_CREDENTIALS_CONTENTS ]]
+  [[ -n $DOCKER_CONFIG_CONTENTS ]]
 
   printf -- "$ID_RSA_CONTENTS" >/root/.ssh/id_rsa
   printf -- "$MAINKEYPAIR_CONTENTS" >/root/.ssh/mainkeypair.pem
