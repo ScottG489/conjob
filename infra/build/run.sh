@@ -16,7 +16,9 @@ cd $_PROJECT_NAME
 
 build_push_application
 
+set +x
 /opt/build/run-test.sh "$1"
+set -x
 
 tf_backend_init $_TFSTATE_BUCKET_NAME "infra/tf"
 
