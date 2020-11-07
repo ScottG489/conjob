@@ -10,11 +10,14 @@ import java.util.Properties;
 import static dci.util.ConfigUtil.getFromConfig;
 
 public class RestAssuredUtil {
-    public static void setBaseUri() {
+    public static void configTest() {
         RestAssured.baseURI = getFromConfig("baseUri");
     }
 
-    public static void setAdminBaseUri() {
+    public static void configAdminTest() {
         RestAssured.baseURI = getFromConfig("adminBaseUri");
+        RestAssured.authentication = RestAssured.basic(
+                getFromConfig("adminUsername"),
+                getFromConfig("adminPassword"));
     }
 }

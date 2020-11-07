@@ -3,14 +3,14 @@ package dci.healthcheck;
 import org.junit.Before;
 import org.junit.Test;
 
-import static dci.util.RestAssuredUtil.setAdminBaseUri;
+import static dci.util.RestAssuredUtil.configAdminTest;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.matchesRegex;
 
 public class VersionTest {
     @Before
     public void setup() {
-        setAdminBaseUri();
+        configAdminTest();
     }
 
     @Test

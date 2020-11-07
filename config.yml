@@ -1,0 +1,2 @@
+adminUsername: ${ADMIN_USERNAME:-}
+adminPassword: ${ADMIN_PASSWORD:-}

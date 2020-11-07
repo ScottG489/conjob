@@ -81,6 +81,29 @@ tf_apply() {
   terraform apply --auto-approve
 }
 
+setup_application_configuration() {
+  set +x
+  [[ -n $1 ]]
+  local ROOT_DIR
+  local BUILD_SCRIPT_JSON_INPUT
+
+  local ADMIN_USERNAME
+  local ADMIN_PASSWORD
+
+  readonly ROOT_DIR=$(get_git_root_dir)
+  readonly BUILD_SCRIPT_JSON_INPUT=$1
+
+  readonly ADMIN_USERNAME=$(echo -n "$BUILD_SCRIPT_JSON_INPUT" | jq -r .ADMIN_USERNAME)
+  readonly ADMIN_PASSWORD=$(echo -n "$BUILD_SCRIPT_JSON_INPUT" | jq -r .ADMIN_PASSWORD)
+  [[ -n $ADMIN_USERNAME ]]
+  [[ -n $ADMIN_PASSWORD ]]
+  echo $ADMIN_PASSWORD
+
+  # These are used in the ansible playbook
+  export _ADMIN_USERNAME=$ADMIN_USERNAME
+  export _ADMIN_PASSWORD=$ADMIN_PASSWORD
+}
+
 ansible_deploy() {
   local ROOT_DIR
   local RELATIVE_PATH_TO_TF_DIR
@@ -114,6 +137,8 @@ run_tests() {
 
   echo "baseUri=http://${PUBLIC_IP}:80" >"$ROOT_DIR/src/test/acceptance/resource/config.properties"
   echo "adminBaseUri=http://${PUBLIC_IP}:8081" >>"$ROOT_DIR/src/test/acceptance/resource/config.properties"
+  echo "adminUsername=${_ADMIN_USERNAME}" >>"$ROOT_DIR/src/test/acceptance/resource/config.properties"
+  echo "adminPassword=${_ADMIN_PASSWORD}" >>"$ROOT_DIR/src/test/acceptance/resource/config.properties"
 
   ./gradlew --info acceptanceTest
 }

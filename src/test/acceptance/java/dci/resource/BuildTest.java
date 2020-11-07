@@ -4,14 +4,14 @@ import io.restassured.RestAssured;
 import org.junit.Before;
 import org.junit.Test;
 
-import static dci.util.RestAssuredUtil.setBaseUri;
+import static dci.util.RestAssuredUtil.configTest;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
 public class BuildTest {
     @Before
     public void setup() {
-        setBaseUri();
+        configTest();
     }
 
     @Test

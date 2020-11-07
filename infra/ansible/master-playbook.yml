@@ -1,8 +1,8 @@
 - hosts: all
   become: yes
-  #sudo: yes
-  #remote_user: root
   gather_facts: no
+  vars_files:
+    - vars.yml
   pre_tasks:
     - name: Update apt
       raw: apt update && apt update
@@ -31,14 +31,24 @@
   # TODO:   change otherwise.
   - name: Run docker-ci-prototype container
     become: yes
+    # TODO: It isn't ideal that we silence output here because some could be useful to know. We should
+    # TODO:   try using a docker env file (--env-file) instead.
+    no_log: True
     shell: |
-      docker rm --force docker-ci-prototype
-      docker pull scottg489/docker-ci-prototype:latest
-      docker run --detach -v /var/run/docker.sock:/var/run/docker.sock -p 80:8080 -p 8081:8081 --name docker-ci-prototype scottg489/docker-ci-prototype:latest
+      docker rm --force {{ container_name }}
+      docker pull {{ image_name }}
+      docker run --detach -v /var/run/docker.sock:/var/run/docker.sock \
+        -p 80:8080 \
+        -p 8081:8081 \
+        -e ADMIN_USERNAME={{ adminUsername }} \
+        -e ADMIN_PASSWORD={{ adminPassword }} \
+        --name {{ container_name }} {{ image_name }}
 
   - name: Wait for service to be healthy
     uri:
       url: "http://localhost:8081/healthcheck"
+      url_username: "{{ adminUsername }}"
+      url_password: "{{ adminPassword }}"
       status_code: 200
     register: result
     until: result.status == 200
