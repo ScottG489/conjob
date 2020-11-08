@@ -4,6 +4,7 @@ import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
+import dci.core.job.JobService;
 import dci.healthcheck.VersionCheck;
 import dci.resource.BuildResource;
 import dci.resource.SecretResource;
@@ -43,7 +44,7 @@ public class DockerCiPrototypeApplication extends Application<DockerCiPrototypeC
         environment.jersey().register(new EveryResponseFilter());
 
         final DockerClient docker = DefaultDockerClient.fromEnv().build();
-        environment.jersey().register(new BuildResource(docker));
+        environment.jersey().register(new BuildResource(new JobService(docker)));
         environment.jersey().register(new SecretResource(docker));
 
         environment.healthChecks().register("version", new VersionCheck());
