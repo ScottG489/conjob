@@ -1,6 +1,9 @@
 package dci.api;
 
+import lombok.Value;
+
+@Value
 public class JobResponse {
-    public String status;
-    public JobRunResponse jobRunResponse;
+    public JobRunResponse jobRun;
+    public JobResultResponse result;
 }

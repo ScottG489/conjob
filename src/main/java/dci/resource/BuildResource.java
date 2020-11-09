@@ -1,12 +1,15 @@
 package dci.resource;
 
 import com.spotify.docker.client.exceptions.DockerException;
+import dci.api.JobResponse;
 import dci.core.job.JobService;
 import dci.core.job.model.Job;
+import dci.resource.convert.JobResponseConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("/build")
@@ -19,22 +22,40 @@ public class BuildResource {
     }
 
     @POST
-    public Response doPost(@NotEmpty @QueryParam("image") String imageName,
-                           @QueryParam("pull") @DefaultValue("true") boolean shouldPull,
-                           String input) throws DockerException, InterruptedException {
-        return getResponse(imageName, shouldPull, input);
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response handlePost(@NotEmpty @QueryParam("image") String imageName,
+                               @QueryParam("pull") @DefaultValue("true") boolean shouldPull,
+                               String input) throws DockerException, InterruptedException {
+        return createResponse(imageName, shouldPull, input);
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response handleJsonPost(@NotEmpty @QueryParam("image") String imageName,
+                                   @QueryParam("pull") @DefaultValue("true") boolean shouldPull,
+                                   String input) throws DockerException, InterruptedException {
+        return createJsonResponse(imageName, shouldPull, input);
     }
 
     @GET
-    public Response doGet(@NotEmpty @QueryParam("image") String imageName,
-                          @QueryParam("pull") @DefaultValue("true") boolean shouldPull)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response handleGet(@NotEmpty @QueryParam("image") String imageName,
+                              @QueryParam("pull") @DefaultValue("true") boolean shouldPull)
             throws DockerException, InterruptedException {
-        return getResponse(imageName, shouldPull, null);
+        return createResponse(imageName, shouldPull, null);
     }
 
-    private Response getResponse(@QueryParam("image") @NotEmpty String imageName,
-                                 boolean shouldPull,
-                                 String input) throws DockerException, InterruptedException {
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response handleJsonGet(@NotEmpty @QueryParam("image") String imageName,
+                                  @QueryParam("pull") @DefaultValue("true") boolean shouldPull)
+            throws DockerException, InterruptedException {
+        return createJsonResponse(imageName, shouldPull, null);
+    }
+
+    private Response createResponse(String imageName,
+                                    boolean shouldPull,
+                                    String input) throws DockerException, InterruptedException {
         log.info("Running image: '{}'", imageName);
         Job job = jobService.getJob(imageName, input, shouldPull);
 
@@ -43,7 +64,21 @@ public class BuildResource {
                 .build();
     }
 
-    private Response.ResponseBuilder getResponseBuilderWithExitStatus(long exitCode) throws DockerException, InterruptedException {
+    private Response createJsonResponse(String imageName,
+                                        boolean shouldPull,
+                                        String input) throws DockerException, InterruptedException {
+        log.info("Running image: '{}'", imageName);
+        Job job = jobService.getJob(imageName, input, shouldPull);
+
+        JobResponse jobResponse = new JobResponseConverter().from(job);
+
+        return getResponseBuilderWithExitStatus(job.getJobRun().getExitCode())
+                .entity(jobResponse)
+                .build();
+    }
+
+
+    private Response.ResponseBuilder getResponseBuilderWithExitStatus(long exitCode) {
         Response.ResponseBuilder responseBuilder;
 
         if (exitCode == 0) {

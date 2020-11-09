@@ -5,5 +5,5 @@ import lombok.Value;
 @Value
 public class Job {
     public JobRun jobRun;
-    public JobResult jobResult;
+    public JobResult result;
 }
