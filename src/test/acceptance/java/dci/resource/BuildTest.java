@@ -24,6 +24,7 @@ public class BuildTest {
         given()
             .get("/build?image=library/hello-world:latest")
         .then()
+            .statusCode(200)
             .contentType(MediaType.TEXT_PLAIN)
             .body(containsString(expectContains));
     }
@@ -36,6 +37,7 @@ public class BuildTest {
             .accept(ContentType.JSON)
             .get("/build?image=library/hello-world:latest")
         .then()
+            .statusCode(200)
             .contentType(MediaType.APPLICATION_JSON)
             .body("jobRun.output", containsString(expectOutputContains))
             .body("jobRun.exitCode", is(0))
@@ -43,11 +45,12 @@ public class BuildTest {
     }
 
     @Test
-    public void getJsonResponsea() {
+    public void getNotFoundJsonResponse() {
         given()
             .accept(ContentType.JSON)
             .get("/build?image=local/does_not_exist:latest")
        .then()
+           .statusCode(404)
            .contentType(MediaType.APPLICATION_JSON)
            .body("jobRun.output", containsString(""))
            .body("jobRun.exitCode", is(-1))
