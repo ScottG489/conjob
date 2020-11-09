@@ -9,9 +9,22 @@ import dci.core.job.model.JobRun;
 
 public class JobResponseConverter {
     public JobResponse from(Job job) {
+        String message = "";
+
+        if (job.getResult().equals(JobResult.FINISHED)) {
+            message = "Job has concluded. Check job run for outcome.";
+        } else if (job.getResult().equals(JobResult.NOT_FOUND)){
+            message = "Image not found.";
+        } else if (job.getResult().equals(JobResult.KILLED)) {
+            message = "Job exceeded server configured maximum duration.";
+        } else {
+            message = "Unknown outcome.";
+        }
+
         return new JobResponse(
                 from(job.getJobRun()),
-                from(job.getResult())
+                from(job.getResult()),
+                message
         );
     }
 

@@ -10,4 +10,5 @@ import lombok.Value;
 public class JobResponse {
     public JobRunResponse jobRun;
     public JobResultResponse result;
+    public String message;
 }
