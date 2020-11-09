@@ -4,8 +4,12 @@ import dci.api.JobResponse;
 import dci.api.JobResultResponse;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.response.ExtractableResponse;
+import io.restassured.response.Response;
 import org.junit.Before;
 import org.junit.Test;
+
+import javax.ws.rs.core.MediaType;
 
 import static dci.util.RestAssuredUtil.configTest;
 import static org.hamcrest.Matchers.containsString;
@@ -22,24 +26,29 @@ public class BuildTest {
     public void getPlainTextResponse() {
         String expectContains = "Hello from Docker!";
 
-        String responseBody =
-                RestAssured.get("/build?image=library/hello-world:latest").body().asString();
+        ExtractableResponse<Response> response = RestAssured
+                .get("/build?image=library/hello-world:latest")
+                .then()
+                    .extract();
 
-        assertThat(responseBody, containsString(expectContains));
+        assertThat(response.contentType(), is(MediaType.TEXT_PLAIN));
+        assertThat(response.body().asString(), containsString(expectContains));
     }
 
     @Test
     public void getJsonResponse() {
         String expectOutputContains = "Hello from Docker!";
 
-        JobResponse jobResponse = RestAssured
+        ExtractableResponse<Response> response = RestAssured
                 .given()
                     .accept(ContentType.JSON)
                 .get("/build?image=library/hello-world:latest")
                 .then()
-                    .extract()
-                    .as(JobResponse.class);
+                    .extract();
 
+        assertThat(response.contentType(), is(MediaType.APPLICATION_JSON));
+
+        JobResponse jobResponse = response.as(JobResponse.class);
 
         assertThat(jobResponse.getJobRun().getOutput(), containsString(expectOutputContains));
         assertThat(jobResponse.getJobRun().getExitCode(), is(0L));

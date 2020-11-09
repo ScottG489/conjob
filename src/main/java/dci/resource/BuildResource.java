@@ -38,7 +38,7 @@ public class BuildResource {
     }
 
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces({MediaType.WILDCARD, MediaType.TEXT_PLAIN})
     public Response handleGet(@NotEmpty @QueryParam("image") String imageName,
                               @QueryParam("pull") @DefaultValue("true") boolean shouldPull)
             throws DockerException, InterruptedException {
