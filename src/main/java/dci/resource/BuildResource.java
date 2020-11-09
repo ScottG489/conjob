@@ -26,7 +26,7 @@ public class BuildResource {
     public Response handlePost(@NotEmpty @QueryParam("image") String imageName,
                                @QueryParam("pull") @DefaultValue("true") boolean shouldPull,
                                String input) throws DockerException, InterruptedException {
-        return createResponse(imageName, shouldPull, input);
+        return createResponse(imageName, input);
     }
 
     @POST
@@ -42,7 +42,7 @@ public class BuildResource {
     public Response handleGet(@NotEmpty @QueryParam("image") String imageName,
                               @QueryParam("pull") @DefaultValue("true") boolean shouldPull)
             throws DockerException, InterruptedException {
-        return createResponse(imageName, shouldPull, null);
+        return createResponse(imageName, null);
     }
 
     @GET
@@ -54,10 +54,9 @@ public class BuildResource {
     }
 
     private Response createResponse(String imageName,
-                                    boolean shouldPull,
                                     String input) throws DockerException, InterruptedException {
         log.info("Running image: '{}'", imageName);
-        Job job = jobService.getJob(imageName, input, shouldPull);
+        Job job = jobService.getJob(imageName, input);
 
         return getResponseBuilderWithExitStatus(job.getJobRun().getExitCode())
                 .entity(job.getJobRun().getOutput())
@@ -68,7 +67,7 @@ public class BuildResource {
                                         boolean shouldPull,
                                         String input) throws DockerException, InterruptedException {
         log.info("Running image: '{}'", imageName);
-        Job job = jobService.getJob(imageName, input, shouldPull);
+        Job job = jobService.getJob(imageName, input);
 
         JobResponse jobResponse = new JobResponseConverter().from(job);
 
