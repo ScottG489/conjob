@@ -86,6 +86,8 @@ public class BuildResource {
             }
         } else if (jobResult.equals(JobResult.NOT_FOUND)) {
             responseBuilder = Response.status(Response.Status.NOT_FOUND);
+        } else if (jobResult.equals(JobResult.KILLED)) {
+            responseBuilder = Response.status(Response.Status.BAD_REQUEST);
         } else {
             responseBuilder = Response.status(Response.Status.INTERNAL_SERVER_ERROR);
         }

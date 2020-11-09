@@ -36,15 +36,21 @@ public class JobService {
 
         dockerClient.startContainer(container.id());
 //         TODO: This seems to prevent the output from being a streaming response
-//        docker.stopContainer(container.id(), 600);  // 10 minutes
+        dockerClient.stopContainer(container.id(), 60 * 30);  // 30 minutes
 
         LogStream logs = dockerClient.logs(container.id(), DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr(), DockerClient.LogsParam.follow());
         String output = logs.readFully();
 
         Long exitCode = dockerClient.inspectContainer(container.id()).state().exitCode();
 
+        JobResult jobResult;
+        if (exitCode == 137) {
+            jobResult = JobResult.KILLED;
+        } else {
+            jobResult = JobResult.FINISHED;
+        }
         return new Job(
-                new JobRun(output, exitCode), JobResult.FINISHED);
+                new JobRun(output, exitCode), jobResult);
     }
 
     private ContainerConfig getContainerConfig(String imageName, String input) throws DockerException, InterruptedException {

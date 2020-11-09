@@ -16,7 +16,7 @@ public class JobResponseConverter {
         } else if (job.getResult().equals(JobResult.NOT_FOUND)){
             message = "Image not found.";
         } else if (job.getResult().equals(JobResult.KILLED)) {
-            message = "Job exceeded server configured maximum duration.";
+            message = "Job exceeded maximum allowed duration.";
         } else {
             message = "Unknown outcome.";
         }
