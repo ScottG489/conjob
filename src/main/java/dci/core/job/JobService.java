@@ -36,7 +36,8 @@ public class JobService {
 
         dockerClient.startContainer(container.id());
 //         TODO: This seems to prevent the output from being a streaming response
-        dockerClient.stopContainer(container.id(), 60 * 30);  // 30 minutes
+//         TODO: This seems to be killing jobs too early. Still investigating.
+//        dockerClient.stopContainer(container.id(), 60 * 30);  // 30 minutes
 
         LogStream logs = dockerClient.logs(container.id(), DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr(), DockerClient.LogsParam.follow());
         String output = logs.readFully();
