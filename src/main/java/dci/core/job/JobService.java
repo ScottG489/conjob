@@ -14,6 +14,7 @@ import dci.core.job.model.JobResult;
 import dci.core.job.model.JobRun;
 
 import java.util.Optional;
+import java.util.concurrent.*;
 
 public class JobService {
     private static final String SECRETS_VOLUME_MOUNT_PATH = "/run/build/secrets";
@@ -35,23 +36,39 @@ public class JobService {
         final ContainerCreation container = containerTry.get();
 
         dockerClient.startContainer(container.id());
-//         TODO: This seems to prevent the output from being a streaming response
-//         TODO: This seems to be killing jobs too early. Still investigating.
-//        dockerClient.stopContainer(container.id(), 60 * 30);  // 30 minutes
+        LogStream logs = dockerClient.logs(
+                container.id(),
+                DockerClient.LogsParam.stdout(),
+                DockerClient.LogsParam.stderr(),
+                DockerClient.LogsParam.follow());
 
-        LogStream logs = dockerClient.logs(container.id(), DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr(), DockerClient.LogsParam.follow());
-        String output = logs.readFully();
+        String output = waitForJobRun(container.id(), logs);
 
         Long exitCode = dockerClient.inspectContainer(container.id()).state().exitCode();
 
         JobResult jobResult;
-        if (exitCode == 137) {
+        int SIGKILL = 137;
+        int SIGTERM = 143;
+        if (exitCode == SIGKILL || exitCode == SIGTERM) {
             jobResult = JobResult.KILLED;
         } else {
             jobResult = JobResult.FINISHED;
         }
         return new Job(
                 new JobRun(output, exitCode), jobResult);
+    }
+
+    private String waitForJobRun(String containerId, LogStream logs) throws InterruptedException, DockerException {
+        String output = "";
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<String> future = executor.submit(new ReadLogsFullyCallable(logs));
+        try {
+            output = future.get(30, TimeUnit.MINUTES);
+        } catch (ExecutionException | TimeoutException ignored) {
+            dockerClient.stopContainer(containerId, 60);
+        }
+        executor.shutdownNow();
+        return output;
     }
 
     private ContainerConfig getContainerConfig(String imageName, String input) throws DockerException, InterruptedException {
@@ -97,5 +114,18 @@ public class JobService {
         }
 
         return container;
+    }
+
+    static class ReadLogsFullyCallable implements Callable<String> {
+        private final LogStream logStream;
+
+        ReadLogsFullyCallable(LogStream logStream) {
+            this.logStream = logStream;
+        }
+
+        @Override
+        public String call() {
+            return logStream.readFully();
+        }
     }
 }
