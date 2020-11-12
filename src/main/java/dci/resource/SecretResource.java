@@ -8,6 +8,7 @@ import com.spotify.docker.client.messages.HostConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.annotation.security.PermitAll;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.File;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 @Path("/secret")
+@PermitAll
 @Slf4j
 public class SecretResource {
     private static final String INTERMEDIARY_CONTAINER_IMAGE = "tianon/true";

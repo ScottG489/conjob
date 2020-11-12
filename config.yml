@@ -1,2 +1,4 @@
 adminUsername: ${ADMIN_USERNAME:-}
 adminPassword: ${ADMIN_PASSWORD:-}
+username: ${USERNAME:-}
+password: ${PASSWORD:-}

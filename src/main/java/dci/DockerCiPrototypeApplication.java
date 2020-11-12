@@ -10,12 +10,16 @@ import dci.healthcheck.VersionCheck;
 import dci.resource.BuildResource;
 import dci.resource.SecretResource;
 import io.dropwizard.Application;
+import io.dropwizard.auth.AuthDynamicFeature;
+import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.AdminEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.eclipse.jetty.security.AbstractLoginService.UserPrincipal;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 
 import java.util.Objects;
 
@@ -51,6 +55,18 @@ public class DockerCiPrototypeApplication extends Application<DockerCiPrototypeC
         environment.healthChecks().register("version", new VersionCheck());
 
         configureAdminEnv(configuration, environment.admin());
+
+        configureBasicAuth(configuration, environment);
+    }
+
+    private void configureBasicAuth(DockerCiPrototypeConfiguration config, Environment environment) {
+        if (Objects.nonNull(config.getUsername()) && Objects.nonNull(config.getPassword())) {
+            environment.jersey().register(new AuthDynamicFeature(
+                    new BasicCredentialAuthFilter.Builder<UserPrincipal>()
+                            .setAuthenticator(new BasicAuthenticator(config.getUsername(), config.getPassword()))
+                            .buildAuthFilter()));
+            environment.jersey().register(RolesAllowedDynamicFeature.class);
+        }
     }
 
     private void configureAdminEnv(DockerCiPrototypeConfiguration config, AdminEnvironment adminEnv) {

@@ -9,11 +9,13 @@ import dci.resource.convert.JobResponseConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.annotation.security.PermitAll;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("/build")
+@PermitAll
 @Slf4j
 public class BuildResource {
     private final JobService jobService;

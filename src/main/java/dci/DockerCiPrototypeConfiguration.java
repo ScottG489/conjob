@@ -9,4 +9,6 @@ import lombok.EqualsAndHashCode;
 public class DockerCiPrototypeConfiguration extends Configuration {
     private String adminUsername;
     private String adminPassword;
+    private String username;
+    private String password;
 }
