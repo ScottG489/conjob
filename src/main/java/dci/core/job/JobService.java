@@ -21,15 +21,23 @@ public class JobService {
     private static final String SECRETS_VOLUME_MOUNT_OPTIONS = "ro";
 
     private final DockerClient dockerClient;
+    private final RunningJobsLimiter runningJobsLimiter;
 
-    public JobService(DockerClient dockerClient) {
+    public JobService(DockerClient dockerClient, RunningJobsLimiter runningJobsLimiter) {
         this.dockerClient = dockerClient;
+        this.runningJobsLimiter = runningJobsLimiter;
     }
 
     public Job getJob(String imageName, String input) throws DockerException, InterruptedException {
+        if (!runningJobsLimiter.tryIncrement()) {
+            return new Job(
+                    new JobRun("", -1), JobResult.REJECTED);
+        }
+
         final ContainerConfig containerConfig = getContainerConfig(imageName, input);
         final Optional<ContainerCreation> containerTry = tryContainerCreate(containerConfig);
         if (!containerTry.isPresent()) {
+            runningJobsLimiter.decrement();
             return new Job(
                     new JobRun("", -1), JobResult.NOT_FOUND);
         }
@@ -54,6 +62,7 @@ public class JobService {
         } else {
             jobResult = JobResult.FINISHED;
         }
+        runningJobsLimiter.decrement();
         return new Job(
                 new JobRun(output, exitCode), jobResult);
     }

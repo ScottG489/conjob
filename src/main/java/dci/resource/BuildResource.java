@@ -2,7 +2,6 @@ package dci.resource;
 
 import com.spotify.docker.client.exceptions.DockerException;
 import dci.api.JobResponse;
-import dci.api.JobResultResponse;
 import dci.core.job.JobService;
 import dci.core.job.model.Job;
 import dci.core.job.model.JobResult;
@@ -88,6 +87,8 @@ public class BuildResource {
             responseBuilder = Response.status(Response.Status.NOT_FOUND);
         } else if (jobResult.equals(JobResult.KILLED)) {
             responseBuilder = Response.status(Response.Status.BAD_REQUEST);
+        } else if (jobResult.equals(JobResult.REJECTED)) {
+            responseBuilder = Response.status(Response.Status.SERVICE_UNAVAILABLE);
         } else {
             responseBuilder = Response.status(Response.Status.INTERNAL_SERVER_ERROR);
         }
