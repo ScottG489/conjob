@@ -21,15 +21,17 @@ public class JobService {
     private static final String SECRETS_VOLUME_MOUNT_OPTIONS = "ro";
 
     private final DockerClient dockerClient;
-    private final RunningJobsLimiter runningJobsLimiter;
+    private final RunJobRateLimiter runJobRateLimiter;
 
-    public JobService(DockerClient dockerClient, RunningJobsLimiter runningJobsLimiter) {
+    public JobService(
+            DockerClient dockerClient,
+            RunJobRateLimiter runJobRateLimiter) {
         this.dockerClient = dockerClient;
-        this.runningJobsLimiter = runningJobsLimiter;
+        this.runJobRateLimiter = runJobRateLimiter;
     }
 
     public Job getJob(String imageName, String input) throws DockerException, InterruptedException {
-        if (!runningJobsLimiter.tryIncrement()) {
+        if (runJobRateLimiter.isAtLimit()) {
             return new Job(
                     new JobRun("", -1), JobResult.REJECTED);
         }
@@ -37,7 +39,7 @@ public class JobService {
         final ContainerConfig containerConfig = getContainerConfig(imageName, input);
         final Optional<ContainerCreation> containerTry = tryContainerCreate(containerConfig);
         if (!containerTry.isPresent()) {
-            runningJobsLimiter.decrement();
+            runJobRateLimiter.decrementRunningJobsCount();
             return new Job(
                     new JobRun("", -1), JobResult.NOT_FOUND);
         }
@@ -62,7 +64,7 @@ public class JobService {
         } else {
             jobResult = JobResult.FINISHED;
         }
-        runningJobsLimiter.decrement();
+        runJobRateLimiter.decrementRunningJobsCount();
         return new Job(
                 new JobRun(output, exitCode), jobResult);
     }
