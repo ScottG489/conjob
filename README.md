@@ -1,6 +1,19 @@
 # ConJob
 ![CI](https://github.com/ScottG489/conjob/workflows/CI/badge.svg)
 
+## Usage
+It's recommended to run **ConJob** using docker but it can also be built then run from source
+## Docker
+```shell script
+docker run -it -v /var/run/docker.sock:/var/run/docker.sock \
+  --name conjob scottg489/conjob
+```
+## Build and run from source
+```shell script
+git clone git@github.com:ScottG489/conjob.git && cd conjob
+./gradlew install && ./build/install/ConJob/bin/ConJob server config.yml
+```
+
 ## Core philosophy
 
 - Simplicity for the user
