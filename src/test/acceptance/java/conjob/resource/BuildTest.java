@@ -12,6 +12,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 public class BuildTest {
+    private static final String JOB_RUN_PATH = "/job/run";
+
     @Before
     public void setup() {
         configTest();
@@ -22,7 +24,7 @@ public class BuildTest {
         String expectContains = "Hello from Docker!";
 
         given()
-            .get("/build?image=library/hello-world:latest")
+            .get(JOB_RUN_PATH + "?image=library/hello-world:latest")
         .then()
             .statusCode(200)
             .contentType(MediaType.TEXT_PLAIN)
@@ -35,7 +37,7 @@ public class BuildTest {
 
         given()
             .accept(ContentType.JSON)
-            .get("/build?image=library/hello-world:latest")
+            .get(JOB_RUN_PATH + "?image=library/hello-world:latest")
         .then()
             .statusCode(200)
             .contentType(MediaType.APPLICATION_JSON)
@@ -48,7 +50,7 @@ public class BuildTest {
     public void getNotFoundJsonResponse() {
         given()
             .accept(ContentType.JSON)
-            .get("/build?image=local/does_not_exist:latest")
+            .get(JOB_RUN_PATH + "?image=local/does_not_exist:latest")
        .then()
            .statusCode(404)
            .contentType(MediaType.APPLICATION_JSON)
