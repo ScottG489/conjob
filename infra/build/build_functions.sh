@@ -79,7 +79,7 @@ tf_apply() {
   [[ -n $HOSTED_ZONE_DNS_NAME ]]
   readonly EXISTING_ZONE_ID=$(aws route53 list-hosted-zones-by-name |
     jq --raw-output --arg name "$HOSTED_ZONE_DNS_NAME" '.HostedZones | .[] | select(.Name == "\($name)") | .Id')
-  terraform import module.simple_ci.aws_route53_zone.r53_zone "$EXISTING_ZONE_ID" || true
+  terraform import module.conjob.aws_route53_zone.r53_zone "$EXISTING_ZONE_ID" || true
 
   terraform plan
   terraform apply --auto-approve

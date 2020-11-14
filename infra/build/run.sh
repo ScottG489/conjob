@@ -9,7 +9,7 @@ set -x
 
 declare -r _PROJECT_NAME='docker-ci-prototype'
 declare -r _GIT_REPO='git@github.com:ScottG489/docker-ci-prototype.git'
-declare -r _TFSTATE_BUCKET_NAME='tfstate-docker-ci-prototype'
+declare -r _TFSTATE_BUCKET_NAME='tfstate-conjob'
 
 git clone $_GIT_REPO
 cd $_PROJECT_NAME
