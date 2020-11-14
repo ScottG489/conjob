@@ -10,9 +10,9 @@ jobs:
       - name: Build and deploy
         run: ./infra/build/build.sh ${{ secrets.ID_RSA_CONTENTS_BASE64 }} ${{ secrets.DOCKER_CONFIG_CONTENTS_BASE64 }}
         env:
-          GIT_REPO_URL: 'git@github.com:ScottG489/docker-ci-prototype.git'
+          GIT_REPO_URL: 'git@github.com:ScottG489/conjob.git'
           RELATIVE_SUB_DIR: 'infra/build'
-          DOCKER_IMAGE_NAME: 'scottg489/docker-ci-prototype-build:latest'
+          DOCKER_IMAGE_NAME: 'scottg489/conjob:latest'
 
   build_application:
     runs-on: ubuntu-latest
