@@ -23,18 +23,18 @@ import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 
 import java.util.Objects;
 
-public class DockerCiPrototypeApplication extends Application<DockerCiPrototypeConfiguration> {
+public class ConJobApplication extends Application<ConJobConfiguration> {
     public static void main(String[] args) throws Exception {
-        new DockerCiPrototypeApplication().run(args);
+        new ConJobApplication().run(args);
     }
 
     @Override
     public String getName() {
-        return "docker-ci-prototype";
+        return "ConJob";
     }
 
     @Override
-    public void initialize(Bootstrap<DockerCiPrototypeConfiguration> bootstrap) {
+    public void initialize(Bootstrap<ConJobConfiguration> bootstrap) {
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false)
@@ -43,7 +43,7 @@ public class DockerCiPrototypeApplication extends Application<DockerCiPrototypeC
     }
 
     @Override
-    public void run(DockerCiPrototypeConfiguration configuration, Environment environment) throws DockerCertificateException, DockerException, InterruptedException {
+    public void run(ConJobConfiguration configuration, Environment environment) throws DockerCertificateException, DockerException, InterruptedException {
         // TODO: We probably want to make this something higher than 0, though not too high
         environment.jersey().property(ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, 0);
         environment.jersey().register(new EveryResponseFilter());
@@ -59,7 +59,7 @@ public class DockerCiPrototypeApplication extends Application<DockerCiPrototypeC
         configureBasicAuth(configuration, environment);
     }
 
-    private void configureBasicAuth(DockerCiPrototypeConfiguration config, Environment environment) {
+    private void configureBasicAuth(ConJobConfiguration config, Environment environment) {
         if (Objects.nonNull(config.getUsername()) && Objects.nonNull(config.getPassword())) {
             environment.jersey().register(new AuthDynamicFeature(
                     new BasicCredentialAuthFilter.Builder<UserPrincipal>()
@@ -69,7 +69,7 @@ public class DockerCiPrototypeApplication extends Application<DockerCiPrototypeC
         }
     }
 
-    private void configureAdminEnv(DockerCiPrototypeConfiguration config, AdminEnvironment adminEnv) {
+    private void configureAdminEnv(ConJobConfiguration config, AdminEnvironment adminEnv) {
         if (Objects.nonNull(config.getAdminUsername()) && Objects.nonNull(config.getAdminPassword())) {
             adminEnv.setSecurityHandler(
                     new AdminConstraintSecurityHandler(

@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class DockerCiPrototypeConfiguration extends Configuration {
+public class ConJobConfiguration extends Configuration {
     private String adminUsername;
     private String adminPassword;
     private String username;

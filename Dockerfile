@@ -2,6 +2,6 @@
 FROM openjdk:11
 
 RUN mkdir /opt/docker-ci-prototype/
-COPY build/install/docker-ci-prototype /opt/docker-ci-prototype
+COPY build/install/ConJob /opt/ConJob
 COPY config.yml /opt/app/config.yml
-CMD ["/opt/docker-ci-prototype/bin/docker-ci-prototype", "server", "/opt/app/config.yml"]
+CMD ["/opt/ConJob/bin/ConJob", "server", "/opt/app/config.yml"]

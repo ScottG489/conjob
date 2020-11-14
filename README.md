@@ -1,4 +1,4 @@
-# docker-ci-prototype
+# ConJob
 ![CI](https://github.com/ScottG489/docker-ci-prototype/workflows/CI/badge.svg)
 
 ## Core philosophy
