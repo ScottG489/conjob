@@ -2,7 +2,7 @@
 ![CI](https://github.com/ScottG489/conjob/workflows/CI/badge.svg)
 
 ## Usage
-It's recommended to run **ConJob** using docker but it can also be built then run from source
+It's recommended to run **ConJob** using docker but it can also be built then run from source.
 ## Docker
 ```shell script
 docker run -it -v /var/run/docker.sock:/var/run/docker.sock \
@@ -20,14 +20,48 @@ git clone git@github.com:ScottG489/conjob.git && cd conjob
 - Statelessness
 
 ## Development
-To fully test your changes run `./test.sh` at the root of the project. However, first make sure to change the file locations of the secrets to your actual locations.
+### Building
+You can build and run unit tests using the following:
+```shell script
+./gradlew build unitTest
+```
 
-Note that you'll need to comment out the `git clone` in `run.sh` otherwise it will fail since you've mounted a directory where it will attempt to clone to. You'll also probably want to comment out all of the prod deploy steps unless you really intend to deploy to prod from your local workstation.
+### Installing and running within your project
+You can install the server into your local project then run it using the following:
+```shell script
+./gradlew install && ./build/install/ConJob/bin/ConJob server config.yml
+```
+
+### Running acceptance tests
+After running the server locally you can run acceptance tests against it using the following:
+```shell script
+./gradlew acceptanceTest
+```
+
+### Complete build testing
+To fully test your changes run `./test.sh` at the root of the project. However, first make
+sure to change the file locations of the secrets to your actual locations.
+
+This script runs the complete build, publish, infrastructure provisioning, and deployment to
+the test environment. It then runs the acceptance tests against the deployed service before
+then tearing the environment down. This allows you to get a very high degree of certainty
+that your changes will deploy successfully once pushed.
+
+Note that you'll need to comment out the `git clone` in `infra/build/run.sh` otherwise it
+will fail since you've mounted a directory where it will attempt to clone to.
+You'll also probably want to comment out all the prod deploy steps unless you really
+intend to deploy to prod from your local workstation.
 
 ### Creating alt/bootstrap server
-In order for the service to deploy itself there needs to be a service already running it can build on.
-Otherwise, it will shut itself down mid-deploy. In order to create this alternate server, run the same command
-above but change the docker build directory to `infra/alt-env/build`.
+The **ConJob** project uses **ConJob** itself as a CI server. This means that in order to build
+the project you need an initial **ConJob** server running. 
+In order to create this alternate/bootstrap server, edit `./test.sh` and change
+`docker build infra/build` to `docker build run infra/alt-env/build`.
+
+The reason this is needed is because as part of it's deploy the server shuts itself down.
+Although the build container will continue to run, the server will not return the build's
+output and we'll have no logs. At some point this will be replace by a
+[blue-green deployment](https://en.wikipedia.org/wiki/Blue-green_deployment).
 
 ### Development troubleshooting
 ```
