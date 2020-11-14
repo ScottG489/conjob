@@ -29,7 +29,7 @@
   # TODO:   because it needs to be installed via pip (python2) which was a pain to install
   # TODO: I'm not sure why I need to manually pull here but it doesn't seem to pick up the latest
   # TODO:   change otherwise.
-  - name: Run docker-ci-prototype container
+  - name: Run ConJob container
     become: yes
     # TODO: It isn't ideal that we silence output here because some could be useful to know. We should
     # TODO:   try using a docker env file (--env-file) instead.

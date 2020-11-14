@@ -1,5 +1,5 @@
 ---
-container_name: docker-ci-prototype
-image_name: scottg489/docker-ci-prototype:latest
+container_name: conjob
+image_name: scottg489/conjob:latest
 adminUsername: "{{ lookup('env', '_ADMIN_USERNAME') }}"
 adminPassword: "{{ lookup('env', '_ADMIN_PASSWORD') }}"

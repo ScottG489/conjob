@@ -37,8 +37,8 @@ build_push_application() {
 
   ./gradlew --info build unitTest install
 
-  docker build -t scottg489/docker-ci-prototype:latest .
-  docker push scottg489/docker-ci-prototype:latest
+  docker build -t scottg489/conjob:latest .
+  docker push scottg489/conjob:latest
 }
 
 tf_backend_init() {
