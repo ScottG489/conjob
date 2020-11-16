@@ -1,4 +1,5 @@
 domain_name = "conjob-test.io"
+subdomain_name = "api"
 instance_type = "t2.small"
 spot_type = "one-time"
 spot_price = "0.008"

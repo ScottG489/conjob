@@ -20,6 +20,7 @@ module "helpers_instance_ssh" {
 module "conjob" {
   source = "./modules/conjob_core"
   domain_name = var.domain_name
+  subdomain_name = var.subdomain_name
   public_ip = module.helpers_instance_ssh.public_ip
 }
 

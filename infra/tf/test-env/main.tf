@@ -16,6 +16,7 @@ module "helpers_spot_instance_ssh" {
 module "conjob" {
   source = "../modules/conjob_core"
   domain_name = "${random_id.name_prefix.hex}.io"
+  subdomain_name = var.subdomain_name
   public_ip = module.helpers_spot_instance_ssh.public_ip
 }
 
