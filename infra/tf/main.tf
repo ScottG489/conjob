@@ -5,7 +5,7 @@ provider "aws" {
 terraform {
   backend "s3" {
     bucket = "tfstate-conjob"
-    key = "conjob.tfstate"
+    key = "app.tfstate"
     region = "us-west-2"
   }
 }
