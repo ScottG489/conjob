@@ -16,8 +16,8 @@ DOCKER_CONFIG_CONTENTS_BASE64=$(base64 ~/.docker/config.json | tr -d '\n') ;
 [[ -n $MAINKEYPAIR_CONTENTS_BASE64 ]]
 [[ -n $DOCKER_CONFIG_CONTENTS_BASE64 ]]
 
-docker build infra/build -t simple-ci-test && \
+docker build infra/build -t conjob-build-test && \
   docker run -it \
   --runtime=sysbox-runc \
   --volume "$PWD:/opt/build/conjob" \
-  simple-ci-test '{"ID_RSA": "'"$ID_RSA_CONTENTS_BASE64"'", "AWS_CREDENTIALS": "'"$AWS_CREDENTIALS_CONTENTS_BASE64"'", "MAIN_KEY_PAIR": "'"$MAINKEYPAIR_CONTENTS_BASE64"'", "DOCKER_CONFIG": "'"$DOCKER_CONFIG_CONTENTS_BASE64"'"}'
+  conjob-build-test '{"ID_RSA": "'"$ID_RSA_CONTENTS_BASE64"'", "AWS_CREDENTIALS": "'"$AWS_CREDENTIALS_CONTENTS_BASE64"'", "MAIN_KEY_PAIR": "'"$MAINKEYPAIR_CONTENTS_BASE64"'", "DOCKER_CONFIG": "'"$DOCKER_CONFIG_CONTENTS_BASE64"'"}'
