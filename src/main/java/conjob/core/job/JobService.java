@@ -96,7 +96,7 @@ public class JobService {
 
     private HostConfig getHostConfig(String secretsVolumeName) throws DockerException, InterruptedException {
         HostConfig.Builder builder = HostConfig.builder()
-                .appendBinds("/var/run/docker.sock:/var/run/docker.sock");
+                .runtime("sysbox-runc");
 
         dockerClient.listVolumes().volumes().stream()
                 .filter(volume -> volume.name().equals(secretsVolumeName))
