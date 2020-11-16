@@ -46,6 +46,8 @@ public class JobService {
         final ContainerCreation container = containerTry.get();
 
         dockerClient.startContainer(container.id());
+        dockerClient.waitContainer(container.id());
+
         LogStream logs = dockerClient.logs(
                 container.id(),
                 DockerClient.LogsParam.stdout(),
