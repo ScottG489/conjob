@@ -26,46 +26,50 @@ public class BuildResource {
 
     @POST
     @Produces(MediaType.TEXT_PLAIN)
-    public Response handlePost(@NotEmpty @QueryParam("image") String imageName, String input)
+    public Response handlePost(@NotEmpty @QueryParam("image") String imageName, String input,
+                               @QueryParam("pull") @DefaultValue("always") String pullStrategy)
             throws DockerException, InterruptedException {
-        return createResponse(imageName, input);
+        return createResponse(imageName, input, pullStrategy);
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public Response handleJsonPost(@NotEmpty @QueryParam("image") String imageName, String input)
+    public Response handleJsonPost(@NotEmpty @QueryParam("image") String imageName, String input,
+                                   @QueryParam("pull") @DefaultValue("always") String pullStrategy)
             throws DockerException, InterruptedException {
-        return createJsonResponse(imageName, input);
+        return createJsonResponse(imageName, input, pullStrategy);
     }
 
     @GET
     @Produces({MediaType.WILDCARD, MediaType.TEXT_PLAIN})
-    public Response handleGet(@NotEmpty @QueryParam("image") String imageName)
+    public Response handleGet(@NotEmpty @QueryParam("image") String imageName,
+                              @QueryParam("pull") @DefaultValue("always") String pullStrategy)
             throws DockerException, InterruptedException {
-        return createResponse(imageName, null);
+        return createResponse(imageName, null, pullStrategy);
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response handleJsonGet(@NotEmpty @QueryParam("image") String imageName)
+    public Response handleJsonGet(@NotEmpty @QueryParam("image") String imageName,
+                                  @QueryParam("pull") @DefaultValue("always") String pullStrategy)
             throws DockerException, InterruptedException {
-        return createJsonResponse(imageName, null);
+        return createJsonResponse(imageName, null, pullStrategy);
     }
 
-    private Response createResponse(String imageName, String input)
+    private Response createResponse(String imageName, String input, String pullStrategy)
             throws DockerException, InterruptedException {
         log.info("Running image: '{}'", imageName);
-        Job job = jobService.getJob(imageName, input);
+        Job job = jobService.getJob(imageName, input, pullStrategy);
 
         return createResponseWithStatus(job)
                 .entity(job.getJobRun().getOutput())
                 .build();
     }
 
-    private Response createJsonResponse(String imageName, String input)
+    private Response createJsonResponse(String imageName, String input, String pullStrategy)
             throws DockerException, InterruptedException {
         log.info("Running image: '{}'", imageName);
-        Job job = jobService.getJob(imageName, input);
+        Job job = jobService.getJob(imageName, input, pullStrategy);
 
         JobResponse jobResponse = new JobResponseConverter().from(job);
 

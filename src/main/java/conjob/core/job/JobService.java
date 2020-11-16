@@ -12,6 +12,7 @@ import conjob.core.job.config.ConfigUtil;
 import conjob.core.job.model.Job;
 import conjob.core.job.model.JobResult;
 import conjob.core.job.model.JobRun;
+import conjob.core.job.model.PullStrategy;
 
 import java.util.Optional;
 import java.util.concurrent.*;
@@ -30,14 +31,15 @@ public class JobService {
         this.runJobRateLimiter = runJobRateLimiter;
     }
 
-    public Job getJob(String imageName, String input) throws DockerException, InterruptedException {
+    public Job getJob(String imageName, String input, String pullStrategy) throws DockerException, InterruptedException {
         if (runJobRateLimiter.isAtLimit()) {
             return new Job(
                     new JobRun("", -1), JobResult.REJECTED);
         }
 
         final ContainerConfig containerConfig = getContainerConfig(imageName, input);
-        final Optional<ContainerCreation> containerTry = tryContainerCreate(containerConfig);
+        final Optional<ContainerCreation> containerTry =
+                tryContainerCreate(containerConfig, PullStrategy.valueOf(pullStrategy.toUpperCase()));
         if (!containerTry.isPresent()) {
             runJobRateLimiter.decrementRunningJobsCount();
             return new Job(
@@ -108,22 +110,46 @@ public class JobService {
         return builder.build();
     }
 
-    private Optional<ContainerCreation> tryContainerCreate(ContainerConfig containerConfig) throws DockerException, InterruptedException {
+    private Optional<ContainerCreation> tryContainerCreate(ContainerConfig containerConfig, PullStrategy pullStrategy)
+            throws DockerException, InterruptedException {
         Optional<ContainerCreation> container;
 
-        try {
-            container = Optional.of(dockerClient.createContainer(containerConfig));
-        } catch (ImageNotFoundException e) {
-            try {
-                dockerClient.pull(containerConfig.image());
-                container = Optional.of(dockerClient.createContainer(containerConfig));
-            } catch (ImageNotFoundException | ImagePullFailedException e2) {
+        switch (pullStrategy) {
+            case NEVER:
                 try {
                     container = Optional.of(dockerClient.createContainer(containerConfig));
-                } catch (ImageNotFoundException | ImagePullFailedException e3) {
+                } catch (ImageNotFoundException e) {
                     container = Optional.empty();
                 }
-            }
+                break;
+            case ALWAYS:
+                try {
+                    dockerClient.pull(containerConfig.image());
+                    container = Optional.of(dockerClient.createContainer(containerConfig));
+                    // TODO: Need to catch exception from pull failing?
+                } catch (ImageNotFoundException e) {
+                    container = Optional.empty();
+                }
+                break;
+            case ABSENT:
+                try {
+                    container = Optional.of(dockerClient.createContainer(containerConfig));
+                } catch (ImageNotFoundException e) {
+                    try {
+                        dockerClient.pull(containerConfig.image());
+                        container = Optional.of(dockerClient.createContainer(containerConfig));
+                    } catch (ImageNotFoundException | ImagePullFailedException e2) {
+                        try {
+                            // The pull will fail if no tag is specified but it's still pulled so we can run it
+                            container = Optional.of(dockerClient.createContainer(containerConfig));
+                        } catch (ImageNotFoundException | ImagePullFailedException e3) {
+                            container = Optional.empty();
+                        }
+                    }
+                }
+                break;
+            default:
+                container = Optional.empty();
         }
 
         return container;
