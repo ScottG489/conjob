@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-readonly IMAGE_NAME='scottg489/docker-ci-prototype-build:latest'
+readonly IMAGE_NAME='scottg489/conjob-build:latest'
 readonly ID_RSA=$1
 readonly DOCKER_CONFIG=$2
 readonly AWS_CREDENTIALS=$3
