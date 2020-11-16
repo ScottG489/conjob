@@ -12,7 +12,7 @@ jobs:
         env:
           GIT_REPO_URL: 'git@github.com:ScottG489/conjob.git'
           RELATIVE_SUB_DIR: 'infra/build'
-          DOCKER_IMAGE_NAME: 'scottg489/conjob:latest'
+          DOCKER_IMAGE_NAME: 'scottg489/conjob-build:latest'
 
   build_application:
     runs-on: ubuntu-latest
