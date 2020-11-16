@@ -65,8 +65,8 @@ output and we'll have no logs. At some point this will be replace by a
 
 ### Development troubleshooting
 ```
-+ terraform import aws_s3_bucket.backend_bucket tfstate--docker-ci-prototype
-aws_s3_bucket.backend_bucket: Importing from ID "tfstate--docker-ci-prototype"...
++ terraform import aws_s3_bucket.backend_bucket tfstate-conjob
+aws_s3_bucket.backend_bucket: Importing from ID "tfstate-conjob"...
 aws_s3_bucket.backend_bucket: Import prepared!
   Prepared aws_s3_bucket for import
 
