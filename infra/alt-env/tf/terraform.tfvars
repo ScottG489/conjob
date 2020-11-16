@@ -1,4 +1,5 @@
-domain_name = "simple-ci.com"
+domain_name = "conjob.io"
+subdomain_name = "alt"
 instance_type = "t2.small"
 spot_type = "one-time"
 spot_price = "0.008"

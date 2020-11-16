@@ -1,0 +1,5 @@
+---
+container_name: conjob
+image_name: scottg489/conjob:latest
+adminUsername: "{{ lookup('env', '_ADMIN_USERNAME') }}"
+adminPassword: "{{ lookup('env', '_ADMIN_PASSWORD') }}"

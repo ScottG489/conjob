@@ -16,6 +16,10 @@ setup_credentials() {
   readonly MAINKEYPAIR_CONTENTS=$(echo -n $1 | jq -r .MAIN_KEY_PAIR | base64 --decode)
   readonly AWS_CREDENTIALS_CONTENTS=$(echo -n $1 | jq -r .AWS_CREDENTIALS | base64 --decode)
   readonly DOCKER_CONFIG_CONTENTS=$(echo -n $1 | jq -r .DOCKER_CONFIG | base64 --decode)
+  [[ -n $ID_RSA_CONTENTS ]]
+  [[ -n $MAINKEYPAIR_CONTENTS ]]
+  [[ -n $AWS_CREDENTIALS_CONTENTS ]]
+  [[ -n $DOCKER_CONFIG_CONTENTS ]]
 
   printf -- "$ID_RSA_CONTENTS" >/root/.ssh/id_rsa
   printf -- "$MAINKEYPAIR_CONTENTS" >/root/.ssh/mainkeypair.pem
@@ -33,8 +37,8 @@ build_push_application() {
 
   ./gradlew --info build unitTest install
 
-  docker build -t scottg489/docker-ci-prototype:latest .
-  docker push scottg489/docker-ci-prototype:latest
+  docker build -t scottg489/conjob:latest .
+  docker push scottg489/conjob:latest
 }
 
 tf_backend_init() {
@@ -74,11 +78,34 @@ tf_apply() {
   readonly HOSTED_ZONE_DNS_NAME=$(echo var.domain_name | terraform console)
   [[ -n $HOSTED_ZONE_DNS_NAME ]]
   readonly EXISTING_ZONE_ID=$(aws route53 list-hosted-zones-by-name |
-    jq --raw-output --arg name "$HOSTED_ZONE_DNS_NAME" '.HostedZones | .[] | select(.Name == "\($name)") | .Id')
-  terraform import module.simple_ci.aws_route53_zone.r53_zone "$EXISTING_ZONE_ID" || true
+    jq --raw-output --arg name "$HOSTED_ZONE_DNS_NAME" '.HostedZones | .[] | select(.Name == "\($name).") | .Id')
+  terraform import module.conjob.aws_route53_zone.r53_zone "$EXISTING_ZONE_ID" || true
 
   terraform plan
   terraform apply --auto-approve
+}
+
+setup_application_configuration() {
+  set +x
+  [[ -n $1 ]]
+  local ROOT_DIR
+  local BUILD_SCRIPT_JSON_INPUT
+
+  local ADMIN_USERNAME
+  local ADMIN_PASSWORD
+
+  readonly ROOT_DIR=$(get_git_root_dir)
+  readonly BUILD_SCRIPT_JSON_INPUT=$1
+
+  readonly ADMIN_USERNAME=$(echo -n "$BUILD_SCRIPT_JSON_INPUT" | jq -r .ADMIN_USERNAME)
+  readonly ADMIN_PASSWORD=$(echo -n "$BUILD_SCRIPT_JSON_INPUT" | jq -r .ADMIN_PASSWORD)
+  [[ -n $ADMIN_USERNAME ]]
+  [[ -n $ADMIN_PASSWORD ]]
+  echo $ADMIN_PASSWORD
+
+  # These are used in the ansible playbook
+  export _ADMIN_USERNAME=$ADMIN_USERNAME
+  export _ADMIN_PASSWORD=$ADMIN_PASSWORD
 }
 
 ansible_deploy() {

@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "backend_bucket" {
-  bucket = "tfstate-alt-docker-ci-prototype"
+  bucket = "tfstate-alt-conjob"
   force_destroy = true
 
   versioning {

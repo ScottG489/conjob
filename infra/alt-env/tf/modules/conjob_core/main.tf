@@ -8,7 +8,7 @@ resource "aws_route53_zone" "r53_zone" {
 
 resource "aws_route53_record" "r53_record_A_api" {
   zone_id = aws_route53_zone.r53_zone.id
-  name = "alt"
+  name = var.subdomain_name
   records = [
     var.public_ip
   ]

@@ -1,8 +1,8 @@
 - hosts: all
   become: yes
-  #sudo: yes
-  #remote_user: root
   gather_facts: no
+  vars_files:
+    - vars.yml
   pre_tasks:
     - name: Update apt
       raw: apt update && apt update
@@ -25,20 +25,36 @@
       name:
         - docker.io
 
+  - name: Download and install sysbox runtime
+    apt:
+      deb: https://github.com/nestybox/sysbox/releases/download/v0.2.1/sysbox_0.2.1-0.ubuntu-focal_amd64.deb
+
   # TODO: We're going to do it this way because the ansible docker module was a pain to set up
   # TODO:   because it needs to be installed via pip (python2) which was a pain to install
   # TODO: I'm not sure why I need to manually pull here but it doesn't seem to pick up the latest
   # TODO:   change otherwise.
-  - name: Run docker-ci-prototype container
+  - name: Run ConJob container
     become: yes
+    # TODO: It isn't ideal that we silence output here because some could be useful to know. We should
+    # TODO:   try using a docker env file (--env-file) instead.
+    no_log: True
     shell: |
-      docker rm --force docker-ci-prototype
-      docker pull scottg489/docker-ci-prototype:latest
-      docker run --detach -v /var/run/docker.sock:/var/run/docker.sock -p 80:8080 -p 8081:8081 --name docker-ci-prototype scottg489/docker-ci-prototype:latest
+      docker rm --force {{ container_name }}
+      docker pull {{ image_name }}
+      docker run --detach \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        --userns=host \
+        -p 80:8080 \
+        -p 8081:8081 \
+        -e ADMIN_USERNAME={{ adminUsername }} \
+        -e ADMIN_PASSWORD={{ adminPassword }} \
+        --name {{ container_name }} {{ image_name }}
 
   - name: Wait for service to be healthy
     uri:
       url: "http://localhost:8081/healthcheck"
+      url_username: "{{ adminUsername }}"
+      url_password: "{{ adminPassword }}"
       status_code: 200
     register: result
     until: result.status == 200
@@ -49,5 +65,5 @@
   # TODO:   all of the dependencies that this ansible module needs
 #  - name: Create a data container
 #    docker_container:
-#      name: docker-ci-prototype
-#      image: scottg489/docker-ci-prototype
+#      name: conjob
+#      image: scottg489/conjob
