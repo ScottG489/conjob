@@ -65,5 +65,5 @@
   # TODO:   all of the dependencies that this ansible module needs
 #  - name: Create a data container
 #    docker_container:
-#      name: docker-ci-prototype
-#      image: scottg489/docker-ci-prototype
+#      name: conjob
+#      image: scottg489/conjob
