@@ -127,8 +127,13 @@ public class JobService {
                     dockerClient.pull(containerConfig.image());
                     container = Optional.of(dockerClient.createContainer(containerConfig));
                     // TODO: Need to catch exception from pull failing?
-                } catch (ImageNotFoundException e) {
-                    container = Optional.empty();
+                } catch (ImageNotFoundException | ImagePullFailedException e2) {
+                    try {
+                        // The pull will fail if no tag is specified but it's still pulled so we can run it
+                        container = Optional.of(dockerClient.createContainer(containerConfig));
+                    } catch (ImageNotFoundException | ImagePullFailedException e3) {
+                        container = Optional.empty();
+                    }
                 }
                 break;
             case ABSENT:
