@@ -101,7 +101,6 @@ setup_application_configuration() {
   readonly ADMIN_PASSWORD=$(echo -n "$BUILD_SCRIPT_JSON_INPUT" | jq -r .ADMIN_PASSWORD)
   [[ -n $ADMIN_USERNAME ]]
   [[ -n $ADMIN_PASSWORD ]]
-  echo $ADMIN_PASSWORD
 
   # These are used in the ansible playbook
   export _ADMIN_USERNAME=$ADMIN_USERNAME
