@@ -25,7 +25,7 @@ public class BuildResource {
     }
 
     @POST
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces({MediaType.WILDCARD, MediaType.TEXT_PLAIN})
     public Response handlePost(@NotEmpty @QueryParam("image") String imageName, String input,
                                @QueryParam("pull") @DefaultValue("always") String pullStrategy)
             throws DockerException, InterruptedException {
