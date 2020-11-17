@@ -12,10 +12,10 @@ setup_credentials() {
   local AWS_CREDENTIALS_CONTENTS
   local DOCKER_CONFIG_CONTENTS
 
-  readonly ID_RSA_CONTENTS=$(echo -n $1 | jq -r .ID_RSA | base64 --decode)
-  readonly MAINKEYPAIR_CONTENTS=$(echo -n $1 | jq -r .MAIN_KEY_PAIR | base64 --decode)
-  readonly AWS_CREDENTIALS_CONTENTS=$(echo -n $1 | jq -r .AWS_CREDENTIALS | base64 --decode)
-  readonly DOCKER_CONFIG_CONTENTS=$(echo -n $1 | jq -r .DOCKER_CONFIG | base64 --decode)
+  readonly ID_RSA_CONTENTS=$(echo -n "$1" | jq -r .ID_RSA | base64 --decode)
+  readonly MAINKEYPAIR_CONTENTS=$(echo -n "$1" | jq -r .MAIN_KEY_PAIR | base64 --decode)
+  readonly AWS_CREDENTIALS_CONTENTS=$(echo -n "$1" | jq -r .AWS_CREDENTIALS | base64 --decode)
+  readonly DOCKER_CONFIG_CONTENTS=$(echo -n "$1" | jq -r .DOCKER_CONFIG | base64 --decode)
   [[ -n $ID_RSA_CONTENTS ]]
   [[ -n $MAINKEYPAIR_CONTENTS ]]
   [[ -n $AWS_CREDENTIALS_CONTENTS ]]
@@ -101,7 +101,6 @@ setup_application_configuration() {
   readonly ADMIN_PASSWORD=$(echo -n "$BUILD_SCRIPT_JSON_INPUT" | jq -r .ADMIN_PASSWORD)
   [[ -n $ADMIN_USERNAME ]]
   [[ -n $ADMIN_PASSWORD ]]
-  echo $ADMIN_PASSWORD
 
   # These are used in the ansible playbook
   export _ADMIN_USERNAME=$ADMIN_USERNAME
