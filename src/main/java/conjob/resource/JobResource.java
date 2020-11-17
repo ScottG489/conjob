@@ -3,9 +3,9 @@ package conjob.resource;
 import com.spotify.docker.client.exceptions.DockerException;
 import conjob.service.JobService;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.annotation.security.PermitAll;
+import javax.validation.constraints.NotEmpty;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
