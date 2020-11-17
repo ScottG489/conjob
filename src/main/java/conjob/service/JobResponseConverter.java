@@ -18,7 +18,7 @@ public class JobResponseConverter {
     );
 
     public JobResponse from(Job job) {
-        String message = "";
+        String message;
 
         if (job.getResult().equals(JobResult.FINISHED)) {
             message = "Job has concluded. Check job run for outcome.";
