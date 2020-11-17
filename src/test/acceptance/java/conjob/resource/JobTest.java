@@ -29,6 +29,14 @@ public class JobTest {
             .statusCode(200)
             .contentType(MediaType.TEXT_PLAIN)
             .body(containsString(expectContains));
+
+        given()
+            .accept(ContentType.TEXT)
+            .get(JOB_RUN_PATH + "?image=library/hello-world:latest")
+        .then()
+            .statusCode(200)
+            .contentType(MediaType.TEXT_PLAIN)
+            .body(containsString(expectContains));
     }
 
     @Test
