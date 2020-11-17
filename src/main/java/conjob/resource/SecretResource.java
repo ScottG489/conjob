@@ -9,7 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.annotation.security.PermitAll;
-import javax.ws.rs.*;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
@@ -69,7 +71,7 @@ public class SecretResource {
         return sb.toString();
     }
 
-    private ContainerCreation createIntermediaryContainer(String intermediaryContainerName, String intermediaryContainerImage, String  secretsVolumeName, String destinationPath) throws DockerException, InterruptedException {
+    private ContainerCreation createIntermediaryContainer(String intermediaryContainerName, String intermediaryContainerImage, String secretsVolumeName, String destinationPath) throws DockerException, InterruptedException {
         HostConfig hostConfig = HostConfig.builder().binds(secretsVolumeName + ":" + destinationPath).build();
         ContainerConfig containerConfig = ContainerConfig.builder()
                 .hostConfig(hostConfig)

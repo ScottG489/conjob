@@ -2,7 +2,6 @@ package conjob.resource;
 
 import com.spotify.docker.client.exceptions.DockerException;
 import conjob.service.JobService;
-import conjob.core.job.model.Job;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
