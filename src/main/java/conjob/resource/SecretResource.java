@@ -5,6 +5,7 @@ import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.HostConfig;
+import conjob.core.job.config.ConfigUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.security.PermitAll;
@@ -34,7 +35,7 @@ public class SecretResource {
     public Response doPost(@NotEmpty @QueryParam("image") String imageName,
                            String input) throws DockerException, InterruptedException, IOException {
 
-        String secretsVolumeName = translateToVolumeName(imageName);
+        String secretsVolumeName = new ConfigUtil().translateToVolumeName(imageName);
         String intermediaryContainerName = "temp-container";
         String destinationPath = "/temp";
 
@@ -57,18 +58,6 @@ public class SecretResource {
         docker.removeContainer(container.id());
 
         return Response.ok().build();
-    }
-
-    private String translateToVolumeName(String imageName) {
-        int usernameSeparatorIndex = imageName.indexOf('/');
-        int tagSeparatorIndex = imageName.lastIndexOf(':');
-        StringBuilder sb = new StringBuilder(imageName);
-        sb.setCharAt(usernameSeparatorIndex, '-');
-        if (tagSeparatorIndex != -1) {
-            sb.setCharAt(tagSeparatorIndex, '-');
-        }
-
-        return sb.toString();
     }
 
     private ContainerCreation createIntermediaryContainer(String intermediaryContainerName, String intermediaryContainerImage, String secretsVolumeName, String destinationPath) throws DockerException, InterruptedException {
