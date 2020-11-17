@@ -42,7 +42,7 @@ public class JobService {
         final ContainerConfig containerConfig = getContainerConfig(imageName, input);
         final Optional<ContainerCreation> containerTry =
                 tryContainerCreate(containerConfig, PullStrategy.valueOf(pullStrategy.toUpperCase()));
-        if (!containerTry.isPresent()) {
+        if (containerTry.isEmpty()) {
             runJobRateLimiter.decrementRunningJobsCount();
             Job job = new Job(new JobRun("", -1), JobResult.NOT_FOUND);
             return createResponseFrom(job);
@@ -85,7 +85,7 @@ public class JobService {
         final ContainerConfig containerConfig = getContainerConfig(imageName, input);
         final Optional<ContainerCreation> containerTry =
                 tryContainerCreate(containerConfig, PullStrategy.valueOf(pullStrategy.toUpperCase()));
-        if (!containerTry.isPresent()) {
+        if (containerTry.isEmpty()) {
             runJobRateLimiter.decrementRunningJobsCount();
             Job job = new Job(new JobRun("", -1), JobResult.NOT_FOUND);
             return createJsonResponseFrom(job);
