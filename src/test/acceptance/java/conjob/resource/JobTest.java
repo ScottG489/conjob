@@ -8,8 +8,7 @@ import javax.ws.rs.core.MediaType;
 
 import static conjob.util.RestAssuredUtil.configTest;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 public class JobTest {
     private static final String JOB_RUN_PATH = "/job/run";
@@ -21,14 +20,14 @@ public class JobTest {
 
     @Test
     public void getPlainTextResponse() {
-        String expectContains = "Hello from Docker!";
+        String expectStartsWith = "\nHello from Docker!";
 
         given()
             .get(JOB_RUN_PATH + "?image=library/hello-world:latest")
         .then()
             .statusCode(200)
             .contentType(MediaType.TEXT_PLAIN)
-            .body(containsString(expectContains));
+            .body(startsWith(expectStartsWith));
 
         given()
             .accept(ContentType.TEXT)
@@ -36,7 +35,7 @@ public class JobTest {
         .then()
             .statusCode(200)
             .contentType(MediaType.TEXT_PLAIN)
-            .body(containsString(expectContains));
+            .body(containsString(expectStartsWith));
     }
 
     @Test
