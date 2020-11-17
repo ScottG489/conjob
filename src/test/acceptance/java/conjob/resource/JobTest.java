@@ -11,7 +11,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
-public class BuildTest {
+public class JobTest {
     private static final String JOB_RUN_PATH = "/job/run";
 
     @Before
