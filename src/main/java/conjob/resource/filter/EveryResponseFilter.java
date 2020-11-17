@@ -1,4 +1,4 @@
-package conjob;
+package conjob.resource.filter;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;

@@ -1,4 +1,4 @@
-package conjob;
+package conjob.resource.auth;
 
 import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.basic.BasicCredentials;
@@ -8,11 +8,11 @@ import org.eclipse.jetty.util.security.Password;
 import java.util.Objects;
 import java.util.Optional;
 
-class BasicAuthenticator implements Authenticator<BasicCredentials, AbstractLoginService.UserPrincipal> {
+public class BasicAuthenticator implements Authenticator<BasicCredentials, AbstractLoginService.UserPrincipal> {
     private final String username;
     private final String password;
 
-    BasicAuthenticator(String username, String password) {
+    public BasicAuthenticator(String username, String password) {
         this.username = username;
         this.password = password;
     }

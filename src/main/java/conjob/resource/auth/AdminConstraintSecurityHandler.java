@@ -1,4 +1,4 @@
-package conjob;
+package conjob.resource.auth;
 
 import org.eclipse.jetty.security.AbstractLoginService;
 import org.eclipse.jetty.security.ConstraintMapping;

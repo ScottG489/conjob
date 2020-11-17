@@ -1,4 +1,4 @@
-package conjob.resource.convert;
+package conjob.service;
 
 import conjob.api.JobResponse;
 import conjob.api.JobResultResponse;
@@ -22,7 +22,7 @@ public class JobResponseConverter {
 
         if (job.getResult().equals(JobResult.FINISHED)) {
             message = "Job has concluded. Check job run for outcome.";
-        } else if (job.getResult().equals(JobResult.NOT_FOUND)){
+        } else if (job.getResult().equals(JobResult.NOT_FOUND)) {
             message = "Image not found.";
         } else if (job.getResult().equals(JobResult.KILLED)) {
             message = "Job exceeded maximum allowed duration.";
