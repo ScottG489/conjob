@@ -14,10 +14,10 @@ import javax.ws.rs.core.Response;
 @Path("/job/run")
 @PermitAll
 @Slf4j
-public class BuildResource {
+public class JobResource {
     private final JobService jobService;
 
-    public BuildResource(JobService jobService) {
+    public JobResource(JobService jobService) {
         this.jobService = jobService;
     }
 
