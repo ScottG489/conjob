@@ -138,10 +138,14 @@ run_tests() {
 
   cd "$ROOT_DIR"
 
+  # Acceptance test configuration
   echo "baseUri=http://${PUBLIC_IP}:80" >"$ROOT_DIR/src/test/acceptance/resource/config.properties"
   echo "adminBaseUri=http://${PUBLIC_IP}:8081" >>"$ROOT_DIR/src/test/acceptance/resource/config.properties"
   echo "adminUsername=${_ADMIN_USERNAME}" >>"$ROOT_DIR/src/test/acceptance/resource/config.properties"
   echo "adminPassword=${_ADMIN_PASSWORD}" >>"$ROOT_DIR/src/test/acceptance/resource/config.properties"
+  # Performance test configuration
+  echo "baseUri=http://${PUBLIC_IP}:80" >"$ROOT_DIR/src/test/performance/resources/config.properties"
+  echo "adminBaseUri=http://${PUBLIC_IP}:8081" >>"$ROOT_DIR/src/test/performance/resources/config.properties"
 
-  ./gradlew --info acceptanceTest
+  ./gradlew --info acceptanceTest performanceTest
 }

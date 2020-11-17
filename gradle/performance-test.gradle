@@ -1,0 +1,20 @@
+sourceSets {
+    gatling {
+        scala.srcDirs = ["src/test/performance/scala/simulations"]
+        resources.srcDirs = ["src/test/performance/resources"]
+        java.srcDirs = ['src/test/performance/java']
+    }
+}
+
+gatling {
+    logLevel = 'INFO'
+}
+
+task performanceTest(type: Test) {
+    finalizedBy gatlingRun
+}
+gatlingRun.outputs.upToDateWhen { false }
+
+dependencies {
+    testImplementation 'io.gatling:gatling-app:3.3.1'
+}

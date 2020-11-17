@@ -1,7 +1,9 @@
 plugins {
     id 'java'
+    id 'scala'
     id 'application'
     id 'org.ajoberstar.grgit' version '4.0.2'
+    id "com.github.lkishalmi.gatling" version "3.3.4"
 }
 
 mainClassName = 'conjob.ConJobApplication'
@@ -20,6 +22,7 @@ dependencies {
 apply from: 'gradle/version.gradle'
 apply from: 'gradle/unit-test.gradle'
 apply from: 'gradle/acceptance-test.gradle'
+apply from: 'gradle/performance-test.gradle'
 
 repositories {
     jcenter()
