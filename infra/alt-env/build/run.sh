@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Start the docker daemon. This is necessary when using the sysbox-runc container runtime rather than moutning docker.sock
+# Start the docker daemon. This is necessary when using the sysbox-runc container runtime rather than mounting docker.sock
 dockerd > /var/log/dockerd.log 2>&1 &
 sleep 3
 

@@ -7,7 +7,7 @@
 - Statelessness
 
 ## Usage
-It's recommended to run **ConJob** using docker but it can also be built then run from source.
+It's recommended to run **ConJob** using docker, but it can also be built then run from source.
 ## Docker
 ```shell script
 docker run -it -v /var/run/docker.sock:/var/run/docker.sock \
@@ -33,7 +33,7 @@ You can install the server into your local project then run it using the followi
 ```
 
 ### Running acceptance tests
-After running the server locally you can run acceptance tests against it using the following:
+After running the server locally you can run acceptance tests against it with the following:
 ```shell script
 ./gradlew acceptanceTest
 ```
@@ -60,7 +60,7 @@ In order to create this alternate/bootstrap server, edit `./test.sh` and change
 
 The reason this is needed is because as part of it's deploy the server shuts itself down.
 Although the build container will continue to run, the server will not return the build's
-output and we'll have no logs. At some point this will be replace by a
+output, and we'll have no logs. At some point this will be replaced by a
 [blue-green deployment](https://en.wikipedia.org/wiki/Blue-green_deployment).
 
 ### Development troubleshooting
