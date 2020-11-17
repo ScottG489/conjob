@@ -25,7 +25,7 @@ public class AdminConstraintSecurityHandler extends ConstraintSecurityHandler {
         setLoginService(new AdminLoginService(userName, password));
     }
 
-    public class AdminLoginService extends AbstractLoginService {
+    public static class AdminLoginService extends AbstractLoginService {
 
         private final UserPrincipal adminPrincipal;
         private final String adminUserName;
