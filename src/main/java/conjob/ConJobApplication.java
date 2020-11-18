@@ -6,6 +6,8 @@ import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import conjob.core.job.RunJobRateLimiter;
 import conjob.healthcheck.VersionCheck;
+import conjob.resource.GlobalErrorHandler;
+import conjob.resource.GlobalExceptionMapper;
 import conjob.resource.JobResource;
 import conjob.resource.SecretResource;
 import conjob.resource.auth.AdminConstraintSecurityHandler;
@@ -54,6 +56,9 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         final DockerClient docker = DefaultDockerClient.fromEnv().build();
         environment.jersey().register(new JobResource(new JobService(docker, new RunJobRateLimiter())));
         environment.jersey().register(new SecretResource(docker));
+
+        environment.jersey().register(new GlobalExceptionMapper());
+        environment.getApplicationContext().setErrorHandler(new GlobalErrorHandler());
 
         environment.healthChecks().register("version", new VersionCheck());
 
