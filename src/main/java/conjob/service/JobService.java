@@ -50,7 +50,7 @@ public class JobService {
         final ContainerCreation container = containerTry.get();
 
         dockerClient.startContainer(container.id());
-        dockerClient.waitContainer(container.id());
+        waitForJob(dockerClient, container.id());
 
         LogStream logs = dockerClient.logs(
                 container.id(),
@@ -58,7 +58,7 @@ public class JobService {
                 DockerClient.LogsParam.stderr(),
                 DockerClient.LogsParam.follow());
 
-        String output = waitForJobRun(container.id(), logs);
+        String output = logs.readFully();
 
         // TODO: Use exit code from waitContainer instead
         Long exitCode = dockerClient.inspectContainer(container.id()).state().exitCode();
@@ -93,7 +93,7 @@ public class JobService {
         final ContainerCreation container = containerTry.get();
 
         dockerClient.startContainer(container.id());
-        dockerClient.waitContainer(container.id());
+        waitForJob(dockerClient, container.id());
 
         LogStream logs = dockerClient.logs(
                 container.id(),
@@ -101,7 +101,7 @@ public class JobService {
                 DockerClient.LogsParam.stderr(),
                 DockerClient.LogsParam.follow());
 
-        String output = waitForJobRun(container.id(), logs);
+        String output = logs.readFully();
 
         // TODO: Use exit code from waitContainer instead
         Long exitCode = dockerClient.inspectContainer(container.id()).state().exitCode();
@@ -131,17 +131,19 @@ public class JobService {
                 .build();
     }
 
-    private String waitForJobRun(String containerId, LogStream logs) throws InterruptedException, DockerException {
-        String output = "";
+    private Long waitForJob(DockerClient dockerClient, String containerId) throws InterruptedException, DockerException {
+        Long exitStatusCode;
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<String> future = executor.submit(new ReadLogsFullyCallable(logs));
+        Future<Long> future = executor.submit(new WaitForContainer(dockerClient, containerId));
         try {
-            output = future.get(30, TimeUnit.MINUTES);
+            exitStatusCode = future.get(30, TimeUnit.MINUTES);
         } catch (ExecutionException | TimeoutException ignored) {
             dockerClient.stopContainer(containerId, 60);
+            // The container could finish naturally before the job timeout but before the stop-to-kill timeout.
+            exitStatusCode = dockerClient.waitContainer(containerId).statusCode();
         }
         executor.shutdownNow();
-        return output;
+        return exitStatusCode;
     }
 
     private ContainerConfig getContainerConfig(String imageName, String input) throws DockerException, InterruptedException {
@@ -242,16 +244,18 @@ public class JobService {
         return responseBuilder;
     }
 
-    static class ReadLogsFullyCallable implements Callable<String> {
-        private final LogStream logStream;
+    static class WaitForContainer implements Callable<Long> {
+        private final DockerClient dockerClient;
+        private final String containerId;
 
-        ReadLogsFullyCallable(LogStream logStream) {
-            this.logStream = logStream;
+        public WaitForContainer(DockerClient dockerClient, String containerId) {
+            this.dockerClient = dockerClient;
+            this.containerId = containerId;
         }
 
         @Override
-        public String call() {
-            return logStream.readFully();
+        public Long call() throws DockerException, InterruptedException {
+            return dockerClient.waitContainer(containerId).statusCode();
         }
     }
 }
