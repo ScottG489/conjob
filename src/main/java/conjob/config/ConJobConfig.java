@@ -6,4 +6,5 @@ import lombok.Data;
 public class ConJobConfig {
     private AdminConfig admin;
     private AuthConfig auth;
+    private JobConfig job;
 }

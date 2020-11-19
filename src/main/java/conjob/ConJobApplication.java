@@ -6,6 +6,7 @@ import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import conjob.config.AdminConfig;
 import conjob.config.AuthConfig;
+import conjob.config.JobConfig;
 import conjob.core.job.RunJobRateLimiter;
 import conjob.healthcheck.VersionCheck;
 import conjob.resource.GlobalErrorHandler;
@@ -56,7 +57,7 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         environment.jersey().register(new EveryResponseFilter());
 
         final DockerClient docker = DefaultDockerClient.fromEnv().build();
-        environment.jersey().register(new JobResource(new JobService(docker, new RunJobRateLimiter())));
+        environment.jersey().register(createJobResource(configuration.getConJob().getJob().getLimit(), docker));
         environment.jersey().register(new SecretResource(docker));
 
         environment.jersey().register(new GlobalExceptionMapper());
@@ -67,6 +68,10 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         configureAdminEnv(configuration.getConJob().getAdmin(), environment.admin());
 
         configureBasicAuth(configuration.getConJob().getAuth(), environment);
+    }
+
+    private JobResource createJobResource(JobConfig.LimitConfig limitConfig, DockerClient docker) {
+        return new JobResource(new JobService(docker, new RunJobRateLimiter(limitConfig)));
     }
 
     private void configureBasicAuth(AuthConfig config, Environment environment) {

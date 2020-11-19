@@ -5,6 +5,12 @@ conJob:
     auth:
         username: ${USERNAME:-}
         password: ${PASSWORD:-}
+    job:
+        limit:
+            maxGlobalRequestsPerSecond: ${JOB_LIMIT_REQ:-5}
+            maxTimeoutMinutes: ${JOB_LIMIT_TIMEOUT:-30}
+            maxConcurrentRuns: ${JOB_LIMIT_CONCURRENT:-5}
+            maxKillTimeoutSeconds: ${JOB_LIMIT_KILL_TIMEOUT:-60}
 
 server:
     registerDefaultExceptionMappers: false
