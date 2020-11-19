@@ -1,6 +1,10 @@
-adminUsername: ${ADMIN_USERNAME:-}
-adminPassword: ${ADMIN_PASSWORD:-}
-username: ${USERNAME:-}
-password: ${PASSWORD:-}
+conJob:
+    admin:
+        username: ${ADMIN_USERNAME:-}
+        password: ${ADMIN_PASSWORD:-}
+    auth:
+        username: ${USERNAME:-}
+        password: ${PASSWORD:-}
+
 server:
     registerDefaultExceptionMappers: false

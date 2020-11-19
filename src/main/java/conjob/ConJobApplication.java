@@ -4,6 +4,8 @@ import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
+import conjob.config.AdminConfig;
+import conjob.config.AuthConfig;
 import conjob.core.job.RunJobRateLimiter;
 import conjob.healthcheck.VersionCheck;
 import conjob.resource.GlobalErrorHandler;
@@ -62,12 +64,12 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
 
         environment.healthChecks().register("version", new VersionCheck());
 
-        configureAdminEnv(configuration, environment.admin());
+        configureAdminEnv(configuration.getConJob().getAdmin(), environment.admin());
 
-        configureBasicAuth(configuration, environment);
+        configureBasicAuth(configuration.getConJob().getAuth(), environment);
     }
 
-    private void configureBasicAuth(ConJobConfiguration config, Environment environment) {
+    private void configureBasicAuth(AuthConfig config, Environment environment) {
         if (Objects.nonNull(config.getUsername()) && Objects.nonNull(config.getPassword())) {
             environment.jersey().register(new AuthDynamicFeature(
                     new BasicCredentialAuthFilter.Builder<UserPrincipal>()
@@ -77,12 +79,12 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         }
     }
 
-    private void configureAdminEnv(ConJobConfiguration config, AdminEnvironment adminEnv) {
-        if (Objects.nonNull(config.getAdminUsername()) && Objects.nonNull(config.getAdminPassword())) {
+    private void configureAdminEnv(AdminConfig config, AdminEnvironment adminEnv) {
+        if (Objects.nonNull(config.getUsername()) && Objects.nonNull(config.getPassword())) {
             adminEnv.setSecurityHandler(
                     new AdminConstraintSecurityHandler(
-                            config.getAdminUsername(),
-                            config.getAdminPassword()));
+                            config.getUsername(),
+                            config.getPassword()));
         }
     }
 }
