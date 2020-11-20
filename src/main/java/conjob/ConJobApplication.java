@@ -57,7 +57,7 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         environment.jersey().register(new EveryResponseFilter());
 
         final DockerClient docker = DefaultDockerClient.fromEnv().build();
-        environment.jersey().register(createJobResource(configuration.getConJob().getJob().getLimit(), docker));
+        environment.jersey().register(createJobResource(configuration.getConjob().getJob().getLimit(), docker));
         environment.jersey().register(new SecretResource(docker));
 
         environment.jersey().register(new GlobalExceptionMapper());
@@ -65,9 +65,9 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
 
         environment.healthChecks().register("version", new VersionCheck());
 
-        configureAdminEnv(configuration.getConJob().getAdmin(), environment.admin());
+        configureAdminEnv(configuration.getConjob().getAdmin(), environment.admin());
 
-        configureBasicAuth(configuration.getConJob().getAuth(), environment);
+        configureBasicAuth(configuration.getConjob().getAuth(), environment);
     }
 
     private JobResource createJobResource(JobConfig.LimitConfig limitConfig, DockerClient docker) {

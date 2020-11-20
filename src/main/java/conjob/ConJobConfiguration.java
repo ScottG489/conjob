@@ -8,5 +8,5 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class ConJobConfiguration extends Configuration {
-    private ConJobConfig conJob;
+    private ConJobConfig conjob;
 }
