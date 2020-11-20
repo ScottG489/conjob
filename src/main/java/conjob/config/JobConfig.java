@@ -9,8 +9,8 @@ public class JobConfig {
     @Data
     public static class LimitConfig {
         private Long maxGlobalRequestsPerSecond;
-        private Long maxTimeoutMinutes;
         private Long maxConcurrentRuns;
+        private Long maxTimeoutMinutes;
         private Long maxKillTimeoutSeconds;
     }
 }
