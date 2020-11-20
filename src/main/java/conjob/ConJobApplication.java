@@ -13,6 +13,7 @@ import conjob.resource.GlobalErrorHandler;
 import conjob.resource.GlobalExceptionMapper;
 import conjob.resource.JobResource;
 import conjob.resource.SecretResource;
+import conjob.resource.admin.task.ConfigTask;
 import conjob.resource.auth.AdminConstraintSecurityHandler;
 import conjob.resource.auth.BasicAuthenticator;
 import conjob.resource.filter.EveryResponseFilter;
@@ -59,6 +60,8 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         final DockerClient docker = DefaultDockerClient.fromEnv().build();
         environment.jersey().register(createJobResource(configuration.getConjob().getJob().getLimit(), docker));
         environment.jersey().register(new SecretResource(docker));
+
+        environment.admin().addTask(new ConfigTask(configuration));
 
         environment.jersey().register(new GlobalExceptionMapper());
         environment.getApplicationContext().setErrorHandler(new GlobalErrorHandler());
