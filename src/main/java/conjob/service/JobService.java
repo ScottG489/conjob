@@ -8,6 +8,7 @@ import com.spotify.docker.client.exceptions.ImagePullFailedException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.HostConfig;
+import conjob.config.JobConfig;
 import conjob.core.job.RunJobRateLimiter;
 import conjob.core.job.config.ConfigUtil;
 import conjob.core.job.model.Job;
@@ -25,15 +26,19 @@ public class JobService {
 
     private final DockerClient dockerClient;
     private final RunJobRateLimiter runJobRateLimiter;
+    private final JobConfig.LimitConfig limitConfig;
 
     public JobService(
             DockerClient dockerClient,
-            RunJobRateLimiter runJobRateLimiter) {
+            RunJobRateLimiter runJobRateLimiter, JobConfig.LimitConfig limitConfig) {
         this.dockerClient = dockerClient;
         this.runJobRateLimiter = runJobRateLimiter;
+        this.limitConfig = limitConfig;
     }
 
     public Response createResponse(String imageName, String input, String pullStrategy) throws DockerException, InterruptedException {
+        long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
+        int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
         if (runJobRateLimiter.isAtLimit()) {
             Job job = new Job(new JobRun("", -1), JobResult.REJECTED);
             return createResponseFrom(job);
@@ -50,7 +55,7 @@ public class JobService {
         final ContainerCreation container = containerTry.get();
 
         dockerClient.startContainer(container.id());
-        waitForJob(dockerClient, container.id());
+        waitForJob(dockerClient, container.id(), maxTimeoutSeconds, maxKillTimeoutSeconds);
 
         LogStream logs = dockerClient.logs(
                 container.id(),
@@ -77,6 +82,8 @@ public class JobService {
     }
 
     public Response createJsonResponse(String imageName, String input, String pullStrategy) throws DockerException, InterruptedException {
+        long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
+        int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
         if (runJobRateLimiter.isAtLimit()) {
             Job job = new Job(new JobRun("", -1), JobResult.REJECTED);
             return createJsonResponseFrom(job);
@@ -93,7 +100,7 @@ public class JobService {
         final ContainerCreation container = containerTry.get();
 
         dockerClient.startContainer(container.id());
-        waitForJob(dockerClient, container.id());
+        waitForJob(dockerClient, container.id(), maxTimeoutSeconds, maxKillTimeoutSeconds);
 
         LogStream logs = dockerClient.logs(
                 container.id(),
@@ -131,14 +138,14 @@ public class JobService {
                 .build();
     }
 
-    private Long waitForJob(DockerClient dockerClient, String containerId) throws InterruptedException, DockerException {
+    private Long waitForJob(DockerClient dockerClient, String containerId, long timeoutSeconds, int killTimeoutSeconds) throws InterruptedException, DockerException {
         Long exitStatusCode;
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<Long> future = executor.submit(new WaitForContainer(dockerClient, containerId));
         try {
-            exitStatusCode = future.get(30, TimeUnit.SECONDS);
+            exitStatusCode = future.get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (ExecutionException | TimeoutException ignored) {
-            dockerClient.stopContainer(containerId, 60);
+            dockerClient.stopContainer(containerId, killTimeoutSeconds);
             // The container could finish naturally before the job timeout but before the stop-to-kill timeout.
             exitStatusCode = dockerClient.waitContainer(containerId).statusCode();
         }

@@ -74,7 +74,7 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
     }
 
     private JobResource createJobResource(JobConfig.LimitConfig limitConfig, DockerClient docker) {
-        return new JobResource(new JobService(docker, new RunJobRateLimiter(limitConfig)));
+        return new JobResource(new JobService(docker, new RunJobRateLimiter(limitConfig), limitConfig));
     }
 
     private void configureBasicAuth(AuthConfig config, Environment environment) {
