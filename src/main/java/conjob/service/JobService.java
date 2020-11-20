@@ -136,7 +136,7 @@ public class JobService {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<Long> future = executor.submit(new WaitForContainer(dockerClient, containerId));
         try {
-            exitStatusCode = future.get(30, TimeUnit.MINUTES);
+            exitStatusCode = future.get(30, TimeUnit.SECONDS);
         } catch (ExecutionException | TimeoutException ignored) {
             dockerClient.stopContainer(containerId, 60);
             // The container could finish naturally before the job timeout but before the stop-to-kill timeout.

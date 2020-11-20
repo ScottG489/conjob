@@ -10,7 +10,7 @@ public class JobConfig {
     public static class LimitConfig {
         private Long maxGlobalRequestsPerSecond;
         private Long maxConcurrentRuns;
-        private Long maxTimeoutMinutes;
+        private Long maxTimeoutSeconds;
         private Long maxKillTimeoutSeconds;
     }
 }

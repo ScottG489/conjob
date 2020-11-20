@@ -20,8 +20,8 @@ public class ConfigTask extends Task {
                     value -> config.getConjob().getJob().getLimit().setMaxGlobalRequestsPerSecond(value)),
             Map.entry("conjob.job.limit.maxConcurrentRuns",
                     value -> config.getConjob().getJob().getLimit().setMaxConcurrentRuns(value)),
-            Map.entry("conjob.job.limit.maxTimeoutMinutes",
-                    value -> config.getConjob().getJob().getLimit().setMaxTimeoutMinutes(value)),
+            Map.entry("conjob.job.limit.maxTimeoutSeconds",
+                    value -> config.getConjob().getJob().getLimit().setMaxTimeoutSeconds(value)),
             Map.entry("conjob.job.limit.maxKillTimeoutSeconds",
                     value -> config.getConjob().getJob().getLimit().setMaxKillTimeoutSeconds(value))
     );
