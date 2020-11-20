@@ -58,12 +58,12 @@ public class JobTest {
         given()
             .accept(ContentType.JSON)
             .get(JOB_RUN_PATH + "?image=local/does_not_exist:latest")
-       .then()
-           .statusCode(404)
-           .contentType(MediaType.APPLICATION_JSON)
-           .body("jobRun.output", containsString(""))
-           .body("jobRun.exitCode", is(-1))
-           .body("result", is("NOT_FOUND"));
+        .then()
+            .statusCode(404)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body("jobRun.output", containsString(""))
+            .body("jobRun.exitCode", is(-1))
+            .body("result", is("NOT_FOUND"));
     }
 
     @Test
@@ -98,7 +98,7 @@ public class JobTest {
         String expectedResponse = "foobar";
 
         given()
-            .post(JOB_RUN_PATH + "?image="+ echoImage)
+            .post(JOB_RUN_PATH + "?image=" + echoImage)
         .then()
             .statusCode(200)
             .contentType(MediaType.TEXT_PLAIN)
@@ -106,7 +106,7 @@ public class JobTest {
 
         given()
             .body("foobar")
-            .post(JOB_RUN_PATH + "?image="+ echoImage)
+            .post(JOB_RUN_PATH + "?image=" + echoImage)
         .then()
             .statusCode(200)
             .contentType(MediaType.TEXT_PLAIN)
@@ -119,7 +119,7 @@ public class JobTest {
 
         given()
             .accept(ContentType.JSON)
-            .post(JOB_RUN_PATH + "?image="+ echoImage)
+            .post(JOB_RUN_PATH + "?image=" + echoImage)
         .then()
             .statusCode(200)
             .contentType(MediaType.APPLICATION_JSON)
@@ -131,7 +131,7 @@ public class JobTest {
         given()
             .accept(ContentType.JSON)
             .body("foobar")
-            .post(JOB_RUN_PATH + "?image="+ echoImage)
+            .post(JOB_RUN_PATH + "?image=" + echoImage)
         .then()
             .statusCode(200)
             .contentType(MediaType.APPLICATION_JSON)
