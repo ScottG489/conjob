@@ -50,7 +50,7 @@ public class JobResource {
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
             throws DockerException, InterruptedException {
-        return createResponse(imageName, null, pullStrategy);
+        return createResponse(imageName, "", pullStrategy);
     }
 
     @GET
@@ -59,7 +59,7 @@ public class JobResource {
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
             throws DockerException, InterruptedException {
-        return createJsonResponse(imageName, null, pullStrategy);
+        return createJsonResponse(imageName, "", pullStrategy);
     }
 
     private Response createResponse(String imageName, String input, String pullStrategy)

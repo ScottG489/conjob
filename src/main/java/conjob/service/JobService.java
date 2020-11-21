@@ -36,67 +36,50 @@ public class JobService {
         this.limitConfig = limitConfig;
     }
 
-    public Response createResponse(String imageName, String input, String pullStrategy) throws DockerException, InterruptedException {
-        long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
-        int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
-        if (runJobRateLimiter.isAtLimit()) {
-            Job job = new Job(new JobRun("", -1), JobResult.REJECTED);
-            return createResponseFrom(job);
-        }
+    public Response createResponse(String imageName) throws DockerException, InterruptedException {
+        return createResponse(imageName, "");
+    }
 
-        final ContainerConfig containerConfig = getContainerConfig(imageName, input);
-        final Optional<ContainerCreation> containerTry =
-                tryContainerCreate(containerConfig, PullStrategy.valueOf(pullStrategy.toUpperCase()));
-        if (containerTry.isEmpty()) {
-            runJobRateLimiter.decrementRunningJobsCount();
-            Job job = new Job(new JobRun("", -1), JobResult.NOT_FOUND);
-            return createResponseFrom(job);
-        }
-        final ContainerCreation container = containerTry.get();
+    public Response createResponse(String imageName, String input) throws DockerException, InterruptedException {
+        return createResponse(imageName, input, PullStrategy.ALWAYS.name());
+    }
 
-        dockerClient.startContainer(container.id());
-        waitForJob(dockerClient, container.id(), maxTimeoutSeconds, maxKillTimeoutSeconds);
-
-        LogStream logs = dockerClient.logs(
-                container.id(),
-                DockerClient.LogsParam.stdout(),
-                DockerClient.LogsParam.stderr(),
-                DockerClient.LogsParam.follow());
-
-        String output = logs.readFully();
-
-        // TODO: Use exit code from waitContainer instead
-        Long exitCode = dockerClient.inspectContainer(container.id()).state().exitCode();
-
-        JobResult jobResult;
-        int SIGKILL = 137;
-        int SIGTERM = 143;
-        if (exitCode == SIGKILL || exitCode == SIGTERM) {
-            jobResult = JobResult.KILLED;
-        } else {
-            jobResult = JobResult.FINISHED;
-        }
-        runJobRateLimiter.decrementRunningJobsCount();
-        Job job = new Job(new JobRun(output, exitCode), jobResult);
+    public Response createResponse(String imageName, String input, String pullStrategyName) throws DockerException, InterruptedException {
+        PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
+        Job job = runJob(imageName, input, pullStrategy);
         return createResponseFrom(job);
     }
 
-    public Response createJsonResponse(String imageName, String input, String pullStrategy) throws DockerException, InterruptedException {
+    public Response createJsonResponse(String imageName) throws DockerException, InterruptedException {
+        return createJsonResponse(imageName, "");
+    }
+
+    public Response createJsonResponse(String imageName, String input) throws DockerException, InterruptedException {
+        return createJsonResponse(imageName, input, PullStrategy.ALWAYS.name());
+    }
+
+    public Response createJsonResponse(String imageName, String input, String pullStrategyName) throws DockerException, InterruptedException {
+        PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
+        Job job = runJob(imageName, input, pullStrategy);
+        return createJsonResponseFrom(job);
+    }
+
+    private Job runJob(String imageName, String input, PullStrategy pullStrategy) throws DockerException, InterruptedException {
         long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
         int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
+
         if (runJobRateLimiter.isAtLimit()) {
-            Job job = new Job(new JobRun("", -1), JobResult.REJECTED);
-            return createJsonResponseFrom(job);
+            return new Job(new JobRun("", -1), JobResult.REJECTED);
         }
 
         final ContainerConfig containerConfig = getContainerConfig(imageName, input);
         final Optional<ContainerCreation> containerTry =
-                tryContainerCreate(containerConfig, PullStrategy.valueOf(pullStrategy.toUpperCase()));
+                tryContainerCreate(containerConfig, pullStrategy);
         if (containerTry.isEmpty()) {
             runJobRateLimiter.decrementRunningJobsCount();
-            Job job = new Job(new JobRun("", -1), JobResult.NOT_FOUND);
-            return createJsonResponseFrom(job);
+            return new Job(new JobRun("", -1), JobResult.NOT_FOUND);
         }
+
         final ContainerCreation container = containerTry.get();
 
         dockerClient.startContainer(container.id());
@@ -121,9 +104,9 @@ public class JobService {
         } else {
             jobResult = JobResult.FINISHED;
         }
+
         runJobRateLimiter.decrementRunningJobsCount();
-        Job job = new Job(new JobRun(output, exitCode), jobResult);
-        return createJsonResponseFrom(job);
+        return new Job(new JobRun(output, exitCode), jobResult);
     }
 
     private Response createResponseFrom(Job job) {
