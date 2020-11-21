@@ -29,8 +29,11 @@ public class SecretResource {
     private static final String INTERMEDIARY_CONTAINER_IMAGE = "tianon/true";
     private final DockerClient docker;
 
-    public SecretResource(DockerClient docker) {
+    public SecretResource(DockerClient docker) throws DockerException, InterruptedException {
         this.docker = docker;
+        if (docker.listImages(DockerClient.ListImagesParam.byName(INTERMEDIARY_CONTAINER_IMAGE)).isEmpty()) {
+            docker.pull(INTERMEDIARY_CONTAINER_IMAGE);
+        }
     }
 
     @POST
