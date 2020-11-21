@@ -8,7 +8,6 @@ import io.restassured.specification.RequestSpecification;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.ws.rs.core.MediaType;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -42,7 +41,7 @@ public class JobLimitTest {
         int maxTimeoutSeconds = 9999;
         int maxKillTimeoutSeconds = 9999;
 
-        setServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
+        Response originalConfigResponse = updateServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
 
         RequestSpecification requestSpec = given()
                 .accept(ContentType.JSON)
@@ -55,13 +54,7 @@ public class JobLimitTest {
         assertThat(Collections.frequency(statusCodes, 503), is(3));
         assertThat(findAllRejectedResponses(responses).count(), is(3L));
 
-        // TODO: Make task endpoint return original config so you can store it and change it back?
-//        given()
-//            .baseUri(adminBaseUri)
-//            .auth().basic(adminUsername, adminPassword)
-//            .post(CONFIG_TASK_PATH + "?conjob.job.limit.maxConcurrentRuns=" + 5)
-//        .then()
-//            .statusCode(200);
+        updateServiceLimitConfig(originalConfigResponse.asString());
     }
 
     @Test
@@ -75,7 +68,7 @@ public class JobLimitTest {
         int maxTimeoutSeconds = 9999;
         int maxKillTimeoutSeconds = 9999;
 
-        setServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
+        Response originalConfigResponse = updateServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
 
         RequestSpecification requestSpec = given()
                 .accept(ContentType.JSON)
@@ -88,13 +81,7 @@ public class JobLimitTest {
         assertThat(Collections.frequency(statusCodes, 503), is(3));
         assertThat(findAllRejectedResponses(responses).count(), is(3L));
 
-        // TODO: Make task endpoint return original config so you can store it and change it back?
-//        given()
-//            .baseUri(adminBaseUri)
-//            .auth().basic(adminUsername, adminPassword)
-//            .post(CONFIG_TASK_PATH + "?conjob.job.limit.maxConcurrentRuns="+ 5)
-//        .then()
-//            .statusCode(200);
+        updateServiceLimitConfig(originalConfigResponse.asString());
     }
 
     @Test
@@ -108,7 +95,7 @@ public class JobLimitTest {
         int maxTimeoutSeconds = 3;
         int maxKillTimeoutSeconds = 10;
 
-        setServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
+        Response originalConfigResponse = updateServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
 
         given()
                 .accept(ContentType.JSON)
@@ -119,16 +106,7 @@ public class JobLimitTest {
             .body("result", is("FINISHED"))
             .body("jobRun.exitCode", is(0));
 
-
-//        int maxTimeoutSeconds = 3;
-
-        // TODO: Make task endpoint return original config so you can store it and change it back?
-//        given()
-//            .baseUri(adminBaseUri)
-//            .auth().basic(adminUsername, adminPassword)
-//            .post(CONFIG_TASK_PATH + "?conjob.job.limit.maxConcurrentRuns="+ 5)
-//        .then()
-//            .statusCode(200);
+        updateServiceLimitConfig(originalConfigResponse.asString());
     }
 
     @Test
@@ -142,7 +120,7 @@ public class JobLimitTest {
         int maxTimeoutSeconds = 3;
         int maxKillTimeoutSeconds = 2;
 
-        setServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
+        Response originalConfigResponse = updateServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
 
         given()
             .accept(ContentType.JSON)
@@ -153,15 +131,7 @@ public class JobLimitTest {
             .body("result", is("KILLED"))
             .body("jobRun.exitCode", is(137));
 
-//        int maxTimeoutSeconds = 3;
-
-        // TODO: Make task endpoint return original config so you can store it and change it back?
-//        given()
-//            .baseUri(adminBaseUri)
-//            .auth().basic(adminUsername, adminPassword)
-//            .post(CONFIG_TASK_PATH + "?conjob.job.limit.maxConcurrentRuns="+ 5)
-//        .then()
-//            .statusCode(200);
+        updateServiceLimitConfig(originalConfigResponse.asString());
     }
 
     private Stream<Response> findAllRejectedResponses(List<Response> responses) {
@@ -170,7 +140,22 @@ public class JobLimitTest {
         });
     }
 
-    private void setServiceLimitConfig(
+    private void updateServiceLimitConfig(String queryParams) {
+        String adminBaseUri = getFromConfig("adminBaseUri");
+        String adminUsername = getFromConfig("adminUsername");
+        String adminPassword = getFromConfig("adminPassword");
+
+        given()
+            .baseUri(adminBaseUri)
+            .auth().basic(adminUsername, adminPassword)
+            .contentType(ContentType.URLENC)
+            .body(queryParams)
+            .post(CONFIG_TASK_PATH)
+        .then()
+            .statusCode(200);
+    }
+
+    private Response updateServiceLimitConfig(
             int maxGlobalRequestsPerSecond,
             int maxConcurrentRuns,
             int maxTimeoutSeconds,
@@ -179,15 +164,15 @@ public class JobLimitTest {
         String adminUsername = getFromConfig("adminUsername");
         String adminPassword = getFromConfig("adminPassword");
 
-        given()
-            .baseUri(adminBaseUri)
-            .auth().basic(adminUsername, adminPassword)
-            .queryParam("conjob.job.limit.maxGlobalRequestsPerSecond", maxGlobalRequestsPerSecond)
-            .queryParam("conjob.job.limit.maxConcurrentRuns", maxConcurrentRuns)
-            .queryParam("conjob.job.limit.maxTimeoutSeconds", maxTimeoutSeconds)
-            .queryParam("conjob.job.limit.maxKillTimeoutSeconds", maxKillTimeoutSeconds)
-            .post(CONFIG_TASK_PATH)
-        .then()
-            .statusCode(200);
+        Response post = given()
+                .baseUri(adminBaseUri)
+                .auth().basic(adminUsername, adminPassword)
+                .queryParam("conjob.job.limit.maxGlobalRequestsPerSecond", maxGlobalRequestsPerSecond)
+                .queryParam("conjob.job.limit.maxConcurrentRuns", maxConcurrentRuns)
+                .queryParam("conjob.job.limit.maxTimeoutSeconds", maxTimeoutSeconds)
+                .queryParam("conjob.job.limit.maxKillTimeoutSeconds", maxKillTimeoutSeconds)
+                .post(CONFIG_TASK_PATH);
+        post.then().statusCode(200);
+        return post;
     }
 }
