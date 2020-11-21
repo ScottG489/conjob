@@ -2,6 +2,7 @@ package conjob.resource.admin.task;
 
 import conjob.ConJobConfiguration;
 import io.dropwizard.servlets.tasks.Task;
+import lombok.Value;
 
 import java.io.PrintWriter;
 import java.util.List;
@@ -17,26 +18,27 @@ import java.util.stream.Collectors;
 public class ConfigTask extends Task {
     ConJobConfiguration config;
 
-    Map<String, Consumer<Long>> configFieldUpdateMethod = Map.ofEntries(
-            Map.entry("conjob.job.limit.maxGlobalRequestsPerSecond",
-                    value -> config.getConjob().getJob().getLimit().setMaxGlobalRequestsPerSecond(value)),
-            Map.entry("conjob.job.limit.maxConcurrentRuns",
-                    value -> config.getConjob().getJob().getLimit().setMaxConcurrentRuns(value)),
-            Map.entry("conjob.job.limit.maxTimeoutSeconds",
-                    value -> config.getConjob().getJob().getLimit().setMaxTimeoutSeconds(value)),
-            Map.entry("conjob.job.limit.maxKillTimeoutSeconds",
-                    value -> config.getConjob().getJob().getLimit().setMaxKillTimeoutSeconds(value))
-    );
-
-    Map<String, Supplier<Long>> configFieldGetMethod = Map.ofEntries(
-            Map.entry("conjob.job.limit.maxGlobalRequestsPerSecond",
-                    () -> config.getConjob().getJob().getLimit().getMaxGlobalRequestsPerSecond()),
-            Map.entry("conjob.job.limit.maxConcurrentRuns",
-                    () -> config.getConjob().getJob().getLimit().getMaxConcurrentRuns()),
-            Map.entry("conjob.job.limit.maxTimeoutSeconds",
-                    () -> config.getConjob().getJob().getLimit().getMaxTimeoutSeconds()),
-            Map.entry("conjob.job.limit.maxKillTimeoutSeconds",
-                    () -> config.getConjob().getJob().getLimit().getMaxKillTimeoutSeconds())
+    Map<String, ConfigMethods> configFieldMethods = Map.ofEntries(
+            Map.entry(
+                    "conjob.job.limit.maxGlobalRequestsPerSecond",
+                    new ConfigMethods(
+                            () -> config.getConjob().getJob().getLimit().getMaxGlobalRequestsPerSecond(),
+                            value -> config.getConjob().getJob().getLimit().setMaxGlobalRequestsPerSecond(value))),
+            Map.entry(
+                    "conjob.job.limit.maxConcurrentRuns",
+                    new ConfigMethods(
+                            () -> config.getConjob().getJob().getLimit().getMaxConcurrentRuns(),
+                            value -> config.getConjob().getJob().getLimit().setMaxConcurrentRuns(value))),
+            Map.entry(
+                    "conjob.job.limit.maxTimeoutSeconds",
+                    new ConfigMethods(
+                            () -> config.getConjob().getJob().getLimit().getMaxTimeoutSeconds(),
+                            value -> config.getConjob().getJob().getLimit().setMaxTimeoutSeconds(value))),
+            Map.entry(
+                    "conjob.job.limit.maxKillTimeoutSeconds",
+                    new ConfigMethods(
+                            () -> config.getConjob().getJob().getLimit().getMaxKillTimeoutSeconds(),
+                            value -> config.getConjob().getJob().getLimit().setMaxKillTimeoutSeconds(value)))
     );
 
     public ConfigTask(ConJobConfiguration config) {
@@ -46,9 +48,9 @@ public class ConfigTask extends Task {
 
     @Override
     public void execute(Map<String, List<String>> parameters, PrintWriter output) {
-        String originalConfig = configFieldGetMethod.entrySet()
+        String originalConfig = configFieldMethods.entrySet()
                 .stream().map(configEntry -> {
-                    return configEntry.getKey() + "=" + configEntry.getValue().get().toString() + "&";
+                    return configEntry.getKey() + "=" + configEntry.getValue().getReadMethod().get() + "&";
                 }).collect(Collectors.joining());
         originalConfig = originalConfig.substring(0, originalConfig.length() - 1);
         parameters.forEach(this::updateConfig);
@@ -61,6 +63,12 @@ public class ConfigTask extends Task {
                 .filter(values -> !values.isEmpty())
                 .map(values -> values.get(0))
                 .map(Long::valueOf)
-                .ifPresent(configFieldUpdateMethod.get(configKey));
+                .ifPresent(configFieldMethods.get(configKey).getWriteMethod());
+    }
+
+    @Value
+    private static class ConfigMethods {
+        Supplier<Long> readMethod;
+        Consumer<Long> writeMethod;
     }
 }
