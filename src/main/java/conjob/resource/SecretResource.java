@@ -2,6 +2,8 @@ package conjob.resource;
 
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.exceptions.ImageNotFoundException;
+import com.spotify.docker.client.exceptions.ImagePullFailedException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.HostConfig;
@@ -22,13 +24,12 @@ import java.nio.file.Files;
 @PermitAll
 @Slf4j
 public class SecretResource {
+    // This image is required to be on the build server to create secrets
     private static final String INTERMEDIARY_CONTAINER_IMAGE = "tianon/true";
     private final DockerClient docker;
 
-    public SecretResource(DockerClient docker) throws DockerException, InterruptedException {
+    public SecretResource(DockerClient docker) {
         this.docker = docker;
-        // This image is required to be on the build server to create secrets
-        docker.pull(INTERMEDIARY_CONTAINER_IMAGE);
     }
 
     @POST
@@ -36,14 +37,12 @@ public class SecretResource {
                            String input) throws DockerException, InterruptedException, IOException {
 
         String secretsVolumeName = new ConfigUtil().translateToVolumeName(imageName);
+        // TODO: Could there be a race condition if two of these containers are running at the same time?
         String intermediaryContainerName = "temp-container";
         String destinationPath = "/temp";
 
-        ContainerCreation container = createIntermediaryContainer(
-                intermediaryContainerName,
-                INTERMEDIARY_CONTAINER_IMAGE,
-                secretsVolumeName,
-                destinationPath);
+        ContainerConfig containerConfig = getContainerConfig(secretsVolumeName, destinationPath);
+        ContainerCreation container = createIntermediaryContainer(intermediaryContainerName, containerConfig, docker);
 
         String secretsTempDir = "secrets-temp-dir";
         String secretsFileName = "secrets";
@@ -60,13 +59,33 @@ public class SecretResource {
         return Response.ok().build();
     }
 
-    private ContainerCreation createIntermediaryContainer(String intermediaryContainerName, String intermediaryContainerImage, String secretsVolumeName, String destinationPath) throws DockerException, InterruptedException {
+    private ContainerConfig getContainerConfig(String secretsVolumeName, String destinationPath) {
         HostConfig hostConfig = HostConfig.builder().binds(secretsVolumeName + ":" + destinationPath).build();
-        ContainerConfig containerConfig = ContainerConfig.builder()
+
+        return ContainerConfig.builder()
                 .hostConfig(hostConfig)
-                .image(intermediaryContainerImage)
+                .image(SecretResource.INTERMEDIARY_CONTAINER_IMAGE)
                 .build();
-        return docker.createContainer(containerConfig, intermediaryContainerName);
+    }
+
+    private ContainerCreation createIntermediaryContainer(
+            String intermediaryContainerName,
+            ContainerConfig containerConfig,
+            DockerClient dockerClient) throws DockerException, InterruptedException {
+        ContainerCreation container;
+        // Pull-if-absent logic
+        try {
+            container = dockerClient.createContainer(containerConfig, intermediaryContainerName);
+        } catch (ImageNotFoundException e) {
+            try {
+                dockerClient.pull(containerConfig.image());
+                container = dockerClient.createContainer(containerConfig, intermediaryContainerName);
+            } catch (ImageNotFoundException | ImagePullFailedException e2) {
+                // The pull will fail if no tag is specified but it's still pulled so we can run it
+                container = dockerClient.createContainer(containerConfig, intermediaryContainerName);
+            }
+        }
+        return container;
     }
 
     private File getTempSecretsFile(String secretsFileName, File tempDirectory) throws IOException {
