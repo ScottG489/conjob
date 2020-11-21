@@ -19,6 +19,7 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.UUID;
 
 @Path("/secret")
 @PermitAll
@@ -38,7 +39,7 @@ public class SecretResource {
 
         String secretsVolumeName = new ConfigUtil().translateToVolumeName(imageName);
         // TODO: Could there be a race condition if two of these containers are running at the same time?
-        String intermediaryContainerName = "temp-container";
+        String intermediaryContainerName = "temp-container-" + UUID.randomUUID().toString();
         String destinationPath = "/temp";
 
         ContainerConfig containerConfig = getContainerConfig(secretsVolumeName, destinationPath);
