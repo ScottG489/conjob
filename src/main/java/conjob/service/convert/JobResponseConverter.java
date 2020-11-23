@@ -1,4 +1,4 @@
-package conjob.service;
+package conjob.service.convert;
 
 import conjob.api.JobResponse;
 import conjob.api.JobResultResponse;

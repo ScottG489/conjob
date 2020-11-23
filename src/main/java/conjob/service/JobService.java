@@ -1,7 +1,6 @@
 package conjob.service;
 
 import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.exceptions.ImageNotFoundException;
 import com.spotify.docker.client.exceptions.ImagePullFailedException;
@@ -9,12 +8,15 @@ import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.HostConfig;
 import conjob.config.JobConfig;
+import conjob.core.job.LogsAdapter;
 import conjob.core.job.RunJobRateLimiter;
 import conjob.core.job.config.ConfigUtil;
 import conjob.core.job.model.Job;
 import conjob.core.job.model.JobResult;
 import conjob.core.job.model.JobRun;
 import conjob.core.job.model.PullStrategy;
+import conjob.service.convert.JobResponseAugmenter;
+import conjob.service.convert.JobResponseConverter;
 
 import javax.ws.rs.core.Response;
 import java.util.Optional;
@@ -83,18 +85,9 @@ public class JobService {
         final ContainerCreation container = containerTry.get();
 
         dockerClient.startContainer(container.id());
-        waitForJob(dockerClient, container.id(), maxTimeoutSeconds, maxKillTimeoutSeconds);
+        Long exitCode = waitForJob(dockerClient, container.id(), maxTimeoutSeconds, maxKillTimeoutSeconds);
 
-        LogStream logs = dockerClient.logs(
-                container.id(),
-                DockerClient.LogsParam.stdout(),
-                DockerClient.LogsParam.stderr(),
-                DockerClient.LogsParam.follow());
-
-        String output = logs.readFully();
-
-        // TODO: Use exit code from waitContainer instead
-        Long exitCode = dockerClient.inspectContainer(container.id()).state().exitCode();
+        String output = new LogsAdapter(dockerClient).readAllLogsUntilExit(container.id());
 
         JobResult jobResult;
         int SIGKILL = 137;
@@ -110,13 +103,13 @@ public class JobService {
     }
 
     private Response createResponseFrom(Job job) {
-        return createResponseWithStatus(job)
+        return new JobResponseAugmenter().create(job)
                 .entity(job.getJobRun().getOutput())
                 .build();
     }
 
     private Response createJsonResponseFrom(Job job) {
-        return createResponseWithStatus(job)
+        return new JobResponseAugmenter().create(job)
                 .entity(new JobResponseConverter().from(job))
                 .build();
     }
@@ -197,7 +190,7 @@ public class JobService {
                         try {
                             // The pull will fail if no tag is specified but it's still pulled so we can run it
                             container = Optional.of(dockerClient.createContainer(containerConfig));
-                        } catch (ImageNotFoundException | ImagePullFailedException e3) {
+                       } catch (ImageNotFoundException | ImagePullFailedException e3) {
                             container = Optional.empty();
                         }
                     }
@@ -208,30 +201,6 @@ public class JobService {
         }
 
         return container;
-    }
-
-    private Response.ResponseBuilder createResponseWithStatus(Job job) {
-        Response.ResponseBuilder responseBuilder;
-        JobResult jobResult = job.getResult();
-        long exitCode = job.getJobRun().getExitCode();
-
-        if (jobResult.equals(JobResult.FINISHED)) {
-            if (exitCode == 0) {
-                responseBuilder = Response.ok();
-            } else {
-                responseBuilder = Response.status(Response.Status.BAD_REQUEST);
-            }
-        } else if (jobResult.equals(JobResult.NOT_FOUND)) {
-            responseBuilder = Response.status(Response.Status.NOT_FOUND);
-        } else if (jobResult.equals(JobResult.KILLED)) {
-            responseBuilder = Response.status(Response.Status.BAD_REQUEST);
-        } else if (jobResult.equals(JobResult.REJECTED)) {
-            responseBuilder = Response.status(Response.Status.SERVICE_UNAVAILABLE);
-        } else {
-            responseBuilder = Response.status(Response.Status.INTERNAL_SERVER_ERROR);
-        }
-
-        return responseBuilder;
     }
 
     static class WaitForContainer implements Callable<Long> {
