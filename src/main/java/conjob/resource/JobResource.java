@@ -55,6 +55,7 @@ public class JobResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+//    @Produces({MediaType.APPLICATION_JSON, MediaType.WILDCARD + ";q=0"})
     public Response handleJsonGet(
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
