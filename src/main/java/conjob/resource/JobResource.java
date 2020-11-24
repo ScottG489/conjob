@@ -25,8 +25,18 @@ public class JobResource {
     }
 
     @POST
-    @Produces({MediaType.WILDCARD, MediaType.TEXT_PLAIN})
+    @Produces(MediaType.WILDCARD)
     public Response handlePost(
+            @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
+            String input,
+            @QueryParam("pull") @DefaultValue("always") String pullStrategy)
+            throws DockerException, InterruptedException {
+        return createResponse(imageName, input, pullStrategy);
+    }
+
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response handleTextPost(
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             String input,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
@@ -45,7 +55,7 @@ public class JobResource {
     }
 
     @GET
-    @Produces({MediaType.WILDCARD, MediaType.TEXT_PLAIN})
+    @Produces(MediaType.WILDCARD)
     public Response handleGet(
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
@@ -54,8 +64,16 @@ public class JobResource {
     }
 
     @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response handleTextGet(
+            @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
+            @QueryParam("pull") @DefaultValue("always") String pullStrategy)
+            throws DockerException, InterruptedException {
+        return createResponse(imageName, "", pullStrategy);
+    }
+
+    @GET
     @Produces(MediaType.APPLICATION_JSON)
-//    @Produces({MediaType.APPLICATION_JSON, MediaType.WILDCARD + ";q=0"})
     public Response handleJsonGet(
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
