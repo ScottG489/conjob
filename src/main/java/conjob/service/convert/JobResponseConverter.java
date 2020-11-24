@@ -1,52 +1,45 @@
 package conjob.service.convert;
 
-import conjob.api.JobResponse;
-import conjob.api.JobResultResponse;
+import conjob.api.JobRunConclusionResponse;
 import conjob.api.JobRunResponse;
-import conjob.core.job.model.Job;
-import conjob.core.job.model.JobResult;
 import conjob.core.job.model.JobRun;
+import conjob.core.job.model.JobRunConclusion;
 
 import java.util.Map;
 
 public class JobResponseConverter {
-    private static final Map<JobResult, JobResultResponse> jobResultToJobResultResponse = Map.of(
-            JobResult.FINISHED, JobResultResponse.FINISHED,
-            JobResult.KILLED, JobResultResponse.KILLED,
-            JobResult.NOT_FOUND, JobResultResponse.NOT_FOUND,
-            JobResult.REJECTED, JobResultResponse.REJECTED
+    private static final Map<JobRunConclusion, JobRunConclusionResponse> jobResultToJobResultResponse = Map.of(
+            JobRunConclusion.SUCCESS, JobRunConclusionResponse.SUCCESS,
+            JobRunConclusion.FAILURE, JobRunConclusionResponse.FAILURE,
+            JobRunConclusion.NOT_FOUND, JobRunConclusionResponse.NOT_FOUND,
+            JobRunConclusion.TIMED_OUT, JobRunConclusionResponse.TIMED_OUT,
+            JobRunConclusion.REJECTED, JobRunConclusionResponse.REJECTED
     );
 
-    public JobResponse from(Job job) {
+    public JobRunResponse from(JobRun jobRun) {
         String message;
 
-        if (job.getResult().equals(JobResult.FINISHED)) {
+        if (jobRun.getConclusion().equals(JobRunConclusion.SUCCESS)) {
             message = "Job has concluded. Check job run for outcome.";
-        } else if (job.getResult().equals(JobResult.NOT_FOUND)) {
-            message = "Image not found.";
-        } else if (job.getResult().equals(JobResult.KILLED)) {
+        } else if (jobRun.getConclusion().equals(JobRunConclusion.NOT_FOUND)) {
+            message = "Job not found.";
+        } else if (jobRun.getConclusion().equals(JobRunConclusion.TIMED_OUT)) {
             message = "Job exceeded maximum allowed duration.";
-        } else if (job.getResult().equals(JobResult.REJECTED)) {
+        } else if (jobRun.getConclusion().equals(JobRunConclusion.REJECTED)) {
             message = "Concurrent job limit exceeded. Please wait then try again.";
         } else {
             message = "Unknown outcome.";
         }
 
-        return new JobResponse(
-                from(job.getJobRun()),
-                from(job.getResult()),
+        return new JobRunResponse(
+                from(jobRun.getConclusion()),
+                jobRun.getOutput(),
+                jobRun.getExitCode(),
                 message
         );
     }
 
-    public JobRunResponse from(JobRun jobRun) {
-        return new JobRunResponse(
-                jobRun.getOutput(),
-                jobRun.getExitCode()
-        );
-    }
-
-    public JobResultResponse from(JobResult result) {
-        return jobResultToJobResultResponse.get(result);
+    public JobRunConclusionResponse from(JobRunConclusion conclusion) {
+        return jobResultToJobResultResponse.get(conclusion);
     }
 }

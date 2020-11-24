@@ -4,6 +4,7 @@ import lombok.Value;
 
 @Value
 public class JobRun {
-    public String output;
-    public long exitCode;
+    JobRunConclusion conclusion;
+    String output;
+    long exitCode;
 }

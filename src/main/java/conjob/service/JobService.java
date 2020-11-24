@@ -11,9 +11,8 @@ import conjob.config.JobConfig;
 import conjob.core.job.LogsAdapter;
 import conjob.core.job.RunJobRateLimiter;
 import conjob.core.job.config.ConfigUtil;
-import conjob.core.job.model.Job;
-import conjob.core.job.model.JobResult;
 import conjob.core.job.model.JobRun;
+import conjob.core.job.model.JobRunConclusion;
 import conjob.core.job.model.PullStrategy;
 import conjob.service.convert.JobResponseConverter;
 
@@ -24,6 +23,8 @@ import java.util.concurrent.*;
 public class JobService {
     private static final String SECRETS_VOLUME_MOUNT_PATH = "/run/build/secrets";
     private static final String SECRETS_VOLUME_MOUNT_OPTIONS = "ro";
+
+    private static final int TIMED_OUT_EXIT_CODE = -1;
 
     private final DockerClient dockerClient;
     private final RunJobRateLimiter runJobRateLimiter;
@@ -47,8 +48,8 @@ public class JobService {
 
     public Response createResponse(String imageName, String input, String pullStrategyName) throws DockerException, InterruptedException {
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
-        Job job = runJob(imageName, input, pullStrategy);
-        return createResponseFrom(job);
+        JobRun jobRun = runJob(imageName, input, pullStrategy);
+        return createResponseFrom(jobRun);
     }
 
     public Response createJsonResponse(String imageName) throws DockerException, InterruptedException {
@@ -61,16 +62,16 @@ public class JobService {
 
     public Response createJsonResponse(String imageName, String input, String pullStrategyName) throws DockerException, InterruptedException {
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
-        Job job = runJob(imageName, input, pullStrategy);
-        return createJsonResponseFrom(job);
+        JobRun jobRun = runJob(imageName, input, pullStrategy);
+        return createJsonResponseFrom(jobRun);
     }
 
-    private Job runJob(String imageName, String input, PullStrategy pullStrategy) throws DockerException, InterruptedException {
+    private JobRun runJob(String imageName, String input, PullStrategy pullStrategy) throws DockerException, InterruptedException {
         long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
         int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
 
         if (runJobRateLimiter.isAtLimit()) {
-            return new Job(new JobRun("", -1), JobResult.REJECTED);
+            return new JobRun(JobRunConclusion.REJECTED, "", -1);
         }
 
         final ContainerConfig containerConfig = getContainerConfig(imageName, input);
@@ -78,7 +79,7 @@ public class JobService {
                 tryContainerCreate(containerConfig, pullStrategy);
         if (containerTry.isEmpty()) {
             runJobRateLimiter.decrementRunningJobsCount();
-            return new Job(new JobRun("", -1), JobResult.NOT_FOUND);
+            return new JobRun(JobRunConclusion.NOT_FOUND, "", -1);
         }
 
         final ContainerCreation container = containerTry.get();
@@ -88,28 +89,28 @@ public class JobService {
 
         String output = new LogsAdapter(dockerClient).readAllLogsUntilExit(container.id());
 
-        JobResult jobResult;
-        int SIGKILL = 137;
-        int SIGTERM = 143;
-        if (exitCode == SIGKILL || exitCode == SIGTERM) {
-            jobResult = JobResult.KILLED;
+        JobRunConclusion jobRunConclusion;
+        if (exitCode == TIMED_OUT_EXIT_CODE) {
+            jobRunConclusion = JobRunConclusion.TIMED_OUT;
+        } else if (exitCode != 0) {
+            jobRunConclusion = JobRunConclusion.FAILURE;
         } else {
-            jobResult = JobResult.FINISHED;
+            jobRunConclusion = JobRunConclusion.SUCCESS;
         }
 
         runJobRateLimiter.decrementRunningJobsCount();
-        return new Job(new JobRun(output, exitCode), jobResult);
+        return new JobRun(jobRunConclusion, output, exitCode);
     }
 
-    private Response createResponseFrom(Job job) {
-        return new ResponseCreator().create(job)
-                .entity(job.getJobRun().getOutput())
+    private Response createResponseFrom(JobRun jobRun) {
+        return new ResponseCreator().create(jobRun.getConclusion())
+                .entity(jobRun.getOutput())
                 .build();
     }
 
-    private Response createJsonResponseFrom(Job job) {
-        return new ResponseCreator().create(job)
-                .entity(new JobResponseConverter().from(job))
+    private Response createJsonResponseFrom(JobRun jobRun) {
+        return new ResponseCreator().create(jobRun.getConclusion())
+                .entity(new JobResponseConverter().from(jobRun))
                 .build();
     }
 
@@ -122,7 +123,8 @@ public class JobService {
         } catch (ExecutionException | TimeoutException ignored) {
             dockerClient.stopContainer(containerId, killTimeoutSeconds);
             // The container could finish naturally before the job timeout but before the stop-to-kill timeout.
-            exitStatusCode = dockerClient.waitContainer(containerId).statusCode();
+            dockerClient.waitContainer(containerId).statusCode();
+            exitStatusCode = -1L;
         }
         executor.shutdownNow();
         return exitStatusCode;
@@ -189,7 +191,7 @@ public class JobService {
                         try {
                             // The pull will fail if no tag is specified but it's still pulled so we can run it
                             container = Optional.of(dockerClient.createContainer(containerConfig));
-                       } catch (ImageNotFoundException | ImagePullFailedException e3) {
+                        } catch (ImageNotFoundException | ImagePullFailedException e3) {
                             container = Optional.empty();
                         }
                     }

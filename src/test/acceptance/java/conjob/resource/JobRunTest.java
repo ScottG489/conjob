@@ -10,7 +10,7 @@ import static conjob.util.RestAssuredUtil.configTest;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-public class JobTest {
+public class JobRunTest {
     private static final String JOB_RUN_PATH = "/job/run";
 
     @Before
@@ -48,9 +48,9 @@ public class JobTest {
         .then()
             .statusCode(200)
             .contentType(MediaType.APPLICATION_JSON)
-            .body("jobRun.output", containsString(expectOutputContains))
-            .body("jobRun.exitCode", is(0))
-            .body("result", is("FINISHED"));
+            .body("output", containsString(expectOutputContains))
+            .body("exitCode", is(0))
+            .body("conclusion", is("SUCCESS"));
     }
 
     @Test
@@ -61,9 +61,9 @@ public class JobTest {
         .then()
             .statusCode(404)
             .contentType(MediaType.APPLICATION_JSON)
-            .body("jobRun.output", containsString(""))
-            .body("jobRun.exitCode", is(-1))
-            .body("result", is("NOT_FOUND"));
+            .body("output", containsString(""))
+            .body("exitCode", is(-1))
+            .body("conclusion", is("NOT_FOUND"));
     }
 
     @Test
@@ -123,9 +123,9 @@ public class JobTest {
         .then()
             .statusCode(200)
             .contentType(MediaType.APPLICATION_JSON)
-            .body("jobRun.output", is(""))
-            .body("jobRun.exitCode", is(0))
-            .body("result", is("FINISHED"))
+            .body("output", is(""))
+            .body("exitCode", is(0))
+            .body("conclusion", is("SUCCESS"))
             .body("message", is("Job has concluded. Check job run for outcome."));
 
         given()
@@ -135,9 +135,9 @@ public class JobTest {
         .then()
             .statusCode(200)
             .contentType(MediaType.APPLICATION_JSON)
-            .body("jobRun.output", is("foobar"))
-            .body("jobRun.exitCode", is(0))
-            .body("result", is("FINISHED"))
+            .body("output", is("foobar"))
+            .body("exitCode", is(0))
+            .body("conclusion", is("SUCCESS"))
             .body("message", is("Job has concluded. Check job run for outcome."));
     }
 }

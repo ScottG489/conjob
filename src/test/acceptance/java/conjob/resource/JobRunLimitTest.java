@@ -21,7 +21,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-public class JobLimitTest {
+public class JobRunLimitTest {
     private static final String JOB_RUN_PATH = "/job/run";
     private static final String CONFIG_TASK_PATH = "/tasks/config";
 

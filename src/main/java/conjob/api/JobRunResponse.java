@@ -8,6 +8,8 @@ import lombok.Value;
 @NoArgsConstructor(force = true)
 @AllArgsConstructor
 public class JobRunResponse {
+    JobRunConclusionResponse conclusion;
     String output;
     long exitCode;
+    String message;
 }
