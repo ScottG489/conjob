@@ -1,4 +1,7 @@
 conjob:
+    docker:
+        username: ${DOCKER_USERNAME:-}
+        password: ${DOCKER_PASSWORD:-}
     admin:
         username: ${ADMIN_USERNAME:-}
         password: ${ADMIN_PASSWORD:-}

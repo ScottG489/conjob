@@ -91,18 +91,26 @@ setup_application_configuration() {
   local ROOT_DIR
   local BUILD_SCRIPT_JSON_INPUT
 
+  local DOCKER_USERNAME
+  local DOCKER_PASSWORD
   local ADMIN_USERNAME
   local ADMIN_PASSWORD
 
   readonly ROOT_DIR=$(get_git_root_dir)
   readonly BUILD_SCRIPT_JSON_INPUT=$1
 
+  readonly DOCKER_USERNAME=$(echo -n "$BUILD_SCRIPT_JSON_INPUT" | jq -r .DOCKER_USERNAME)
+  [[ -n $DOCKER_USERNAME ]]
+  readonly DOCKER_PASSWORD=$(echo -n "$BUILD_SCRIPT_JSON_INPUT" | jq -r .DOCKER_PASSWORD)
+  [[ -n $DOCKER_PASSWORD ]]
   readonly ADMIN_USERNAME=$(echo -n "$BUILD_SCRIPT_JSON_INPUT" | jq -r .ADMIN_USERNAME)
-  readonly ADMIN_PASSWORD=$(echo -n "$BUILD_SCRIPT_JSON_INPUT" | jq -r .ADMIN_PASSWORD)
   [[ -n $ADMIN_USERNAME ]]
+  readonly ADMIN_PASSWORD=$(echo -n "$BUILD_SCRIPT_JSON_INPUT" | jq -r .ADMIN_PASSWORD)
   [[ -n $ADMIN_PASSWORD ]]
 
   # These are used in the ansible playbook
+  export _DOCKER_USERNAME=$DOCKER_USERNAME
+  export _DOCKER_PASSWORD=$DOCKER_PASSWORD
   export _ADMIN_USERNAME=$ADMIN_USERNAME
   export _ADMIN_PASSWORD=$ADMIN_PASSWORD
 }

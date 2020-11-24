@@ -46,6 +46,8 @@
         --userns=host \
         -p 80:8080 \
         -p 8081:8081 \
+        -e DOCKER_USERNAME={{ dockerUsername }} \
+        -e DOCKER_PASSWORD={{ dockerPassword }} \
         -e ADMIN_USERNAME={{ adminUsername }} \
         -e ADMIN_PASSWORD={{ adminPassword }} \
         --name {{ container_name }} {{ image_name }}
