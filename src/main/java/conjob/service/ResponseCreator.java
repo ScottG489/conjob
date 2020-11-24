@@ -1,11 +1,11 @@
-package conjob.service.convert;
+package conjob.service;
 
 import conjob.core.job.model.Job;
 import conjob.core.job.model.JobResult;
 
 import javax.ws.rs.core.Response;
 
-public class JobResponseAugmenter {
+public class ResponseCreator {
     public Response.ResponseBuilder create(Job job) {
         Response.ResponseBuilder responseBuilder;
         JobResult jobResult = job.getResult();

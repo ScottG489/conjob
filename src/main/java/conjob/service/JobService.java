@@ -15,7 +15,6 @@ import conjob.core.job.model.Job;
 import conjob.core.job.model.JobResult;
 import conjob.core.job.model.JobRun;
 import conjob.core.job.model.PullStrategy;
-import conjob.service.convert.JobResponseAugmenter;
 import conjob.service.convert.JobResponseConverter;
 
 import javax.ws.rs.core.Response;
@@ -103,13 +102,13 @@ public class JobService {
     }
 
     private Response createResponseFrom(Job job) {
-        return new JobResponseAugmenter().create(job)
+        return new ResponseCreator().create(job)
                 .entity(job.getJobRun().getOutput())
                 .build();
     }
 
     private Response createJsonResponseFrom(Job job) {
-        return new JobResponseAugmenter().create(job)
+        return new ResponseCreator().create(job)
                 .entity(new JobResponseConverter().from(job))
                 .build();
     }
