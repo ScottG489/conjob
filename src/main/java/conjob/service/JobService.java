@@ -122,12 +122,18 @@ public class JobService {
             exitStatusCode = future.get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (ExecutionException | TimeoutException ignored) {
             dockerClient.stopContainer(containerId, killTimeoutSeconds);
+            exitStatusCode = dockerClient.waitContainer(containerId).statusCode();
             // The container could finish naturally before the job timeout but before the stop-to-kill timeout.
-            dockerClient.waitContainer(containerId).statusCode();
-            exitStatusCode = -1L;
+            exitStatusCode = wasStoppedOrKilled(exitStatusCode) ? -1 : 0L;
         }
         executor.shutdownNow();
         return exitStatusCode;
+    }
+
+    private boolean wasStoppedOrKilled(Long exitCode) {
+        final int SIGKILL = 137;
+        final int SIGTERM = 143;
+        return exitCode == SIGKILL || exitCode == SIGTERM;
     }
 
     private ContainerConfig getContainerConfig(String imageName, String input) throws DockerException, InterruptedException {
