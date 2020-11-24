@@ -1,6 +1,7 @@
 package conjob.resource;
 
 import io.restassured.http.ContentType;
+import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,7 +26,7 @@ public class JobRunTest {
         given()
             .get(JOB_RUN_PATH + "?image=library/hello-world:latest")
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(MediaType.TEXT_PLAIN)
             .body(startsWith(expectStartsWith));
 
@@ -33,7 +34,7 @@ public class JobRunTest {
             .accept(ContentType.TEXT)
             .get(JOB_RUN_PATH + "?image=library/hello-world:latest")
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(MediaType.TEXT_PLAIN)
             .body(containsString(expectStartsWith));
     }
@@ -46,7 +47,7 @@ public class JobRunTest {
             .accept(ContentType.JSON)
             .get(JOB_RUN_PATH + "?image=library/hello-world:latest")
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(MediaType.APPLICATION_JSON)
             .body("output", containsString(expectOutputContains))
             .body("exitCode", is(0))
@@ -59,7 +60,7 @@ public class JobRunTest {
             .accept(ContentType.JSON)
             .get(JOB_RUN_PATH + "?image=local/does_not_exist:latest")
         .then()
-            .statusCode(404)
+            .statusCode(HttpStatus.SC_NOT_FOUND)
             .contentType(MediaType.APPLICATION_JSON)
             .body("output", containsString(""))
             .body("exitCode", is(-1))
@@ -73,21 +74,21 @@ public class JobRunTest {
         given()
             .get(JOB_RUN_PATH + "?image=library/hello-world:latest&pull=always")
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(MediaType.TEXT_PLAIN)
             .body(startsWith(expectStartsWith));
 
         given()
             .get(JOB_RUN_PATH + "?image=library/hello-world:latest&pull=never")
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(MediaType.TEXT_PLAIN)
             .body(startsWith(expectStartsWith));
 
         given()
             .get(JOB_RUN_PATH + "?image=library/hello-world:latest&pull=absent")
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(MediaType.TEXT_PLAIN)
             .body(startsWith(expectStartsWith));
     }
@@ -100,7 +101,7 @@ public class JobRunTest {
         given()
             .post(JOB_RUN_PATH + "?image=" + echoImage)
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(MediaType.TEXT_PLAIN)
             .body(is(""));
 
@@ -108,7 +109,7 @@ public class JobRunTest {
             .body("foobar")
             .post(JOB_RUN_PATH + "?image=" + echoImage)
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(MediaType.TEXT_PLAIN)
             .body(is("foobar"));
     }
@@ -121,23 +122,23 @@ public class JobRunTest {
             .accept(ContentType.JSON)
             .post(JOB_RUN_PATH + "?image=" + echoImage)
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(MediaType.APPLICATION_JSON)
             .body("output", is(""))
             .body("exitCode", is(0))
             .body("conclusion", is("SUCCESS"))
-            .body("message", is("Job has concluded. Check job run for outcome."));
+            .body("message", is("Job run successful."));
 
         given()
             .accept(ContentType.JSON)
             .body("foobar")
             .post(JOB_RUN_PATH + "?image=" + echoImage)
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(MediaType.APPLICATION_JSON)
             .body("output", is("foobar"))
             .body("exitCode", is(0))
             .body("conclusion", is("SUCCESS"))
-            .body("message", is("Job has concluded. Check job run for outcome."));
+            .body("message", is("Job run successful."));
     }
 }

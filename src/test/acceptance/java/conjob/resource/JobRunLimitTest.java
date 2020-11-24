@@ -5,6 +5,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.response.ResponseOptions;
 import io.restassured.specification.RequestSpecification;
+import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,7 +52,7 @@ public class JobRunLimitTest {
         List<Integer> statusCodes =
                 responses.stream().map(ResponseOptions::getStatusCode).collect(Collectors.toList());
 
-        assertThat(Collections.frequency(statusCodes, 503), is(3));
+        assertThat(Collections.frequency(statusCodes, HttpStatus.SC_SERVICE_UNAVAILABLE), is(3));
         assertThat(findAllRejectedResponses(responses).count(), is(3L));
 
         updateServiceLimitConfig(originalConfigResponse.asString());
@@ -78,7 +79,7 @@ public class JobRunLimitTest {
         List<Integer> statusCodes =
                 responses.stream().map(ResponseOptions::getStatusCode).collect(Collectors.toList());
 
-        assertThat(Collections.frequency(statusCodes, 503), is(3));
+        assertThat(Collections.frequency(statusCodes, HttpStatus.SC_SERVICE_UNAVAILABLE), is(3));
         assertThat(findAllRejectedResponses(responses).count(), is(3L));
 
         updateServiceLimitConfig(originalConfigResponse.asString());
@@ -102,9 +103,9 @@ public class JobRunLimitTest {
                 .body(jobLengthSeconds)
                 .post(JOB_RUN_PATH + "?image=" + imageName)
         .then()
-            .statusCode(200)
-            .body("result", is("FINISHED"))
-            .body("jobRun.exitCode", is(0));
+            .statusCode(HttpStatus.SC_OK)
+            .body("conclusion", is("SUCCESS"))
+            .body("exitCode", is(0));
 
         updateServiceLimitConfig(originalConfigResponse.asString());
     }
@@ -127,16 +128,16 @@ public class JobRunLimitTest {
             .body(jobLengthSeconds)
             .post(JOB_RUN_PATH + "?image=" + imageName)
         .then()
-            .statusCode(400)
-            .body("result", is("KILLED"))
-            .body("jobRun.exitCode", is(137));
+            .statusCode(HttpStatus.SC_REQUEST_TIMEOUT)
+            .body("conclusion", is("TIMED_OUT"))
+            .body("exitCode", is(-1));
 
         updateServiceLimitConfig(originalConfigResponse.asString());
     }
 
     private Stream<Response> findAllRejectedResponses(List<Response> responses) {
         return responses.stream().filter(response -> {
-            return response.getBody().jsonPath().getString("result").equals("REJECTED");
+            return response.getBody().jsonPath().getString("conclusion").equals("REJECTED");
         });
     }
 
@@ -152,7 +153,7 @@ public class JobRunLimitTest {
             .body(queryParams)
             .post(CONFIG_TASK_PATH)
         .then()
-            .statusCode(200);
+            .statusCode(HttpStatus.SC_OK);
     }
 
     private Response updateServiceLimitConfig(
@@ -172,7 +173,7 @@ public class JobRunLimitTest {
                 .queryParam("conjob.job.limit.maxTimeoutSeconds", maxTimeoutSeconds)
                 .queryParam("conjob.job.limit.maxKillTimeoutSeconds", maxKillTimeoutSeconds)
                 .post(CONFIG_TASK_PATH);
-        post.then().statusCode(200);
+        post.then().statusCode(HttpStatus.SC_OK);
         return post;
     }
 }
