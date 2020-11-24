@@ -20,7 +20,9 @@ public class JobResponseConverter {
         String message;
 
         if (jobRun.getConclusion().equals(JobRunConclusion.SUCCESS)) {
-            message = "Job has concluded. Check job run for outcome.";
+            message = "Job run successful.";
+        } else if (jobRun.getConclusion().equals(JobRunConclusion.FAILURE)) {
+            message = "Job run failed.";
         } else if (jobRun.getConclusion().equals(JobRunConclusion.NOT_FOUND)) {
             message = "Job not found.";
         } else if (jobRun.getConclusion().equals(JobRunConclusion.TIMED_OUT)) {
