@@ -19,6 +19,7 @@ import conjob.resource.admin.task.ConfigTask;
 import conjob.resource.auth.AdminConstraintSecurityHandler;
 import conjob.resource.auth.BasicAuthenticator;
 import conjob.resource.filter.EveryResponseFilter;
+import conjob.service.DockerAdapter;
 import conjob.service.JobService;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
@@ -106,7 +107,11 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
     }
 
     private JobResource createJobResource(JobConfig.LimitConfig limitConfig, DockerClient docker) {
-        return new JobResource(new JobService(docker, new RunJobRateLimiter(limitConfig), limitConfig));
+        return new JobResource(
+                new JobService(
+                        new DockerAdapter(docker),
+                        new RunJobRateLimiter(limitConfig),
+                        limitConfig));
     }
 
     private void configureBasicAuth(AuthConfig config, Environment environment) {

@@ -1,14 +1,11 @@
 package conjob.service;
 
-import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.exceptions.ImageNotFoundException;
-import com.spotify.docker.client.exceptions.ImagePullFailedException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.HostConfig;
 import conjob.config.JobConfig;
-import conjob.core.job.LogsAdapter;
 import conjob.core.job.RunJobRateLimiter;
 import conjob.core.job.config.ConfigUtil;
 import conjob.core.job.model.JobRun;
@@ -26,14 +23,14 @@ public class JobService {
 
     private static final int TIMED_OUT_EXIT_CODE = -1;
 
-    private final DockerClient dockerClient;
     private final RunJobRateLimiter runJobRateLimiter;
     private final JobConfig.LimitConfig limitConfig;
+    private final DockerAdapter dockerAdapter;
 
     public JobService(
-            DockerClient dockerClient,
+            DockerAdapter dockerAdapter,
             RunJobRateLimiter runJobRateLimiter, JobConfig.LimitConfig limitConfig) {
-        this.dockerClient = dockerClient;
+        this.dockerAdapter = dockerAdapter;
         this.runJobRateLimiter = runJobRateLimiter;
         this.limitConfig = limitConfig;
     }
@@ -74,20 +71,20 @@ public class JobService {
             return new JobRun(JobRunConclusion.REJECTED, "", -1);
         }
 
-        final ContainerConfig containerConfig = getContainerConfig(imageName, input);
-        final Optional<ContainerCreation> containerTry =
-                tryContainerCreate(containerConfig, pullStrategy);
-        if (containerTry.isEmpty()) {
+        HostConfig hostConfig = getHostConfig(imageName);
+        ContainerConfig containerConfig = getContainerConfig(imageName, input, hostConfig);
+
+        ContainerCreation container;
+        try {
+            container = createContainer(containerConfig, pullStrategy);
+        } catch (ImageNotFoundException e2) {
             runJobRateLimiter.decrementRunningJobsCount();
             return new JobRun(JobRunConclusion.NOT_FOUND, "", -1);
         }
 
-        final ContainerCreation container = containerTry.get();
+        Long exitCode = runContainer(container.id(), maxTimeoutSeconds, maxKillTimeoutSeconds);
 
-        dockerClient.startContainer(container.id());
-        Long exitCode = waitForJob(dockerClient, container.id(), maxTimeoutSeconds, maxKillTimeoutSeconds);
-
-        String output = new LogsAdapter(dockerClient).readAllLogsUntilExit(container.id());
+        String output = dockerAdapter.readAllLogsUntilExit(container.id());
 
         JobRunConclusion jobRunConclusion;
         if (exitCode == TIMED_OUT_EXIT_CODE) {
@@ -114,15 +111,14 @@ public class JobService {
                 .build();
     }
 
-    private Long waitForJob(DockerClient dockerClient, String containerId, long timeoutSeconds, int killTimeoutSeconds) throws InterruptedException, DockerException {
+    private Long runContainer(String containerId, long timeoutSeconds, int killTimeoutSeconds) throws InterruptedException, DockerException {
         Long exitStatusCode;
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<Long> future = executor.submit(new WaitForContainer(dockerClient, containerId));
+        Future<Long> future = executor.submit(new WaitForContainer(dockerAdapter, containerId));
         try {
             exitStatusCode = future.get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (ExecutionException | TimeoutException ignored) {
-            dockerClient.stopContainer(containerId, killTimeoutSeconds);
-            exitStatusCode = dockerClient.waitContainer(containerId).statusCode();
+            exitStatusCode = dockerAdapter.stopContainer(containerId, killTimeoutSeconds);
             // The container could finish naturally before the job timeout but before the stop-to-kill timeout.
             exitStatusCode = wasStoppedOrKilled(exitStatusCode) ? -1 : 0L;
         }
@@ -136,92 +132,76 @@ public class JobService {
         return exitCode == SIGKILL || exitCode == SIGTERM;
     }
 
-    private ContainerConfig getContainerConfig(String imageName, String input) throws DockerException, InterruptedException {
-        String secretsVolumeName = new ConfigUtil().translateToVolumeName(imageName);
-        HostConfig hostConfig = getHostConfig(secretsVolumeName);
-        ContainerConfig.Builder builder = ContainerConfig.builder()
-                .image(imageName)
-                .hostConfig(hostConfig);
+    private ContainerConfig getContainerConfig(String imageName, String input, HostConfig hostConfig) {
+        ContainerConfig containerConfig;
         if (input != null && !input.isEmpty()) {
-            builder.cmd(input);
+            containerConfig = dockerAdapter.createContainerConfigWithInput(imageName, hostConfig, input);
+        } else {
+            containerConfig = dockerAdapter.createContainerConfig(imageName, hostConfig);
         }
-        return builder.build();
+        return containerConfig;
     }
 
-    private HostConfig getHostConfig(String secretsVolumeName) throws DockerException, InterruptedException {
-        HostConfig.Builder builder = HostConfig.builder()
-                .runtime("sysbox-runc");
+    private HostConfig getHostConfig(String imageName) throws DockerException, InterruptedException {
+        String secretsVolumeName = new ConfigUtil().translateToVolumeName(imageName);
+        HostConfig hostConfig;
+        String runtime = "sysbox-runc";
 
-        dockerClient.listVolumes().volumes().stream()
-                .filter(volume -> volume.name().equals(secretsVolumeName))
-                .limit(1)
-                .forEach(volume -> builder.appendBinds(secretsVolumeName + ":" + SECRETS_VOLUME_MOUNT_PATH + ":" + SECRETS_VOLUME_MOUNT_OPTIONS));
+        Optional<String> existingSecretsVolume = dockerAdapter.listAllVolumeNames().stream()
+                .filter(volName -> volName.equals(secretsVolumeName))
+                .findFirst();
 
-        return builder.build();
+        if (existingSecretsVolume.isPresent()) {
+            hostConfig = dockerAdapter.createHostConfigWithBind(
+                    runtime,
+                    existingSecretsVolume.get()
+                            + ":" + SECRETS_VOLUME_MOUNT_PATH
+                            + ":" + SECRETS_VOLUME_MOUNT_OPTIONS);
+        } else {
+            hostConfig = dockerAdapter.createHostConfig(runtime);
+        }
+
+        return hostConfig;
     }
 
     // ContainerCreator (class) | ContainerCreator.PullStrategy (enum)
-    private Optional<ContainerCreation> tryContainerCreate(ContainerConfig containerConfig, PullStrategy pullStrategy)
+    private ContainerCreation createContainer(ContainerConfig containerConfig, PullStrategy pullStrategy)
             throws DockerException, InterruptedException {
-        Optional<ContainerCreation> container;
+        ContainerCreation container;
 
         switch (pullStrategy) {
             case NEVER:
-                try {
-                    container = Optional.of(dockerClient.createContainer(containerConfig));
-                } catch (ImageNotFoundException e) {
-                    container = Optional.empty();
-                }
+                container = dockerAdapter.createContainer(containerConfig);
                 break;
             case ALWAYS:
-                try {
-                    dockerClient.pull(containerConfig.image());
-                    container = Optional.of(dockerClient.createContainer(containerConfig));
-                } catch (ImageNotFoundException | ImagePullFailedException e2) {
-                    try {
-                        // The pull will fail if no tag is specified but it's still pulled so we can run it
-                        container = Optional.of(dockerClient.createContainer(containerConfig));
-                    } catch (ImageNotFoundException | ImagePullFailedException e3) {
-                        container = Optional.empty();
-                    }
-                }
+                container = dockerAdapter.pullThenCreateContainer(containerConfig);
                 break;
             case ABSENT:
                 try {
-                    container = Optional.of(dockerClient.createContainer(containerConfig));
+                    container = dockerAdapter.createContainer(containerConfig);
                 } catch (ImageNotFoundException e) {
-                    try {
-                        dockerClient.pull(containerConfig.image());
-                        container = Optional.of(dockerClient.createContainer(containerConfig));
-                    } catch (ImageNotFoundException | ImagePullFailedException e2) {
-                        try {
-                            // The pull will fail if no tag is specified but it's still pulled so we can run it
-                            container = Optional.of(dockerClient.createContainer(containerConfig));
-                        } catch (ImageNotFoundException | ImagePullFailedException e3) {
-                            container = Optional.empty();
-                        }
-                    }
+                    container = dockerAdapter.pullThenCreateContainer(containerConfig);
                 }
                 break;
             default:
-                container = Optional.empty();
+                throw new RuntimeException("Unknown pull strategy: " + pullStrategy.name());
         }
 
         return container;
     }
 
     static class WaitForContainer implements Callable<Long> {
-        private final DockerClient dockerClient;
+        private final DockerAdapter dockerAdapter;
         private final String containerId;
 
-        public WaitForContainer(DockerClient dockerClient, String containerId) {
-            this.dockerClient = dockerClient;
+        public WaitForContainer(DockerAdapter dockerClient, String containerId) {
+            this.dockerAdapter = dockerClient;
             this.containerId = containerId;
         }
 
         @Override
         public Long call() throws DockerException, InterruptedException {
-            return dockerClient.waitContainer(containerId).statusCode();
+            return dockerAdapter.startContainerThenWaitForExit(containerId);
         }
     }
 }
