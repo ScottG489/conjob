@@ -2,9 +2,6 @@ package conjob.service;
 
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.exceptions.ImageNotFoundException;
-import com.spotify.docker.client.messages.ContainerConfig;
-import com.spotify.docker.client.messages.ContainerCreation;
-import com.spotify.docker.client.messages.HostConfig;
 import conjob.config.JobConfig;
 import conjob.core.job.RunJobRateLimiter;
 import conjob.core.job.config.ConfigUtil;
@@ -14,7 +11,6 @@ import conjob.core.job.model.PullStrategy;
 import conjob.service.convert.JobResponseConverter;
 
 import javax.ws.rs.core.Response;
-import java.util.Optional;
 import java.util.concurrent.*;
 
 public class JobService {
@@ -71,20 +67,19 @@ public class JobService {
             return new JobRun(JobRunConclusion.REJECTED, "", -1);
         }
 
-        HostConfig hostConfig = getHostConfig(imageName);
-        ContainerConfig containerConfig = getContainerConfig(imageName, input, hostConfig);
+        JobRunConfig jobRunConfig = getContainerConfig(imageName, input);
 
-        ContainerCreation container;
+        String jobId;
         try {
-            container = createContainer(containerConfig, pullStrategy);
+            jobId = createJob(jobRunConfig, pullStrategy);
         } catch (ImageNotFoundException e2) {
             runJobRateLimiter.decrementRunningJobsCount();
             return new JobRun(JobRunConclusion.NOT_FOUND, "", -1);
         }
 
-        Long exitCode = runContainer(container.id(), maxTimeoutSeconds, maxKillTimeoutSeconds);
+        Long exitCode = runContainer(jobId, maxTimeoutSeconds, maxKillTimeoutSeconds);
 
-        String output = dockerAdapter.readAllLogsUntilExit(container.id());
+        String output = dockerAdapter.readAllLogsUntilExit(jobId);
 
         JobRunConclusion jobRunConclusion;
         if (exitCode == TIMED_OUT_EXIT_CODE) {
@@ -132,62 +127,50 @@ public class JobService {
         return exitCode == SIGKILL || exitCode == SIGTERM;
     }
 
-    private ContainerConfig getContainerConfig(String imageName, String input, HostConfig hostConfig) {
-        ContainerConfig containerConfig;
+    private JobRunConfig getContainerConfig(String imageName, String input) throws DockerException, InterruptedException {
+        JobRunConfig jobRunConfig;
+
+        String correspondingSecretsVolumeName = new ConfigUtil().translateToVolumeName(imageName);
+        String secretVolumeName = dockerAdapter.listAllVolumeNames().stream()
+                .filter(volName -> volName.equals(correspondingSecretsVolumeName))
+                .findFirst()
+                .orElse(null);
+
         if (input != null && !input.isEmpty()) {
-            containerConfig = dockerAdapter.createContainerConfigWithInput(imageName, hostConfig, input);
+            jobRunConfig = new JobRunConfig(imageName, input, secretVolumeName);
         } else {
-            containerConfig = dockerAdapter.createContainerConfig(imageName, hostConfig);
-        }
-        return containerConfig;
-    }
-
-    private HostConfig getHostConfig(String imageName) throws DockerException, InterruptedException {
-        String secretsVolumeName = new ConfigUtil().translateToVolumeName(imageName);
-        HostConfig hostConfig;
-        String runtime = "sysbox-runc";
-
-        Optional<String> existingSecretsVolume = dockerAdapter.listAllVolumeNames().stream()
-                .filter(volName -> volName.equals(secretsVolumeName))
-                .findFirst();
-
-        if (existingSecretsVolume.isPresent()) {
-            hostConfig = dockerAdapter.createHostConfigWithBind(
-                    runtime,
-                    existingSecretsVolume.get()
-                            + ":" + SECRETS_VOLUME_MOUNT_PATH
-                            + ":" + SECRETS_VOLUME_MOUNT_OPTIONS);
-        } else {
-            hostConfig = dockerAdapter.createHostConfig(runtime);
+            jobRunConfig = new JobRunConfig(imageName, null, secretVolumeName);
         }
 
-        return hostConfig;
+        return jobRunConfig;
     }
 
     // ContainerCreator (class) | ContainerCreator.PullStrategy (enum)
-    private ContainerCreation createContainer(ContainerConfig containerConfig, PullStrategy pullStrategy)
+    private String createJob(JobRunConfig jobRunConfig, PullStrategy pullStrategy)
             throws DockerException, InterruptedException {
-        ContainerCreation container;
+        String jobId;
 
         switch (pullStrategy) {
             case NEVER:
-                container = dockerAdapter.createContainer(containerConfig);
+                jobId = dockerAdapter.createJobRun(jobRunConfig);
                 break;
             case ALWAYS:
-                container = dockerAdapter.pullThenCreateContainer(containerConfig);
+                dockerAdapter.pullImage(jobRunConfig.getJobName());
+                jobId = dockerAdapter.createJobRun(jobRunConfig);
                 break;
             case ABSENT:
                 try {
-                    container = dockerAdapter.createContainer(containerConfig);
+                    jobId = dockerAdapter.createJobRun(jobRunConfig);
                 } catch (ImageNotFoundException e) {
-                    container = dockerAdapter.pullThenCreateContainer(containerConfig);
+                    dockerAdapter.pullImage(jobRunConfig.getJobName());
+                    jobId = dockerAdapter.createJobRun(jobRunConfig);
                 }
                 break;
             default:
                 throw new RuntimeException("Unknown pull strategy: " + pullStrategy.name());
         }
 
-        return container;
+        return jobId;
     }
 
     static class WaitForContainer implements Callable<Long> {

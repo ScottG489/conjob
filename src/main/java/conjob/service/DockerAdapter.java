@@ -4,7 +4,6 @@ import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
-import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.Volume;
 
@@ -12,6 +11,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DockerAdapter {
+    private static final String RUNTIME = "sysbox-runc";
+    private static final String SECRETS_VOLUME_MOUNT_PATH = "/run/build/secrets";
+    private static final String SECRETS_VOLUME_MOUNT_OPTIONS = "ro";
+
     private final DockerClient dockerClient;
 
     public DockerAdapter(DockerClient dockerClient) {
@@ -23,36 +26,42 @@ public class DockerAdapter {
                 .map(Volume::name).collect(Collectors.toList());
     }
 
-    public HostConfig createHostConfig(String runtime) {
-        return HostConfig.builder().runtime(runtime).build();
+    public String createJobRun(JobRunConfig jobRunConfig) throws DockerException, InterruptedException {
+        HostConfig hostConfig = getHostConfig(jobRunConfig.getSecretsVolumeName());
+
+        ContainerConfig containerConfig = getContainerConfig(
+                jobRunConfig.getJobName(),
+                jobRunConfig.getInput(),
+                hostConfig);
+
+        return dockerClient.createContainer(containerConfig).id();
     }
 
-    public HostConfig createHostConfigWithBind(String runtime, String bind) {
-        return HostConfig.builder()
-                .runtime(runtime)
-                .appendBinds(bind).build();
+    private ContainerConfig getContainerConfig(String jobName, String input, HostConfig hostConfig) {
+        ContainerConfig.Builder containerConfigBuilder = ContainerConfig.builder()
+                .image(jobName)
+                .hostConfig(hostConfig);
+
+        if (input != null) {
+            containerConfigBuilder.cmd(input);
+        }
+
+        return containerConfigBuilder.build();
     }
 
-    public ContainerConfig createContainerConfig(String imageName, HostConfig hostConfig) {
-        return ContainerConfig.builder()
-                .image(imageName)
-                .hostConfig(hostConfig).build();
+    private HostConfig getHostConfig(String secretsVolumeName) {
+        HostConfig.Builder hostConfigBuilder = HostConfig.builder().runtime(RUNTIME);
+        if (secretsVolumeName != null) {
+            hostConfigBuilder.appendBinds(
+                    secretsVolumeName
+                            + ":" + SECRETS_VOLUME_MOUNT_PATH
+                            + ":" + SECRETS_VOLUME_MOUNT_OPTIONS);
+        }
+        return hostConfigBuilder.build();
     }
 
-    public ContainerConfig createContainerConfigWithInput(String imageName, HostConfig hostConfig, String input) {
-        return ContainerConfig.builder()
-                .image(imageName)
-                .cmd(input)
-                .hostConfig(hostConfig).build();
-    }
-
-    public ContainerCreation createContainer(ContainerConfig containerConfig) throws DockerException, InterruptedException {
-        return dockerClient.createContainer(containerConfig);
-    }
-
-    public ContainerCreation pullThenCreateContainer(ContainerConfig containerConfig) throws DockerException, InterruptedException {
-        dockerClient.pull(containerConfig.image());
-        return dockerClient.createContainer(containerConfig);
+    public void pullImage(String imageName) throws DockerException, InterruptedException {
+        dockerClient.pull(imageName);
     }
 
     public Long startContainerThenWaitForExit(String containerId) throws DockerException, InterruptedException {
