@@ -17,7 +17,7 @@ public class SecretStore {
                     .filter(volName -> volName.equals(secretName))
                     .findFirst();
         } catch (DockerException | InterruptedException e) {
-            throw new SecretStoreException("Problem finding secret");
+            throw new SecretStoreException(e);
         }
     }
 }
