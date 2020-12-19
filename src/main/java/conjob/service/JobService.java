@@ -59,6 +59,18 @@ public class JobService {
         return createJsonResponseFrom(jobRun);
     }
 
+    private Response createResponseFrom(JobRun jobRun) {
+        return new ResponseCreator().create(jobRun.getConclusion())
+                .entity(jobRun.getOutput())
+                .build();
+    }
+
+    private Response createJsonResponseFrom(JobRun jobRun) {
+        return new ResponseCreator().create(jobRun.getConclusion())
+                .entity(new JobResponseConverter().from(jobRun))
+                .build();
+    }
+
     private JobRun runJob(String imageName, String input, PullStrategy pullStrategy) throws DockerException, InterruptedException, SecretStoreException {
         long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
         int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
@@ -97,18 +109,6 @@ public class JobService {
 
         runJobRateLimiter.decrementRunningJobsCount();
         return new JobRun(jobRunConclusion, output, exitCode);
-    }
-
-    private Response createResponseFrom(JobRun jobRun) {
-        return new ResponseCreator().create(jobRun.getConclusion())
-                .entity(jobRun.getOutput())
-                .build();
-    }
-
-    private Response createJsonResponseFrom(JobRun jobRun) {
-        return new ResponseCreator().create(jobRun.getConclusion())
-                .entity(new JobResponseConverter().from(jobRun))
-                .build();
     }
 
     private Long runContainer(String containerId, long timeoutSeconds, int killTimeoutSeconds) throws InterruptedException, DockerException {
