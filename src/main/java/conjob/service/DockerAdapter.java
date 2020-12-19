@@ -10,6 +10,7 @@ import com.spotify.docker.client.messages.Volume;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// TODO: Create more specific exceptions for when ImageNotFoundException is thrown
 public class DockerAdapter {
     private static final String RUNTIME = "sysbox-runc";
     private static final String SECRETS_VOLUME_MOUNT_PATH = "/run/build/secrets";
@@ -26,7 +27,7 @@ public class DockerAdapter {
                 .map(Volume::name).collect(Collectors.toList());
     }
 
-    public String createJobRun(JobRunConfig jobRunConfig) throws DockerException, InterruptedException {
+    public String createJobRun(JobRunConfig jobRunConfig) throws CreateJobRunException {
         HostConfig hostConfig = getHostConfig(jobRunConfig.getSecretsVolumeName());
 
         ContainerConfig containerConfig = getContainerConfig(
@@ -34,7 +35,11 @@ public class DockerAdapter {
                 jobRunConfig.getInput(),
                 hostConfig);
 
-        return dockerClient.createContainer(containerConfig).id();
+        try {
+            return dockerClient.createContainer(containerConfig).id();
+        } catch (DockerException | InterruptedException e) {
+            throw new CreateJobRunException(e);
+        }
     }
 
     private ContainerConfig getContainerConfig(String jobName, String input, HostConfig hostConfig) {
@@ -60,8 +65,12 @@ public class DockerAdapter {
         return hostConfigBuilder.build();
     }
 
-    public void pullImage(String imageName) throws DockerException, InterruptedException {
-        dockerClient.pull(imageName);
+    public void pullImage(String imageName) throws JobUpdateException {
+        try {
+            dockerClient.pull(imageName);
+        } catch (InterruptedException | DockerException e2) {
+            throw new JobUpdateException(e2);
+        }
     }
 
     public Long startContainerThenWaitForExit(String containerId) throws DockerException, InterruptedException {

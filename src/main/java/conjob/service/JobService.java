@@ -1,7 +1,6 @@
 package conjob.service;
 
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.exceptions.ImageNotFoundException;
 import conjob.config.JobConfig;
 import conjob.core.job.RunJobRateLimiter;
 import conjob.core.job.config.ConfigUtil;
@@ -71,7 +70,8 @@ public class JobService {
                 .build();
     }
 
-    private JobRun runJob(String imageName, String input, PullStrategy pullStrategy) throws DockerException, InterruptedException, SecretStoreException {
+    private JobRun runJob(String imageName, String input, PullStrategy pullStrategy)
+            throws DockerException, InterruptedException, SecretStoreException {
         long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
         int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
 
@@ -89,7 +89,7 @@ public class JobService {
         String jobId;
         try {
             jobId = createJob(jobRunConfig, pullStrategy);
-        } catch (ImageNotFoundException e2) {
+        } catch (CreateJobRunException | JobUpdateException e2) {
             runJobRateLimiter.decrementRunningJobsCount();
             return new JobRun(JobRunConclusion.NOT_FOUND, "", -1);
         }
@@ -134,7 +134,7 @@ public class JobService {
 
     // ContainerCreator (class) | ContainerCreator.PullStrategy (enum)
     private String createJob(JobRunConfig jobRunConfig, PullStrategy pullStrategy)
-            throws DockerException, InterruptedException {
+            throws JobUpdateException, CreateJobRunException {
         String jobId;
 
         switch (pullStrategy) {
@@ -148,7 +148,7 @@ public class JobService {
             case ABSENT:
                 try {
                     jobId = dockerAdapter.createJobRun(jobRunConfig);
-                } catch (ImageNotFoundException e) {
+                } catch (CreateJobRunException e) {
                     dockerAdapter.pullImage(jobRunConfig.getJobName());
                     jobId = dockerAdapter.createJobRun(jobRunConfig);
                 }
