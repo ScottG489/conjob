@@ -31,35 +31,35 @@ public class JobService {
         this.limitConfig = limitConfig;
     }
 
-    public Response createResponse(String imageName) throws DockerException, InterruptedException {
+    public Response createResponse(String imageName) throws DockerException, InterruptedException, SecretStoreException {
         return createResponse(imageName, "");
     }
 
-    public Response createResponse(String imageName, String input) throws DockerException, InterruptedException {
+    public Response createResponse(String imageName, String input) throws DockerException, InterruptedException, SecretStoreException {
         return createResponse(imageName, input, PullStrategy.ALWAYS.name());
     }
 
-    public Response createResponse(String imageName, String input, String pullStrategyName) throws DockerException, InterruptedException {
+    public Response createResponse(String imageName, String input, String pullStrategyName) throws DockerException, InterruptedException, SecretStoreException {
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
         JobRun jobRun = runJob(imageName, input, pullStrategy);
         return createResponseFrom(jobRun);
     }
 
-    public Response createJsonResponse(String imageName) throws DockerException, InterruptedException {
+    public Response createJsonResponse(String imageName) throws DockerException, InterruptedException, SecretStoreException {
         return createJsonResponse(imageName, "");
     }
 
-    public Response createJsonResponse(String imageName, String input) throws DockerException, InterruptedException {
+    public Response createJsonResponse(String imageName, String input) throws DockerException, InterruptedException, SecretStoreException {
         return createJsonResponse(imageName, input, PullStrategy.ALWAYS.name());
     }
 
-    public Response createJsonResponse(String imageName, String input, String pullStrategyName) throws DockerException, InterruptedException {
+    public Response createJsonResponse(String imageName, String input, String pullStrategyName) throws DockerException, InterruptedException, SecretStoreException {
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
         JobRun jobRun = runJob(imageName, input, pullStrategy);
         return createJsonResponseFrom(jobRun);
     }
 
-    private JobRun runJob(String imageName, String input, PullStrategy pullStrategy) throws DockerException, InterruptedException {
+    private JobRun runJob(String imageName, String input, PullStrategy pullStrategy) throws DockerException, InterruptedException, SecretStoreException {
         long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
         int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
 
@@ -67,7 +67,12 @@ public class JobService {
             return new JobRun(JobRunConclusion.REJECTED, "", -1);
         }
 
-        JobRunConfig jobRunConfig = getContainerConfig(imageName, input);
+        String correspondingSecretsVolumeName = new ConfigUtil().translateToVolumeName(imageName);
+        String secretId = new SecretStore(dockerAdapter)
+                .findSecret(correspondingSecretsVolumeName)
+                .orElse(null);
+
+        JobRunConfig jobRunConfig = new JobRunConfigCreator().getContainerConfig(imageName, input, secretId);
 
         String jobId;
         try {
@@ -125,24 +130,6 @@ public class JobService {
         final int SIGKILL = 137;
         final int SIGTERM = 143;
         return exitCode == SIGKILL || exitCode == SIGTERM;
-    }
-
-    private JobRunConfig getContainerConfig(String imageName, String input) throws DockerException, InterruptedException {
-        JobRunConfig jobRunConfig;
-
-        String correspondingSecretsVolumeName = new ConfigUtil().translateToVolumeName(imageName);
-        String secretVolumeName = dockerAdapter.listAllVolumeNames().stream()
-                .filter(volName -> volName.equals(correspondingSecretsVolumeName))
-                .findFirst()
-                .orElse(null);
-
-        if (input != null && !input.isEmpty()) {
-            jobRunConfig = new JobRunConfig(imageName, input, secretVolumeName);
-        } else {
-            jobRunConfig = new JobRunConfig(imageName, null, secretVolumeName);
-        }
-
-        return jobRunConfig;
     }
 
     // ContainerCreator (class) | ContainerCreator.PullStrategy (enum)
