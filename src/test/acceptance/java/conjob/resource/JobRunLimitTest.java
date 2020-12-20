@@ -6,6 +6,7 @@ import io.restassured.response.Response;
 import io.restassured.response.ResponseOptions;
 import io.restassured.specification.RequestSpecification;
 import org.apache.http.HttpStatus;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -26,9 +27,16 @@ public class JobRunLimitTest {
     private static final String JOB_RUN_PATH = "/job/run";
     private static final String CONFIG_TASK_PATH = "/tasks/config";
 
+    Response originalConfigResponse;
+
     @Before
     public void setup() {
         configTest();
+    }
+
+    @After
+    public void teardown() {
+        updateServiceLimitConfig(originalConfigResponse.asString());
     }
 
     @Test
@@ -42,7 +50,7 @@ public class JobRunLimitTest {
         int maxTimeoutSeconds = 9999;
         int maxKillTimeoutSeconds = 9999;
 
-        Response originalConfigResponse = updateServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
+        originalConfigResponse = updateServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
 
         RequestSpecification requestSpec = given()
                 .accept(ContentType.JSON)
@@ -54,8 +62,6 @@ public class JobRunLimitTest {
 
         assertThat(Collections.frequency(statusCodes, HttpStatus.SC_SERVICE_UNAVAILABLE), is(3));
         assertThat(findAllRejectedResponses(responses).count(), is(3L));
-
-        updateServiceLimitConfig(originalConfigResponse.asString());
     }
 
     @Test
@@ -69,7 +75,7 @@ public class JobRunLimitTest {
         int maxTimeoutSeconds = 9999;
         int maxKillTimeoutSeconds = 9999;
 
-        Response originalConfigResponse = updateServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
+        originalConfigResponse = updateServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
 
         RequestSpecification requestSpec = given()
                 .accept(ContentType.JSON)
@@ -81,8 +87,6 @@ public class JobRunLimitTest {
 
         assertThat(Collections.frequency(statusCodes, HttpStatus.SC_SERVICE_UNAVAILABLE), is(3));
         assertThat(findAllRejectedResponses(responses).count(), is(3L));
-
-        updateServiceLimitConfig(originalConfigResponse.asString());
     }
 
     @Test
@@ -96,7 +100,7 @@ public class JobRunLimitTest {
         int maxTimeoutSeconds = 3;
         int maxKillTimeoutSeconds = 10;
 
-        Response originalConfigResponse = updateServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
+        originalConfigResponse = updateServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
 
         given()
                 .accept(ContentType.JSON)
@@ -106,8 +110,6 @@ public class JobRunLimitTest {
             .statusCode(HttpStatus.SC_OK)
             .body("conclusion", is("SUCCESS"))
             .body("exitCode", is(0));
-
-        updateServiceLimitConfig(originalConfigResponse.asString());
     }
 
     @Test
@@ -121,7 +123,7 @@ public class JobRunLimitTest {
         int maxTimeoutSeconds = 3;
         int maxKillTimeoutSeconds = 2;
 
-        Response originalConfigResponse = updateServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
+        originalConfigResponse = updateServiceLimitConfig(maxGlobalRequestsPerSecond, maxConcurrentRuns, maxTimeoutSeconds, maxKillTimeoutSeconds);
 
         given()
             .accept(ContentType.JSON)
@@ -131,8 +133,6 @@ public class JobRunLimitTest {
             .statusCode(HttpStatus.SC_REQUEST_TIMEOUT)
             .body("conclusion", is("TIMED_OUT"))
             .body("exitCode", is(-1));
-
-        updateServiceLimitConfig(originalConfigResponse.asString());
     }
 
     private Stream<Response> findAllRejectedResponses(List<Response> responses) {
