@@ -73,23 +73,35 @@ public class DockerAdapter {
         }
     }
 
-    public Long startContainerThenWaitForExit(String containerId) throws DockerException, InterruptedException {
-        dockerClient.startContainer(containerId);
-        return dockerClient.waitContainer(containerId).statusCode();
+    public Long startContainerThenWaitForExit(String containerId) throws RunJobException {
+        try {
+            dockerClient.startContainer(containerId);
+            return dockerClient.waitContainer(containerId).statusCode();
+        } catch (DockerException | InterruptedException e) {
+            throw new RunJobException(e);
+        }
     }
 
-    public Long stopContainer(String containerId, int killTimeoutSeconds) throws DockerException, InterruptedException {
-        dockerClient.stopContainer(containerId, killTimeoutSeconds);
-        return dockerClient.waitContainer(containerId).statusCode();
+    public Long stopContainer(String containerId, int killTimeoutSeconds) throws StopJobRunException {
+        try {
+            dockerClient.stopContainer(containerId, killTimeoutSeconds);
+            return dockerClient.waitContainer(containerId).statusCode();
+        } catch (DockerException | InterruptedException e) {
+            throw new StopJobRunException(e);
+        }
     }
 
-    public String readAllLogsUntilExit(String containerId) throws DockerException, InterruptedException {
-        LogStream logs = dockerClient.logs(
-                containerId,
-                DockerClient.LogsParam.stdout(),
-                DockerClient.LogsParam.stderr(),
-                DockerClient.LogsParam.follow());
-
-        return logs.readFully();
+    public String readAllLogsUntilExit(String containerId) throws ReadLogsException {
+        LogStream logs;
+        try {
+            logs = dockerClient.logs(
+                    containerId,
+                    DockerClient.LogsParam.stdout(),
+                    DockerClient.LogsParam.stderr(),
+                    DockerClient.LogsParam.follow());
+            return logs.readFully();
+        } catch (DockerException | InterruptedException e) {
+            throw new ReadLogsException(e);
+        }
     }
 }
