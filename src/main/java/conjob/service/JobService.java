@@ -20,14 +20,27 @@ public class JobService {
 
     private final RunJobRateLimiter runJobRateLimiter;
     private final JobConfig.LimitConfig limitConfig;
-    private final DockerAdapter dockerAdapter;
+    private final JobRunCreator jobRunCreator;
+    private final JobRunner jobRunner;
+    private final JobRunConfigCreator jobRunConfigCreator;
+    private final ResponseCreator responseCreator;
+    private final JobResponseConverter jobResponseConverter;
+    private final ConfigUtil configUtil;
+    private final SecretStore secretStore;
 
     public JobService(
             DockerAdapter dockerAdapter,
             RunJobRateLimiter runJobRateLimiter, JobConfig.LimitConfig limitConfig) {
-        this.dockerAdapter = dockerAdapter;
         this.runJobRateLimiter = runJobRateLimiter;
         this.limitConfig = limitConfig;
+
+        this.jobRunCreator = new JobRunCreator(dockerAdapter);
+        this.jobRunner = new JobRunner(dockerAdapter);
+        this.jobRunConfigCreator = new JobRunConfigCreator();
+        this.responseCreator = new ResponseCreator();
+        this.jobResponseConverter = new JobResponseConverter();
+        this.configUtil = new ConfigUtil();
+        this.secretStore = new SecretStore(dockerAdapter);
     }
 
     public Response createResponse(String imageName) throws DockerException, InterruptedException, SecretStoreException {
@@ -59,14 +72,14 @@ public class JobService {
     }
 
     private Response createResponseFrom(JobRun jobRun) {
-        return new ResponseCreator().create(jobRun.getConclusion())
+        return responseCreator.create(jobRun.getConclusion())
                 .entity(jobRun.getOutput())
                 .build();
     }
 
     private Response createJsonResponseFrom(JobRun jobRun) {
-        return new ResponseCreator().create(jobRun.getConclusion())
-                .entity(new JobResponseConverter().from(jobRun))
+        return responseCreator.create(jobRun.getConclusion())
+                .entity(jobResponseConverter.from(jobRun))
                 .build();
     }
 
@@ -83,13 +96,13 @@ public class JobService {
 
         String jobId;
         try {
-            jobId = new JobRunCreator(dockerAdapter).createJob(jobRunConfig, pullStrategy);
+            jobId = jobRunCreator.createJob(jobRunConfig, pullStrategy);
         } catch (CreateJobRunException | JobUpdateException e2) {
             runJobRateLimiter.decrementRunningJobsCount();
             return new JobRun(JobRunConclusion.NOT_FOUND, "", -1);
         }
 
-        JobRunOutcome outcome = new JobRunner(dockerAdapter)
+        JobRunOutcome outcome = jobRunner
                 .runContainer(jobId, maxTimeoutSeconds, maxKillTimeoutSeconds);
         JobRun jobRun = createJobRun(outcome);
 
@@ -111,11 +124,11 @@ public class JobService {
     }
 
     private JobRunConfig getJobRunConfig(String imageName, String input) throws SecretStoreException {
-        String correspondingSecretsVolumeName = new ConfigUtil().translateToVolumeName(imageName);
-        String secretId = new SecretStore(dockerAdapter)
+        String correspondingSecretsVolumeName = configUtil.translateToVolumeName(imageName);
+        String secretId = secretStore
                 .findSecret(correspondingSecretsVolumeName)
                 .orElse(null);
 
-        return new JobRunConfigCreator().getContainerConfig(imageName, input, secretId);
+        return jobRunConfigCreator.getContainerConfig(imageName, input, secretId);
     }
 }
