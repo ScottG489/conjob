@@ -10,13 +10,10 @@ import conjob.core.job.model.PullStrategy;
 import conjob.service.convert.JobResponseConverter;
 
 import javax.ws.rs.core.Response;
-import java.util.concurrent.*;
 
 public class JobService {
     private static final String SECRETS_VOLUME_MOUNT_PATH = "/run/build/secrets";
     private static final String SECRETS_VOLUME_MOUNT_OPTIONS = "ro";
-
-    private static final int TIMED_OUT_EXIT_CODE = -1;
 
     private final RunJobRateLimiter runJobRateLimiter;
     private final JobConfig.LimitConfig limitConfig;
@@ -27,6 +24,7 @@ public class JobService {
     private final JobResponseConverter jobResponseConverter;
     private final ConfigUtil configUtil;
     private final SecretStore secretStore;
+    private final OutcomeDeterminer outcomeDeterminer;
 
     public JobService(
             DockerAdapter dockerAdapter,
@@ -34,13 +32,14 @@ public class JobService {
         this.runJobRateLimiter = runJobRateLimiter;
         this.limitConfig = limitConfig;
 
+        this.secretStore = new SecretStore(dockerAdapter);
         this.jobRunCreator = new JobRunCreator(dockerAdapter);
         this.jobRunner = new JobRunner(dockerAdapter);
         this.jobRunConfigCreator = new JobRunConfigCreator();
         this.responseCreator = new ResponseCreator();
         this.jobResponseConverter = new JobResponseConverter();
+        this.outcomeDeterminer = new OutcomeDeterminer();
         this.configUtil = new ConfigUtil();
-        this.secretStore = new SecretStore(dockerAdapter);
     }
 
     public Response createResponse(String imageName) throws DockerException, InterruptedException, SecretStoreException {
@@ -104,22 +103,9 @@ public class JobService {
 
         JobRunOutcome outcome = jobRunner
                 .runContainer(jobId, maxTimeoutSeconds, maxKillTimeoutSeconds);
-        JobRun jobRun = createJobRun(outcome);
+        JobRunConclusion jobRunConclusion = outcomeDeterminer.determineOutcome(outcome);
 
         runJobRateLimiter.decrementRunningJobsCount();
-        return jobRun;
-    }
-
-    private JobRun createJobRun(JobRunOutcome outcome) {
-        JobRunConclusion jobRunConclusion;
-        if (outcome.getExitStatusCode() == TIMED_OUT_EXIT_CODE) {
-            jobRunConclusion = JobRunConclusion.TIMED_OUT;
-        } else if (outcome.getExitStatusCode() != 0) {
-            jobRunConclusion = JobRunConclusion.FAILURE;
-        } else {
-            jobRunConclusion = JobRunConclusion.SUCCESS;
-        }
-
         return new JobRun(jobRunConclusion, outcome.getOutput(), outcome.getExitStatusCode());
     }
 
