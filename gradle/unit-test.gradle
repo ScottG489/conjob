@@ -11,9 +11,14 @@ task unitTest(type: Test) {
     testClassesDirs = sourceSets.unitTest.output.classesDirs
     classpath = sourceSets.unitTest.runtimeClasspath
 
+    useJUnitPlatform()
+
     mustRunAfter build
 }
 
 dependencies {
     testCompile 'junit:junit:4.12'
+
+    testImplementation(platform('org.junit:junit-bom:5.7.1'))
+    testImplementation('org.junit.jupiter:junit-jupiter')
 }
