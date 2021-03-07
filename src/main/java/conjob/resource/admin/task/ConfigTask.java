@@ -16,9 +16,9 @@ import java.util.stream.Collectors;
 // TODO:   values aren't being used in a way where they may cause a race condition or update in the middle
 // TODO:   of processing.
 public class ConfigTask extends Task {
-    ConJobConfiguration config;
+    private ConJobConfiguration config;
 
-    Map<String, ConfigMethods> configFieldMethods = Map.ofEntries(
+    private final Map<String, ConfigMethods> configFieldMethods = Map.ofEntries(
             Map.entry(
                     "conjob.job.limit.maxGlobalRequestsPerSecond",
                     new ConfigMethods(

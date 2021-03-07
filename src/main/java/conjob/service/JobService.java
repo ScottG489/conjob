@@ -16,8 +16,6 @@ import conjob.service.convert.JobResponseConverter;
 import javax.ws.rs.core.Response;
 
 public class JobService {
-    private static final String SECRETS_VOLUME_MOUNT_PATH = "/run/build/secrets";
-    private static final String SECRETS_VOLUME_MOUNT_OPTIONS = "ro";
 
     private final RunJobRateLimiter runJobRateLimiter;
     private final JobConfig.LimitConfig limitConfig;
