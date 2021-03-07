@@ -1,8 +1,7 @@
 package conjob.resource;
 
-import com.spotify.docker.client.exceptions.DockerException;
-import conjob.service.JobService;
 import conjob.core.secret.SecretStoreException;
+import conjob.service.JobService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.security.PermitAll;
@@ -31,7 +30,7 @@ public class JobResource {
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             String input,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
-            throws DockerException, InterruptedException, SecretStoreException {
+            throws SecretStoreException {
         return createResponse(imageName, input, pullStrategy);
     }
 
@@ -41,7 +40,7 @@ public class JobResource {
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             String input,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
-            throws DockerException, InterruptedException, SecretStoreException {
+            throws SecretStoreException {
         return createJsonResponse(imageName, input, pullStrategy);
     }
 
@@ -50,7 +49,7 @@ public class JobResource {
     public Response handleTextGet(
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
-            throws DockerException, InterruptedException, SecretStoreException {
+            throws SecretStoreException {
         return createResponse(imageName, "", pullStrategy);
     }
 
@@ -59,18 +58,18 @@ public class JobResource {
     public Response handleJsonGet(
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
-            throws DockerException, InterruptedException, SecretStoreException {
+            throws SecretStoreException {
         return createJsonResponse(imageName, "", pullStrategy);
     }
 
     private Response createResponse(String imageName, String input, String pullStrategy)
-            throws DockerException, InterruptedException, SecretStoreException {
+            throws SecretStoreException {
         log.info("Running image: '{}'", imageName);
         return jobService.createResponse(imageName, input, pullStrategy);
     }
 
     private Response createJsonResponse(String imageName, String input, String pullStrategy)
-            throws DockerException, InterruptedException, SecretStoreException {
+            throws SecretStoreException {
         log.info("Running image: '{}'", imageName);
         return jobService.createJsonResponse(imageName, input, pullStrategy);
     }

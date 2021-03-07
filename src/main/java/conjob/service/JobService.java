@@ -1,6 +1,5 @@
 package conjob.service;
 
-import com.spotify.docker.client.exceptions.DockerException;
 import conjob.config.JobConfig;
 import conjob.core.job.*;
 import conjob.core.job.config.ConfigUtil;
@@ -47,29 +46,29 @@ public class JobService {
         this.configUtil = new ConfigUtil();
     }
 
-    public Response createResponse(String imageName) throws DockerException, InterruptedException, SecretStoreException {
+    public Response createResponse(String imageName) throws SecretStoreException {
         return createResponse(imageName, "");
     }
 
-    public Response createResponse(String imageName, String input) throws DockerException, InterruptedException, SecretStoreException {
+    public Response createResponse(String imageName, String input) throws SecretStoreException {
         return createResponse(imageName, input, PullStrategy.ALWAYS.name());
     }
 
-    public Response createResponse(String imageName, String input, String pullStrategyName) throws DockerException, InterruptedException, SecretStoreException {
+    public Response createResponse(String imageName, String input, String pullStrategyName) throws SecretStoreException {
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
         JobRun jobRun = runJob(imageName, input, pullStrategy);
         return createResponseFrom(jobRun);
     }
 
-    public Response createJsonResponse(String imageName) throws DockerException, InterruptedException, SecretStoreException {
+    public Response createJsonResponse(String imageName) throws SecretStoreException {
         return createJsonResponse(imageName, "");
     }
 
-    public Response createJsonResponse(String imageName, String input) throws DockerException, InterruptedException, SecretStoreException {
+    public Response createJsonResponse(String imageName, String input) throws SecretStoreException {
         return createJsonResponse(imageName, input, PullStrategy.ALWAYS.name());
     }
 
-    public Response createJsonResponse(String imageName, String input, String pullStrategyName) throws DockerException, InterruptedException, SecretStoreException {
+    public Response createJsonResponse(String imageName, String input, String pullStrategyName) throws SecretStoreException {
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
         JobRun jobRun = runJob(imageName, input, pullStrategy);
         return createJsonResponseFrom(jobRun);
