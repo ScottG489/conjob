@@ -46,8 +46,8 @@ public class DockerAdapter {
     public void pullImage(String imageName) throws JobUpdateException {
         try {
             dockerClient.pull(imageName);
-        } catch (InterruptedException | DockerException e2) {
-            throw new JobUpdateException(e2);
+        } catch (DockerException | InterruptedException e) {
+            throw new JobUpdateException(e);
         }
     }
 
