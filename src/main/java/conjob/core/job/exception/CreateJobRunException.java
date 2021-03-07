@@ -1,4 +1,4 @@
-package conjob.service;
+package conjob.core.job.exception;
 
 public class CreateJobRunException extends Exception {
     public CreateJobRunException(Exception e) {

@@ -1,11 +1,12 @@
-package conjob.service;
+package conjob.core.job;
 
 import conjob.core.job.model.JobRunConclusion;
+import conjob.core.job.model.JobRunOutcome;
 
 public class OutcomeDeterminer {
     private static final int TIMED_OUT_EXIT_CODE = -1;
 
-    JobRunConclusion determineOutcome(JobRunOutcome outcome) {
+    public JobRunConclusion determineOutcome(JobRunOutcome outcome) {
         JobRunConclusion jobRunConclusion;
         if (outcome.getExitStatusCode() == TIMED_OUT_EXIT_CODE) {
             jobRunConclusion = JobRunConclusion.TIMED_OUT;

@@ -19,7 +19,7 @@ import conjob.resource.admin.task.ConfigTask;
 import conjob.resource.auth.AdminConstraintSecurityHandler;
 import conjob.resource.auth.BasicAuthenticator;
 import conjob.resource.filter.EveryResponseFilter;
-import conjob.service.DockerAdapter;
+import conjob.core.job.DockerAdapter;
 import conjob.service.JobService;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;

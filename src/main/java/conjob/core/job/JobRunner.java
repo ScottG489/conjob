@@ -1,4 +1,9 @@
-package conjob.service;
+package conjob.core.job;
+
+import conjob.core.job.exception.ReadLogsException;
+import conjob.core.job.exception.RunJobException;
+import conjob.core.job.exception.StopJobRunException;
+import conjob.core.job.model.JobRunOutcome;
 
 import java.util.concurrent.*;
 

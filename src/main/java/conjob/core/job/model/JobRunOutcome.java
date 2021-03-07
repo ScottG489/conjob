@@ -1,4 +1,4 @@
-package conjob.service;
+package conjob.core.job.model;
 
 import lombok.Value;
 

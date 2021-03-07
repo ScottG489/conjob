@@ -2,7 +2,7 @@ package conjob.resource;
 
 import com.spotify.docker.client.exceptions.DockerException;
 import conjob.service.JobService;
-import conjob.service.SecretStoreException;
+import conjob.core.secret.SecretStoreException;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.security.PermitAll;

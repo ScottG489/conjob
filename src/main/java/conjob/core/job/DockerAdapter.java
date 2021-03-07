@@ -1,4 +1,4 @@
-package conjob.service;
+package conjob.core.job;
 
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
@@ -6,6 +6,7 @@ import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.Volume;
+import conjob.core.job.exception.*;
 
 import java.util.List;
 import java.util.stream.Collectors;

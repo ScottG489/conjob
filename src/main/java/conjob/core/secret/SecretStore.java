@@ -1,6 +1,7 @@
-package conjob.service;
+package conjob.core.secret;
 
 import com.spotify.docker.client.exceptions.DockerException;
+import conjob.core.job.DockerAdapter;
 
 import java.util.Optional;
 
