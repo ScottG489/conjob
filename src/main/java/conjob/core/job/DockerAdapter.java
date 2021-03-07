@@ -43,29 +43,6 @@ public class DockerAdapter {
         }
     }
 
-    private ContainerConfig getContainerConfig(String jobName, String input, HostConfig hostConfig) {
-        ContainerConfig.Builder containerConfigBuilder = ContainerConfig.builder()
-                .image(jobName)
-                .hostConfig(hostConfig);
-
-        if (input != null) {
-            containerConfigBuilder.cmd(input);
-        }
-
-        return containerConfigBuilder.build();
-    }
-
-    private HostConfig getHostConfig(String secretsVolumeName) {
-        HostConfig.Builder hostConfigBuilder = HostConfig.builder().runtime(RUNTIME);
-        if (secretsVolumeName != null) {
-            hostConfigBuilder.appendBinds(
-                    secretsVolumeName
-                            + ":" + SECRETS_VOLUME_MOUNT_PATH
-                            + ":" + SECRETS_VOLUME_MOUNT_OPTIONS);
-        }
-        return hostConfigBuilder.build();
-    }
-
     public void pullImage(String imageName) throws JobUpdateException {
         try {
             dockerClient.pull(imageName);
@@ -104,5 +81,28 @@ public class DockerAdapter {
         } catch (DockerException | InterruptedException e) {
             throw new ReadLogsException(e);
         }
+    }
+
+    private ContainerConfig getContainerConfig(String jobName, String input, HostConfig hostConfig) {
+        ContainerConfig.Builder containerConfigBuilder = ContainerConfig.builder()
+                .image(jobName)
+                .hostConfig(hostConfig);
+
+        if (input != null) {
+            containerConfigBuilder.cmd(input);
+        }
+
+        return containerConfigBuilder.build();
+    }
+
+    private HostConfig getHostConfig(String secretsVolumeName) {
+        HostConfig.Builder hostConfigBuilder = HostConfig.builder().runtime(RUNTIME);
+        if (secretsVolumeName != null) {
+            hostConfigBuilder.appendBinds(
+                    secretsVolumeName
+                            + ":" + SECRETS_VOLUME_MOUNT_PATH
+                            + ":" + SECRETS_VOLUME_MOUNT_OPTIONS);
+        }
+        return hostConfigBuilder.build();
     }
 }
