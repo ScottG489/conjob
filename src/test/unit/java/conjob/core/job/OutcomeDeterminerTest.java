@@ -25,4 +25,14 @@ class OutcomeDeterminerTest {
 
         assertThat(jobRunConclusion, is(JobRunConclusion.SUCCESS));
     }
+
+    @Test
+    void determineOutcomeTimedOut() {
+        Long exitStatusCode = -1L;
+        JobRunOutcome jobRunOutcome = new JobRunOutcome(exitStatusCode, "");
+
+        JobRunConclusion jobRunConclusion = outcomeDeterminer.determineOutcome(jobRunOutcome);
+
+        assertThat(jobRunConclusion, is(JobRunConclusion.TIMED_OUT));
+    }
 }
