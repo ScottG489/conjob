@@ -2,6 +2,7 @@ package conjob.core.job;
 
 import conjob.core.job.exception.CreateJobRunException;
 import conjob.core.job.exception.JobUpdateException;
+import conjob.core.job.model.JobRunConfig;
 import conjob.core.job.model.PullStrategy;
 
 public class JobRunCreator {

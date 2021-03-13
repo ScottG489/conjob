@@ -7,6 +7,7 @@ import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.Volume;
 import conjob.core.job.exception.*;
+import conjob.core.job.model.JobRunConfig;
 
 import java.util.List;
 import java.util.stream.Collectors;

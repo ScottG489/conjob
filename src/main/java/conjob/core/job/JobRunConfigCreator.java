@@ -1,5 +1,7 @@
 package conjob.core.job;
 
+import conjob.core.job.model.JobRunConfig;
+
 public class JobRunConfigCreator {
     public JobRunConfig getContainerConfig(String imageName, String input, String secretId) {
         JobRunConfig jobRunConfig;
