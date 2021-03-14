@@ -2,8 +2,8 @@ package conjob.resource;
 
 import io.restassured.http.ContentType;
 import org.apache.http.HttpStatus;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.MediaType;
 
@@ -14,7 +14,7 @@ import static org.hamcrest.Matchers.*;
 public class JobRunTest {
     private static final String JOB_RUN_PATH = "/job/run";
 
-    @Before
+    @BeforeEach
     public void setup() {
         configTest();
     }

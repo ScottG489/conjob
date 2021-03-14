@@ -6,9 +6,9 @@ import io.restassured.response.Response;
 import io.restassured.response.ResponseOptions;
 import io.restassured.specification.RequestSpecification;
 import org.apache.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,8 +20,8 @@ import java.util.stream.Stream;
 import static conjob.util.ConfigUtil.getFromConfig;
 import static conjob.util.RestAssuredUtil.configTest;
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 public class JobRunLimitTest {
     private static final String JOB_RUN_PATH = "/job/run";
@@ -29,12 +29,12 @@ public class JobRunLimitTest {
 
     Response originalConfigResponse;
 
-    @Before
+    @BeforeEach
     public void setup() {
         configTest();
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         updateServiceLimitConfig(originalConfigResponse.asString());
     }

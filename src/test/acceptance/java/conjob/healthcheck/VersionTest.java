@@ -1,14 +1,14 @@
 package conjob.healthcheck;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static conjob.util.RestAssuredUtil.configAdminTest;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.matchesRegex;
 
 public class VersionTest {
-    @Before
+    @BeforeEach
     public void setup() {
         configAdminTest();
     }
