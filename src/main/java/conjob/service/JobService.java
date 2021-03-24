@@ -16,7 +16,7 @@ public class JobService {
 
     private final RunJobRateLimiter runJobRateLimiter;
     private final JobConfig.LimitConfig limitConfig;
-    private final JobRunCreator jobRunCreator;
+    private final JobRunCreationStrategyDeterminer jobRunCreationStrategyDeterminer;
     private final JobRunner jobRunner;
     private final JobRunConfigCreator jobRunConfigCreator;
     private final ResponseCreator responseCreator;
@@ -32,7 +32,7 @@ public class JobService {
         this.limitConfig = limitConfig;
 
         this.secretStore = new SecretStore(dockerAdapter);
-        this.jobRunCreator = new JobRunCreator(dockerAdapter);
+        this.jobRunCreationStrategyDeterminer = new JobRunCreationStrategyDeterminer(dockerAdapter);
         this.jobRunner = new JobRunner(dockerAdapter);
         this.jobRunConfigCreator = new JobRunConfigCreator();
         this.responseCreator = new ResponseCreator();
@@ -91,10 +91,12 @@ public class JobService {
         }
 
         JobRunConfig jobRunConfig = getJobRunConfig(imageName, input);
+        JobRunCreationStrategy jobRunCreationStrategy =
+                jobRunCreationStrategyDeterminer.determineStrategy(pullStrategy);
 
         String jobId;
         try {
-            jobId = jobRunCreator.createJob(jobRunConfig, pullStrategy);
+            jobId = jobRunCreationStrategy.createJobRun(jobRunConfig);
         } catch (CreateJobRunException | JobUpdateException e2) {
             runJobRateLimiter.decrementRunningJobsCount();
             return new JobRun(JobRunConclusion.NOT_FOUND, "", -1);
