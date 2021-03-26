@@ -47,7 +47,7 @@ class JobRunCreationStrategyDeterminerTest {
                                     @ForAll String secretsVolumeName,
                                     @ForAll String givenJobRunId)
             throws CreateJobRunException, JobUpdateException {
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, "", "");
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeName);
         when(dockerAdapter.createJobRun(jobRunConfig)).thenReturn(givenJobRunId);
 
         String jobRunId = new JobRunCreationStrategyDeterminer(dockerAdapter)
