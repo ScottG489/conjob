@@ -1,4 +1,4 @@
-package conjob.core.job;
+package conjob.service;
 
 import com.codahale.metrics.SlidingTimeWindowReservoir;
 import conjob.config.JobConfig;

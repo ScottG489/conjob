@@ -10,7 +10,7 @@ import conjob.config.AdminConfig;
 import conjob.config.AuthConfig;
 import conjob.config.JobConfig;
 import conjob.core.job.DockerAdapter;
-import conjob.core.job.RunJobRateLimiter;
+import conjob.service.RunJobRateLimiter;
 import conjob.healthcheck.VersionCheck;
 import conjob.resource.GlobalErrorHandler;
 import conjob.resource.GlobalExceptionMapper;
