@@ -1,6 +1,9 @@
 package conjob.resource;
 
+import conjob.core.job.model.JobRun;
 import conjob.core.secret.SecretStoreException;
+import conjob.resource.convert.JobResponseConverter;
+import conjob.resource.convert.ResponseCreator;
 import conjob.service.JobService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,9 +22,13 @@ public class JobResource {
     //   user to specify tag. See here for why: https://github.com/ScottG489/conjob/issues/18
     private static final String DOCKER_IMAGE_NAME_FORMAT = "^(?:(?=[^:\\/]{1,253})(?!-)[a-zA-Z0-9-]{1,63}(?<!-)(?:\\.(?!-)[a-zA-Z0-9-]{1,63}(?<!-))*(?::[0-9]{1,5})?/)?((?![._-])(?:[a-z0-9._-]*)(?<![._-])(?:/(?![._-])[a-z0-9._-]*(?<![._-]))*)(?::(?![.-])[a-zA-Z0-9_.-]{1,128})$";
     private final JobService jobService;
+    private final ResponseCreator responseCreator;
+    private final JobResponseConverter jobResponseConverter;
 
     public JobResource(JobService jobService) {
         this.jobService = jobService;
+        this.responseCreator = new ResponseCreator();
+        this.jobResponseConverter = new JobResponseConverter();
     }
 
     @POST
@@ -65,13 +72,24 @@ public class JobResource {
     private Response createResponse(String imageName, String input, String pullStrategy)
             throws SecretStoreException {
         log.info("Running image: '{}'", imageName);
-        return jobService.createResponse(imageName, input, pullStrategy);
+        return createResponseFrom(jobService.createResponse(imageName, input, pullStrategy));
     }
 
     private Response createJsonResponse(String imageName, String input, String pullStrategy)
             throws SecretStoreException {
         log.info("Running image: '{}'", imageName);
-        return jobService.createJsonResponse(imageName, input, pullStrategy);
+        return createJsonResponseFrom(jobService.createJsonResponse(imageName, input, pullStrategy));
     }
 
+    private Response createResponseFrom(JobRun jobRun) {
+        return responseCreator.create(jobRun.getConclusion())
+                .entity(jobRun.getOutput())
+                .build();
+    }
+
+    private Response createJsonResponseFrom(JobRun jobRun) {
+        return responseCreator.create(jobRun.getConclusion())
+                .entity(jobResponseConverter.from(jobRun))
+                .build();
+    }
 }

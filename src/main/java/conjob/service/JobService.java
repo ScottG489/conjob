@@ -8,9 +8,6 @@ import conjob.core.job.exception.JobUpdateException;
 import conjob.core.job.model.*;
 import conjob.core.secret.SecretStore;
 import conjob.core.secret.SecretStoreException;
-import conjob.service.convert.JobResponseConverter;
-
-import javax.ws.rs.core.Response;
 
 public class JobService {
 
@@ -19,8 +16,6 @@ public class JobService {
     private final JobRunCreationStrategyDeterminer jobRunCreationStrategyDeterminer;
     private final JobRunner jobRunner;
     private final JobRunConfigCreator jobRunConfigCreator;
-    private final ResponseCreator responseCreator;
-    private final JobResponseConverter jobResponseConverter;
     private final ConfigUtil configUtil;
     private final SecretStore secretStore;
     private final OutcomeDeterminer outcomeDeterminer;
@@ -35,50 +30,34 @@ public class JobService {
         this.jobRunCreationStrategyDeterminer = new JobRunCreationStrategyDeterminer(dockerAdapter);
         this.jobRunner = new JobRunner(dockerAdapter);
         this.jobRunConfigCreator = new JobRunConfigCreator();
-        this.responseCreator = new ResponseCreator();
-        this.jobResponseConverter = new JobResponseConverter();
         this.outcomeDeterminer = new OutcomeDeterminer();
         this.configUtil = new ConfigUtil();
     }
 
-    public Response createResponse(String imageName) throws SecretStoreException {
+    public JobRun createResponse(String imageName) throws SecretStoreException {
         return createResponse(imageName, "");
     }
 
-    public Response createResponse(String imageName, String input) throws SecretStoreException {
+    public JobRun createResponse(String imageName, String input) throws SecretStoreException {
         return createResponse(imageName, input, PullStrategy.ALWAYS.name());
     }
 
-    public Response createResponse(String imageName, String input, String pullStrategyName) throws SecretStoreException {
+    public JobRun createResponse(String imageName, String input, String pullStrategyName) throws SecretStoreException {
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
-        JobRun jobRun = runJob(imageName, input, pullStrategy);
-        return createResponseFrom(jobRun);
+        return runJob(imageName, input, pullStrategy);
     }
 
-    public Response createJsonResponse(String imageName) throws SecretStoreException {
+    public JobRun createJsonResponse(String imageName) throws SecretStoreException {
         return createJsonResponse(imageName, "");
     }
 
-    public Response createJsonResponse(String imageName, String input) throws SecretStoreException {
+    public JobRun createJsonResponse(String imageName, String input) throws SecretStoreException {
         return createJsonResponse(imageName, input, PullStrategy.ALWAYS.name());
     }
 
-    public Response createJsonResponse(String imageName, String input, String pullStrategyName) throws SecretStoreException {
+    public JobRun createJsonResponse(String imageName, String input, String pullStrategyName) throws SecretStoreException {
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
-        JobRun jobRun = runJob(imageName, input, pullStrategy);
-        return createJsonResponseFrom(jobRun);
-    }
-
-    private Response createResponseFrom(JobRun jobRun) {
-        return responseCreator.create(jobRun.getConclusion())
-                .entity(jobRun.getOutput())
-                .build();
-    }
-
-    private Response createJsonResponseFrom(JobRun jobRun) {
-        return responseCreator.create(jobRun.getConclusion())
-                .entity(jobResponseConverter.from(jobRun))
-                .build();
+        return runJob(imageName, input, pullStrategy);
     }
 
     private JobRun runJob(String imageName, String input, PullStrategy pullStrategy)

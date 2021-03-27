@@ -1,4 +1,4 @@
-package conjob.service;
+package conjob.resource.convert;
 
 import conjob.core.job.model.JobRunConclusion;
 
