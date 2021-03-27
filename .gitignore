@@ -9,6 +9,9 @@ out
 *.ipr
 *.iws
 
+# jqwik
+.jqwik-database
+
 # Terraform (Taken from https://raw.githubusercontent.com/github/gitignore/master/Terraform.gitignore)
 # Local .terraform directories
 **/.terraform/*
