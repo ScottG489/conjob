@@ -4,9 +4,11 @@ import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
 import conjob.core.job.exception.ReadLogsException;
+import net.jqwik.api.ForAll;
+import net.jqwik.api.Label;
+import net.jqwik.api.Property;
+import net.jqwik.api.lifecycle.BeforeTry;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -18,18 +20,20 @@ public class DockerAdapterReadAllLogsTest {
     private DockerClient mockClient;
 
     @BeforeEach
+    @BeforeTry
     void setUp() {
         mockClient = mock(DockerClient.class);
         dockerAdapter = new DockerAdapter(mockClient);
     }
 
-    @Test
-    @DisplayName("Given a container ID," +
-            "when reading that container's logs," +
-            "should return all of the log contents")
-    void readLogsSuccessfully() throws ReadLogsException, DockerException, InterruptedException {
-        String givenContainerId = "container_id";
-        String expectedLogs = "some_logs";
+    @Property
+    @Label("Given a container ID, " +
+            "when reading that container's logs, " +
+            "should return all of the log contents.")
+    void readLogsSuccessfully(
+            @ForAll String givenContainerId,
+            @ForAll String expectedLogs
+    ) throws ReadLogsException, DockerException, InterruptedException {
         LogStream mockLogStream = mock(LogStream.class);
 
         when(mockClient.logs(eq(givenContainerId), any(DockerClient.LogsParam.class)))
@@ -41,42 +45,36 @@ public class DockerAdapterReadAllLogsTest {
         assertThat(actualLogs, is(expectedLogs));
     }
 
-    @Test
-    @DisplayName("Given a container ID," +
-            "when reading that container's logs," +
-            "and a DockerException is thrown," +
-            "should throw a ReadLogsException")
-    void readLogsDockerException() throws DockerException, InterruptedException {
-        String givenContainerId = "container_id";
-
+    @Property
+    @Label("Given a container ID, " +
+            "when reading that container's logs, " +
+            "and a DockerException is thrown, " +
+            "should throw a ReadLogsException.")
+    void readLogsDockerException(@ForAll String givenContainerId) throws DockerException, InterruptedException {
         doThrow(new DockerException("")).when(mockClient)
                 .logs(eq(givenContainerId), any(DockerClient.LogsParam.class));
 
         assertThrows(ReadLogsException.class, () -> dockerAdapter.readAllLogsUntilExit(givenContainerId));
     }
 
-    @Test
-    @DisplayName("Given a container ID," +
-            "when reading that container's logs," +
-            "and a InterruptedException is thrown," +
-            "should throw a ReadLogsException")
-    void readLogsInterruptedException() throws DockerException, InterruptedException {
-        String givenContainerId = "container_id";
-
+    @Property
+    @Label("Given a container ID, " +
+            "when reading that container's logs, " +
+            "and a InterruptedException is thrown, " +
+            "should throw a ReadLogsException.")
+    void readLogsInterruptedException(@ForAll String givenContainerId) throws DockerException, InterruptedException {
         doThrow(new InterruptedException("")).when(mockClient)
                 .logs(eq(givenContainerId), any(DockerClient.LogsParam.class));
 
         assertThrows(ReadLogsException.class, () -> dockerAdapter.readAllLogsUntilExit(givenContainerId));
     }
 
-    @Test
-    @DisplayName("Given a container ID," +
-            "when reading that container's logs," +
-            "and an unexpected Exception is thrown," +
-            "should throw that exception")
-    void readLogsUnexpectedException() throws DockerException, InterruptedException {
-        String givenContainerId = "container_id";
-
+    @Property
+    @Label("Given a container ID, " +
+            "when reading that container's logs, " +
+            "and an unexpected Exception is thrown, " +
+            "should throw that exception.")
+    void readLogsUnexpectedException(@ForAll String givenContainerId) throws DockerException, InterruptedException {
         doThrow(new RuntimeException("")).when(mockClient)
                 .logs(eq(givenContainerId), any(DockerClient.LogsParam.class));
 
