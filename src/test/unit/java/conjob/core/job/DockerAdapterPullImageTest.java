@@ -3,6 +3,10 @@ package conjob.core.job;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
 import conjob.core.job.exception.JobUpdateException;
+import net.jqwik.api.ForAll;
+import net.jqwik.api.Label;
+import net.jqwik.api.Property;
+import net.jqwik.api.lifecycle.BeforeTry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,50 +19,51 @@ public class DockerAdapterPullImageTest {
     private DockerClient mockClient;
 
     @BeforeEach
+    @BeforeTry
     void setUp() {
         mockClient = mock(DockerClient.class);
         dockerAdapter = new DockerAdapter(mockClient);
     }
 
-    @Test
-    @DisplayName("Given an image name," +
-            "when pulling that image," +
-            "should finish successfully")
-    void pullImageSuccessfully() throws JobUpdateException, DockerException, InterruptedException {
-        dockerAdapter.pullImage("image_name");
-        verify(mockClient).pull("image_name");
+    @Property
+    @Label("Given an image name, " +
+            "when pulling that image, " +
+            "should finish successfully.")
+    void pullImageSuccessfully(@ForAll String imageName) throws JobUpdateException, DockerException, InterruptedException {
+        dockerAdapter.pullImage(imageName);
+        verify(mockClient).pull(imageName);
     }
 
-    @Test
-    @DisplayName("Given an image name," +
-            "when pulling that image," +
-            "and a DockerException is thrown," +
-            "should throw a JobUpdateException")
-    void pullImageDockerException() throws DockerException, InterruptedException {
-        doThrow(new DockerException("")).when(mockClient).pull("image_name");
+    @Property
+    @Label("Given an image name, " +
+            "when pulling that image, " +
+            "and a DockerException is thrown, " +
+            "should throw a JobUpdateException.")
+    void pullImageDockerException(@ForAll String imageName) throws DockerException, InterruptedException {
+        doThrow(new DockerException("")).when(mockClient).pull(imageName);
 
-        assertThrows(JobUpdateException.class, () -> dockerAdapter.pullImage("image_name"));
+        assertThrows(JobUpdateException.class, () -> dockerAdapter.pullImage(imageName));
     }
 
-    @Test
-    @DisplayName("Given an image name," +
-            "when pulling that image," +
-            "and an InterruptedException is thrown," +
-            "should throw a JobUpdateException")
-    void pullImageInterruptedException() throws DockerException, InterruptedException {
-        doThrow(new InterruptedException("")).when(mockClient).pull("image_name");
+    @Property
+    @Label("Given an image name, " +
+            "when pulling that image, " +
+            "and an InterruptedException is thrown, " +
+            "should throw a JobUpdateException.")
+    void pullImageInterruptedException(@ForAll String imageName) throws DockerException, InterruptedException {
+        doThrow(new InterruptedException("")).when(mockClient).pull(imageName);
 
-        assertThrows(JobUpdateException.class, () -> dockerAdapter.pullImage("image_name"));
+        assertThrows(JobUpdateException.class, () -> dockerAdapter.pullImage(imageName));
     }
 
-    @Test
-    @DisplayName("Given an image name," +
-            "when pulling that image," +
-            "and an unexpected Exception is thrown," +
-            "should throw that exception")
-    void pullImageUnexpectedException() throws DockerException, InterruptedException {
-        doThrow(new RuntimeException("")).when(mockClient).pull("image_name");
+    @Property
+    @Label("Given an image name, " +
+            "when pulling that image, " +
+            "and an unexpected Exception is thrown, " +
+            "should throw that exception.")
+    void pullImageUnexpectedException(@ForAll String imageName) throws DockerException, InterruptedException {
+        doThrow(new RuntimeException("")).when(mockClient).pull(imageName);
 
-        assertThrows(RuntimeException.class, () -> dockerAdapter.pullImage("image_name"));
+        assertThrows(RuntimeException.class, () -> dockerAdapter.pullImage(imageName));
     }
 }
