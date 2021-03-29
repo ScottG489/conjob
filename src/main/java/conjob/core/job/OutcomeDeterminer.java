@@ -9,12 +9,12 @@ public class OutcomeDeterminer {
 
     public JobRunConclusion determineOutcome(JobRunOutcome outcome) {
         JobRunConclusion jobRunConclusion;
-        if (outcome.getExitStatusCode() == 0) {
+        if (outcome.getExitStatusCode() > 0) {
+            jobRunConclusion = JobRunConclusion.FAILURE;
+        } else if (outcome.getExitStatusCode() == 0) {
             jobRunConclusion = JobRunConclusion.SUCCESS;
         } else if (outcome.getExitStatusCode() == TIMED_OUT_EXIT_CODE) {
             jobRunConclusion = JobRunConclusion.TIMED_OUT;
-        } else if (outcome.getExitStatusCode() > 0) {
-            jobRunConclusion = JobRunConclusion.FAILURE;
         } else {
             throw new UnknownOutcomeStatusCodeException();
         }
