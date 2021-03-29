@@ -9,6 +9,12 @@ sourceSets {
 
 ext.jqwikVersion = '1.5.0'
 
+pitest {
+    testSourceSets.set([sourceSets.unitTest])
+    junit5PluginVersion = '0.12'
+    timestampedReports = false
+}
+
 task unitTest(type: Test) {
     testClassesDirs = sourceSets.unitTest.output.classesDirs
     classpath = sourceSets.unitTest.runtimeClasspath
