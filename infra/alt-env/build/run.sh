@@ -12,11 +12,11 @@ setup_credentials "$1"
 set -x
 
 declare -r _PROJECT_NAME='conjob'
-#declare -r _GIT_REPO='git@github.com:ScottG489/conjob.git'
+declare -r _GIT_REPO='git@github.com:ScottG489/conjob.git'
 declare -r _TFSTATE_BUCKET_NAME='tfstate-alt-conjob'
 
 # Since the alt-env is never meant to be run other than locally we'll always be mounting the local repo
-#git clone $_GIT_REPO
+git clone $_GIT_REPO
 cd $_PROJECT_NAME
 
 # We don't really need to build the application. The latest changes should have been pushed to docker hub and we aren't trying to deploy with local changes

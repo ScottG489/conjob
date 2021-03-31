@@ -55,8 +55,7 @@ intend to deploy to prod from your local workstation.
 ### Creating alt/bootstrap server
 The **ConJob** project uses **ConJob** itself as a CI server. This means that in order to build
 the project you need an initial **ConJob** server running. 
-In order to create this alternate/bootstrap server, edit `./test.sh` and change
-`docker build infra/build` to `docker build run infra/alt-env/build`.
+In order to create this alternate/bootstrap server, simply run `./alt-env.sh`.
 
 The reason this is needed is because as part of it's deploy the server shuts itself down.
 Although the build container will continue to run, the server will not return the build's
