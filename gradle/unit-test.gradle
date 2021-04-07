@@ -22,7 +22,6 @@ task unitTest(type: Test) {
     useJUnitPlatform()
 
     mustRunAfter build
-    finalizedBy jacocoTestReport
 }
 
 dependencies {
@@ -34,7 +33,10 @@ dependencies {
     testImplementation 'com.tngtech.archunit:archunit-junit5:0.17.0'
 }
 
-jacocoTestReport {
+task jacocoUnitTestReport(type:JacocoReport) {
     dependsOn unitTest
-    getExecutionData().setFrom(fileTree(buildDir).include("/jacoco/unitTest.exec"))
+    executionData unitTest
+    sourceSets sourceSets.main
 }
+
+unitTest.finalizedBy jacocoUnitTestReport
