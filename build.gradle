@@ -31,7 +31,11 @@ repositories {
     jcenter()
 }
 
-//application {
-    // jacocoagent.jar can be found in the build dir with `find -name jacocoagent.jar` after resolving dependencies
-//    applicationDefaultJvmArgs = ["-javaagent:jacocoagent.jar=destfile=build/jacoco/test.exec,append=false"]
-//}
+jacoco {
+    applyTo run
+}
+
+task jacocoApplicationReport(type:JacocoReport) {
+    executionData run
+    sourceSets sourceSets.main
+}
