@@ -24,6 +24,7 @@ dependencies {
 
 apply from: 'gradle/version.gradle'
 apply from: 'gradle/unit-test.gradle'
+apply from: 'gradle/integration-test.gradle'
 apply from: 'gradle/acceptance-test.gradle'
 apply from: 'gradle/performance-test.gradle'
 
