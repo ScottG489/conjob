@@ -57,7 +57,7 @@ public class DockerAdapterCreateContainerTest {
     ) throws CreateJobRunException {
         this.secretVolumeName = secretVolumeName;
         JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretVolumeName);
-        jobRunId = dockerAdapter.createJobRun(jobRunConfig);
+        jobRunId = dockerAdapter.createJobRun(jobRunConfig, DockerAdapter.Runtime.DEFAULT);
 
         assertThat(jobRunId, matchesPattern("[a-f0-9]{64}"));
     }

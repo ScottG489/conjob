@@ -10,6 +10,7 @@ import conjob.core.job.exception.*;
 import conjob.core.job.model.JobRunConfig;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 // TODO: Create more specific exceptions for when ImageNotFoundException is thrown
@@ -30,7 +31,11 @@ public class DockerAdapter {
     }
 
     public String createJobRun(JobRunConfig jobRunConfig) throws CreateJobRunException {
-        HostConfig hostConfig = getHostConfig(jobRunConfig.getSecretsVolumeName());
+        return createJobRun(jobRunConfig, Runtime.SYSBOX_RUNC);
+    }
+
+    public String createJobRun(JobRunConfig jobRunConfig, Runtime runtime) throws CreateJobRunException {
+        HostConfig hostConfig = getHostConfig(jobRunConfig.getSecretsVolumeName(), runtime);
 
         ContainerConfig containerConfig = getContainerConfig(
                 jobRunConfig.getJobName(),
@@ -96,8 +101,8 @@ public class DockerAdapter {
         return containerConfigBuilder.build();
     }
 
-    private HostConfig getHostConfig(String secretsVolumeName) {
-        HostConfig.Builder hostConfigBuilder = HostConfig.builder().runtime(RUNTIME);
+    private HostConfig getHostConfig(String secretsVolumeName, Runtime runtime) {
+        HostConfig.Builder hostConfigBuilder = getHostConfigBuilderFor(runtime);
         if (secretsVolumeName != null) {
             hostConfigBuilder.appendBinds(
                     secretsVolumeName
@@ -105,5 +110,15 @@ public class DockerAdapter {
                             + ":" + SECRETS_VOLUME_MOUNT_OPTIONS);
         }
         return hostConfigBuilder.build();
+    }
+
+    private HostConfig.Builder getHostConfigBuilderFor(Runtime runtime) {
+        return Map.of(Runtime.DEFAULT, HostConfig.builder(),
+                Runtime.SYSBOX_RUNC, HostConfig.builder().runtime(RUNTIME)
+        ).get(runtime);
+    }
+
+    public enum Runtime {
+        DEFAULT, SYSBOX_RUNC
     }
 }
