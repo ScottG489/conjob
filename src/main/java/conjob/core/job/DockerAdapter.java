@@ -75,6 +75,9 @@ public class DockerAdapter {
         }
     }
 
+    // TODO: There seems to be an issue with reading logs where if you read them too quickly,
+    // TODO:   before any output has been produced, then the read will finish and return an empty
+    // TODO:   string when really it should have waited for the job to finish. Not sure why this is.
     public String readAllLogsUntilExit(String containerId) throws ReadLogsException {
         LogStream logs;
         try {
