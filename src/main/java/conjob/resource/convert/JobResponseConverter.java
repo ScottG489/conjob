@@ -16,32 +16,32 @@ public class JobResponseConverter {
             JobRunConclusion.REJECTED, JobRunConclusionResponse.REJECTED
     );
 
+    private static final Map<JobRunConclusion, String> jobRunConclusionResponseMessage = Map.of(
+            JobRunConclusion.SUCCESS, "Job run successful.",
+            JobRunConclusion.FAILURE, "Job run failed.",
+            JobRunConclusion.NOT_FOUND, "Job not found.",
+            JobRunConclusion.TIMED_OUT, "Job exceeded maximum allowed duration.",
+            JobRunConclusion.REJECTED, "Concurrent job limit exceeded. Please wait then try again."
+    );
+
     public JobRunResponse from(JobRun jobRun) {
-        String message;
-
-        if (jobRun.getConclusion().equals(JobRunConclusion.SUCCESS)) {
-            message = "Job run successful.";
-        } else if (jobRun.getConclusion().equals(JobRunConclusion.FAILURE)) {
-            message = "Job run failed.";
-        } else if (jobRun.getConclusion().equals(JobRunConclusion.NOT_FOUND)) {
-            message = "Job not found.";
-        } else if (jobRun.getConclusion().equals(JobRunConclusion.TIMED_OUT)) {
-            message = "Job exceeded maximum allowed duration.";
-        } else if (jobRun.getConclusion().equals(JobRunConclusion.REJECTED)) {
-            message = "Concurrent job limit exceeded. Please wait then try again.";
-        } else {
-            message = "Unknown outcome.";
-        }
-
         return new JobRunResponse(
                 from(jobRun.getConclusion()),
                 jobRun.getOutput(),
                 jobRun.getExitCode(),
-                message
+                responseMessageFrom(jobRun.getConclusion())
         );
     }
 
-    public JobRunConclusionResponse from(JobRunConclusion conclusion) {
-        return jobResultToJobResultResponse.get(conclusion);
+    private String responseMessageFrom(JobRunConclusion conclusion) {
+        return conclusion == null
+                ? "Unknown outcome."
+                : jobRunConclusionResponseMessage.getOrDefault(conclusion, "Unknown outcome.");
+    }
+
+    private JobRunConclusionResponse from(JobRunConclusion conclusion) {
+        return conclusion == null
+                ? JobRunConclusionResponse.UNKNOWN
+                : jobResultToJobResultResponse.getOrDefault(conclusion, JobRunConclusionResponse.UNKNOWN);
     }
 }
