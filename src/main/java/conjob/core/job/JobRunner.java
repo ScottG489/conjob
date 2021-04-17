@@ -24,8 +24,7 @@ public class JobRunner {
             try {
                 exitStatusCode = dockerAdapter.stopContainer(containerId, killTimeoutSeconds);
                 // The container could finish naturally before the job timeout but before the stop-to-kill timeout.
-                // TODO: Should this be 0L or existStatusCode? If above could have succeeded then we want the latter.
-                exitStatusCode = wasStoppedOrKilled(exitStatusCode) ? -1 : 0L;
+                exitStatusCode = wasStoppedOrKilled(exitStatusCode) ? -1 : exitStatusCode;
             } catch (StopJobRunException e) {
                 exitStatusCode = -1L;
             }
