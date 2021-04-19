@@ -40,7 +40,7 @@ class JobRunnerTest {
         assertThat(jobRunOutcome.getOutput(), is(givenContainerOutput));
     }
 
-    @Property(tries = 1)
+    @Property
     @Label("Given a container id, " +
             "and an infinite timeout, " +
             "when running the container, " +
