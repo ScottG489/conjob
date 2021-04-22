@@ -10,7 +10,6 @@ import conjob.config.AdminConfig;
 import conjob.config.AuthConfig;
 import conjob.config.JobConfig;
 import conjob.core.job.DockerAdapter;
-import conjob.service.RunJobRateLimiter;
 import conjob.healthcheck.VersionCheck;
 import conjob.resource.GlobalErrorHandler;
 import conjob.resource.GlobalExceptionMapper;
@@ -21,6 +20,7 @@ import conjob.resource.auth.AdminConstraintSecurityHandler;
 import conjob.resource.auth.BasicAuthenticator;
 import conjob.resource.filter.EveryResponseFilter;
 import conjob.service.JobService;
+import conjob.service.RunJobRateLimiter;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
@@ -31,6 +31,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.apache.http.HttpStatus;
 import org.eclipse.jetty.security.AbstractLoginService.UserPrincipal;
+import org.eclipse.jetty.util.security.Password;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 
@@ -128,8 +129,10 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         if (Objects.nonNull(config.getUsername()) && Objects.nonNull(config.getPassword())) {
             adminEnv.setSecurityHandler(
                     new AdminConstraintSecurityHandler(
-                            config.getUsername(),
-                            config.getPassword()));
+                            new AdminConstraintSecurityHandler.AdminLoginService(
+                                    new UserPrincipal(
+                                            config.getUsername(),
+                                            new Password(config.getPassword())))));
         }
     }
 }

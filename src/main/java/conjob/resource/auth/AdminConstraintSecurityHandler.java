@@ -5,7 +5,6 @@ import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.util.security.Constraint;
-import org.eclipse.jetty.util.security.Password;
 
 import java.util.Objects;
 
@@ -13,7 +12,7 @@ public class AdminConstraintSecurityHandler extends ConstraintSecurityHandler {
 
     private static final String ADMIN_ROLE = "admin";
 
-    public AdminConstraintSecurityHandler(final String userName, final String password) {
+    public AdminConstraintSecurityHandler(AdminLoginService adminLoginService) {
         final Constraint constraint = new Constraint(Constraint.__BASIC_AUTH, ADMIN_ROLE);
         constraint.setAuthenticate(true);
         constraint.setRoles(new String[]{ADMIN_ROLE});
@@ -22,7 +21,7 @@ public class AdminConstraintSecurityHandler extends ConstraintSecurityHandler {
         cm.setPathSpec("/*");
         setAuthenticator(new BasicAuthenticator());
         addConstraintMapping(cm);
-        setLoginService(new AdminLoginService(userName, password));
+        setLoginService(adminLoginService);
     }
 
     public static class AdminLoginService extends AbstractLoginService {
@@ -30,9 +29,9 @@ public class AdminConstraintSecurityHandler extends ConstraintSecurityHandler {
         private final UserPrincipal adminPrincipal;
         private final String adminUserName;
 
-        public AdminLoginService(final String userName, final String password) {
-            this.adminUserName = Objects.requireNonNull(userName);
-            this.adminPrincipal = new UserPrincipal(userName, new Password(Objects.requireNonNull(password)));
+        public AdminLoginService(UserPrincipal userPrincipal) {
+            this.adminUserName = Objects.requireNonNull(userPrincipal.getName());
+            this.adminPrincipal = userPrincipal;
         }
 
         @Override
