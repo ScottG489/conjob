@@ -49,9 +49,9 @@ public class ConfigTask extends Task {
     @Override
     public void execute(Map<String, List<String>> parameters, PrintWriter output) {
         String originalConfig = configFieldMethods.entrySet()
-                .stream().map(configEntry -> {
-                    return configEntry.getKey() + "=" + configEntry.getValue().getReadMethod().get() + "&";
-                }).collect(Collectors.joining());
+                .stream().map(configEntry ->
+                        configEntry.getKey() + "=" + configEntry.getValue().getReadMethod().get() + "&")
+                .collect(Collectors.joining());
         originalConfig = originalConfig.substring(0, originalConfig.length() - 1);
         parameters.forEach(this::updateConfig);
 
