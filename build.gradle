@@ -32,6 +32,14 @@ repositories {
     jcenter()
 }
 
+task jacocoAllTestReport(type: JacocoReport) {
+    getExecutionData().setFrom(fileTree(buildDir)
+            .include("/jacoco/unitTest.exec")
+            .include("/jacoco/integrationTest.exec")
+            .include("/jacoco/run.exec"))
+    sourceSets sourceSets.main
+}
+
 jacoco {
     applyTo run
 }
