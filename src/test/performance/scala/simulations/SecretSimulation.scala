@@ -6,6 +6,8 @@ import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
 import util.ConfigUtil
 
+import scala.concurrent.duration.DurationInt
+
 class SecretSimulation extends Simulation {
 
   private val baseUrl: String = ConfigUtil.getFromConfig("baseUri")
@@ -21,7 +23,7 @@ class SecretSimulation extends Simulation {
     .exec(request)
 
   setUp(
-    secretScenario.inject(atOnceUsers(10))
+    secretScenario.inject(constantUsersPerSec(1) during(10.seconds))
   )
     .protocols(httpProtocol)
     .assertions(
