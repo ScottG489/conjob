@@ -1,5 +1,4 @@
-import io.gatling.core.Predef._
-import io.gatling.core.body.StringBody
+import io.gatling.core.Predef.{constantUsersPerSec, _}
 import io.gatling.core.scenario.Simulation
 import io.gatling.core.structure.ScenarioBuilder
 import io.gatling.http.Predef._
@@ -17,14 +16,25 @@ class SecretSimulation extends Simulation {
   private val request = http("Secrets request")
     .post("/secret")
     .queryParam("image", "${image}")
-    .body(new StringBody("some secret"))
-  private val secretScenario : ScenarioBuilder = scenario("Secrets Simulation")
+    .body(StringBody("some secret"))
+  private val secretScenario: ScenarioBuilder = scenario("Secrets Simulation")
     .exec(_.set("image", "library/hello-world:latest"))
     .exec(request)
 
+  private val warmUpRequest = request.silent
+  private val warmUpScenario: ScenarioBuilder = scenario("Warm up Scenario")
+    .exec(_.set("image", "library/hello-world:latest"))
+    .exec(warmUpRequest)
+
+  private val all: ScenarioBuilder = warmUpScenario.exec(secretScenario)
+
   setUp(
-    secretScenario.inject(constantUsersPerSec(1) during(10.seconds))
-  )
+    warmUpScenario.inject(
+      constantUsersPerSec(1) during (1.seconds),
+    ).andThen(
+      secretScenario.inject(
+        constantUsersPerSec(1) during (10.seconds))
+    ))
     .protocols(httpProtocol)
     .assertions(
       // Not sure why this gets above 1 second for 10 concurrent requests. It can handle much more locally. I

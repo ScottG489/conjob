@@ -5,6 +5,8 @@ import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
 import util.ConfigUtil
 
+import scala.concurrent.duration.DurationInt
+
 class JobRunOverLoadSimulation extends Simulation {
 
   private val baseUrl: String = ConfigUtil.getFromConfig("baseUri")
@@ -18,9 +20,18 @@ class JobRunOverLoadSimulation extends Simulation {
     .exec(_.set("image", "library/hello-world:latest"))
     .exec(request)
 
+  private val warmUpRequest = request.silent
+  private val warmUpScenario: ScenarioBuilder = scenario("Warm up Scenario")
+    .exec(_.set("image", "library/hello-world:latest"))
+    .exec(warmUpRequest)
+
   setUp(
-    overLoadScenario.inject(atOnceUsers(6))
-  )
+    warmUpScenario.inject(
+      constantUsersPerSec(1) during (1.seconds),
+    ).andThen(
+      overLoadScenario.inject(
+        atOnceUsers(6))
+    ))
     .protocols(httpProtocol)
     .assertions(
       global.responseTime.mean.lt(5000),
