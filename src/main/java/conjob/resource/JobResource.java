@@ -72,24 +72,14 @@ public class JobResource {
     private Response createResponse(String imageName, String input, String pullStrategy)
             throws SecretStoreException {
         log.info("Running image: '{}'", imageName);
-        return createResponseFrom(jobService.createResponse(imageName, input, pullStrategy));
+        JobRun jobRun = jobService.createResponse(imageName, input, pullStrategy);
+        return responseCreator.createResponseFrom(jobResponseConverter.from(jobRun));
     }
 
     private Response createJsonResponse(String imageName, String input, String pullStrategy)
             throws SecretStoreException {
         log.info("Running image: '{}'", imageName);
-        return createJsonResponseFrom(jobService.createJsonResponse(imageName, input, pullStrategy));
-    }
-
-    private Response createResponseFrom(JobRun jobRun) {
-        return responseCreator.create(jobRun.getConclusion())
-                .entity(jobRun.getOutput())
-                .build();
-    }
-
-    private Response createJsonResponseFrom(JobRun jobRun) {
-        return responseCreator.create(jobRun.getConclusion())
-                .entity(jobResponseConverter.from(jobRun))
-                .build();
+        JobRun jobRun = jobService.createJsonResponse(imageName, input, pullStrategy);
+        return responseCreator.createJsonResponseFrom(jobResponseConverter.from(jobRun));
     }
 }

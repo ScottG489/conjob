@@ -1,63 +1,82 @@
 package conjob.resource.convert;
 
-import conjob.core.job.model.JobRunConclusion;
-import net.jqwik.api.ForAll;
-import net.jqwik.api.Label;
-import net.jqwik.api.Property;
+import conjob.api.JobRunConclusionResponse;
+import conjob.api.JobRunResponse;
+import net.jqwik.api.*;
 import net.jqwik.api.lifecycle.BeforeTry;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 
 import javax.ws.rs.core.Response;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 
 class ResponseCreatorTest {
     private ResponseCreator responseCreator;
 
     @BeforeEach
     @BeforeTry
-    void setup() {
+    void beforeEach() {
         responseCreator = new ResponseCreator();
     }
 
-    @ParameterizedTest(name = "Given a JobRunConclusion, " +
-            "when mapping it to a Response.Status, " +
-            "should map {0}")
-    @MethodSource("givenConclusionResponseStatus")
-    void mapFromSuccess(Map.Entry<JobRunConclusion, Response.Status> givenConclusionResponseStatus) {
-        JobRunConclusion givenConclusion = givenConclusionResponseStatus.getKey();
-        Response.Status expectedResponseStatus = givenConclusionResponseStatus.getValue();
-        Response.Status status = responseCreator.create(givenConclusion)
-                .build().getStatusInfo().toEnum();
+    @Property
+    @Label("Given a job run response, " +
+            "when creating a text web response from it, " +
+            "should have the expected status, " +
+            "and the body should be the given job run responses' output.")
+    void createTextResponse(
+            @ForAll("conclusionExpectedStatus") Map.Entry<JobRunConclusionResponse, Response.Status>
+                    givenConclusionExpectedStatus,
+            @ForAll String givenOutput,
+            @ForAll Long givenExitCode,
+            @ForAll String givenMessage) {
+        JobRunConclusionResponse givenConclusion = givenConclusionExpectedStatus.getKey();
+        Response.Status expectedResponseStatus = givenConclusionExpectedStatus.getValue();
+        JobRunResponse jobRunResponse =
+                new JobRunResponse(givenConclusion, givenOutput, givenExitCode, givenMessage);
 
-        assertThat(status, is(expectedResponseStatus));
+        Response response = responseCreator.createResponseFrom(jobRunResponse);
+
+        assertThat(response.getStatusInfo().toEnum(), is(expectedResponseStatus));
+        assertThat(response.getEntity(), is(jobRunResponse.getOutput()));
     }
 
     @Property
-    @Label("Given a JobRunConclusion, " +
-            "when mapping it to a Response.Status, " +
-            "should never be a server error")
-    void shouldNeverMapToServerError(@ForAll JobRunConclusion jobRunConclusion) {
-        Response.Status status = responseCreator.create(jobRunConclusion)
-                .build().getStatusInfo().toEnum();
+    @Label("Given a job run response, " +
+            "when creating a JSON web response from it, " +
+            "should have the expected status, " +
+            "and the body should be the given job run response.")
+    void createJsonResponse(
+            @ForAll("conclusionExpectedStatus") Map.Entry<JobRunConclusionResponse, Response.Status>
+                    givenConclusionExpectedStatus,
+            @ForAll String givenOutput,
+            @ForAll Long givenExitCode,
+            @ForAll String givenMessage) {
+        JobRunConclusionResponse givenConclusion = givenConclusionExpectedStatus.getKey();
+        Response.Status expectedResponseStatus = givenConclusionExpectedStatus.getValue();
+        JobRunResponse jobRunResponse =
+                new JobRunResponse(givenConclusion, givenOutput, givenExitCode, givenMessage);
 
-        assertThat(status, is(not(Response.Status.INTERNAL_SERVER_ERROR)));
+        Response response = responseCreator.createJsonResponseFrom(jobRunResponse);
+
+        assertThat(response.getStatusInfo().toEnum(), is(expectedResponseStatus));
+        assertThat(response.getEntity(), is(jobRunResponse));
     }
 
-    private static List<Map.Entry<JobRunConclusion, Response.Status>> givenConclusionResponseStatus() {
-        return Arrays.asList(
-                Map.entry(JobRunConclusion.SUCCESS, Response.ok().build().getStatusInfo().toEnum()),
-                Map.entry(JobRunConclusion.FAILURE, Response.status(Response.Status.BAD_REQUEST).build().getStatusInfo().toEnum()),
-                Map.entry(JobRunConclusion.NOT_FOUND, Response.status(Response.Status.NOT_FOUND).build().getStatusInfo().toEnum()),
-                Map.entry(JobRunConclusion.REJECTED, Response.status(Response.Status.SERVICE_UNAVAILABLE).build().getStatusInfo().toEnum()),
-                Map.entry(JobRunConclusion.TIMED_OUT, Response.status(Response.Status.REQUEST_TIMEOUT).build().getStatusInfo().toEnum())
-        );
+    @Provide
+    private Arbitrary<JobRunResponse> foo() {
+        return Arbitraries.forType(JobRunResponse.class);
+    }
+
+    @Provide
+    private Arbitrary<Map.Entry<JobRunConclusionResponse, Response.Status>> conclusionExpectedStatus() {
+        return Arbitraries.oneOf(
+                Arbitraries.of(Map.entry(JobRunConclusionResponse.SUCCESS, Response.ok().build().getStatusInfo().toEnum())),
+                Arbitraries.of(Map.entry(JobRunConclusionResponse.FAILURE, Response.status(Response.Status.BAD_REQUEST).build().getStatusInfo().toEnum())),
+                Arbitraries.of(Map.entry(JobRunConclusionResponse.NOT_FOUND, Response.status(Response.Status.NOT_FOUND).build().getStatusInfo().toEnum())),
+                Arbitraries.of(Map.entry(JobRunConclusionResponse.REJECTED, Response.status(Response.Status.SERVICE_UNAVAILABLE).build().getStatusInfo().toEnum())),
+                Arbitraries.of(Map.entry(JobRunConclusionResponse.TIMED_OUT, Response.status(Response.Status.REQUEST_TIMEOUT).build().getStatusInfo().toEnum())));
     }
 }
