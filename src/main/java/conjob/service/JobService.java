@@ -34,28 +34,11 @@ public class JobService {
         this.configUtil = new ConfigUtil();
     }
 
-    public JobRun createResponse(String imageName) throws SecretStoreException {
-        return createResponse(imageName, "");
+    public JobRun runJob(String imageName, String input) throws SecretStoreException {
+        return runJob(imageName, input, PullStrategy.ALWAYS.name());
     }
 
-    public JobRun createResponse(String imageName, String input) throws SecretStoreException {
-        return createResponse(imageName, input, PullStrategy.ALWAYS.name());
-    }
-
-    public JobRun createResponse(String imageName, String input, String pullStrategyName) throws SecretStoreException {
-        PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
-        return runJob(imageName, input, pullStrategy);
-    }
-
-    public JobRun createJsonResponse(String imageName) throws SecretStoreException {
-        return createJsonResponse(imageName, "");
-    }
-
-    public JobRun createJsonResponse(String imageName, String input) throws SecretStoreException {
-        return createJsonResponse(imageName, input, PullStrategy.ALWAYS.name());
-    }
-
-    public JobRun createJsonResponse(String imageName, String input, String pullStrategyName) throws SecretStoreException {
+    public JobRun runJob(String imageName, String input, String pullStrategyName) throws SecretStoreException {
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
         return runJob(imageName, input, pullStrategy);
     }
