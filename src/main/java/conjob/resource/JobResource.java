@@ -31,6 +31,15 @@ public class JobResource {
         this.jobResponseConverter = new JobResponseConverter();
     }
 
+    public JobResource(
+            JobService jobService,
+            ResponseCreator responseCreator,
+            JobResponseConverter jobResponseConverter) {
+        this.jobService = jobService;
+        this.responseCreator = responseCreator;
+        this.jobResponseConverter = jobResponseConverter;
+    }
+
     @POST
     @Produces(MediaType.TEXT_PLAIN)
     public Response handleTextPost(
