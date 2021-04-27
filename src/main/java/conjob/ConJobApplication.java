@@ -18,6 +18,8 @@ import conjob.resource.SecretResource;
 import conjob.resource.admin.task.ConfigTask;
 import conjob.resource.auth.AdminConstraintSecurityHandler;
 import conjob.resource.auth.BasicAuthenticator;
+import conjob.resource.convert.JobResponseConverter;
+import conjob.resource.convert.ResponseCreator;
 import conjob.resource.filter.EveryResponseFilter;
 import conjob.service.JobService;
 import conjob.service.RunJobRateLimiter;
@@ -112,7 +114,9 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
                 new JobService(
                         new DockerAdapter(docker),
                         new RunJobRateLimiter(limitConfig),
-                        limitConfig));
+                        limitConfig),
+                new ResponseCreator(),
+                new JobResponseConverter());
     }
 
     private void configureBasicAuth(AuthConfig config, Environment environment) {

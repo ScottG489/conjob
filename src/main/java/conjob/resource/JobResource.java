@@ -25,12 +25,6 @@ public class JobResource {
     private final ResponseCreator responseCreator;
     private final JobResponseConverter jobResponseConverter;
 
-    public JobResource(JobService jobService) {
-        this.jobService = jobService;
-        this.responseCreator = new ResponseCreator();
-        this.jobResponseConverter = new JobResponseConverter();
-    }
-
     public JobResource(
             JobService jobService,
             ResponseCreator responseCreator,
