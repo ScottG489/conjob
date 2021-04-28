@@ -7,7 +7,7 @@ sourceSets {
     }
 }
 
-ext.jqwikVersion = '1.5.1'
+ext.integrationTestJqwikVersion = '1.5.1'
 
 task integrationTest(type: Test) {
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
@@ -19,9 +19,9 @@ task integrationTest(type: Test) {
 }
 
 dependencies {
-    testImplementation platform('org.junit:junit-bom:5.7.1')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testImplementation "net.jqwik:jqwik:${jqwikVersion}"
+    integrationTestImplementation platform('org.junit:junit-bom:5.7.1')
+    integrationTestImplementation 'org.junit.jupiter:junit-jupiter'
+    integrationTestImplementation "net.jqwik:jqwik:${integrationTestJqwikVersion}"
 }
 
 task jacocoIntegrationTestReport(type:JacocoReport) {
