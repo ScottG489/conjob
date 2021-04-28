@@ -25,7 +25,7 @@ task unitTest(type: Test) {
 }
 
 dependencies {
-    testCompile "org.mockito:mockito-core:3.8.0"
+    testImplementation "org.mockito:mockito-core:3.8.0"
     testImplementation(platform('org.junit:junit-bom:5.7.1'))
     testImplementation('org.junit.jupiter:junit-jupiter')
     testImplementation "net.jqwik:jqwik:${jqwikVersion}"
