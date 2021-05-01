@@ -48,7 +48,7 @@ public class JobService {
         long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
         int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
 
-        if (runJobRateLimiter.isAtLimit()) {
+        if (runJobRateLimiter.isLimitingOrIncrement()) {
             return new JobRun(JobRunConclusion.REJECTED, "", -1);
         }
 

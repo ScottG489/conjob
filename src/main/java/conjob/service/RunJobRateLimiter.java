@@ -16,7 +16,7 @@ public class RunJobRateLimiter {
         this.limitConfig = limitConfig;
     }
 
-    public synchronized boolean isAtLimit() {
+    public synchronized boolean isLimitingOrIncrement() {
         if (runningJobsCount >= limitConfig.getMaxConcurrentRuns()
                 || requestTimeWindow.getSnapshot().getValues().length >= limitConfig.getMaxGlobalRequestsPerSecond()) {
             return true;
@@ -29,5 +29,9 @@ public class RunJobRateLimiter {
 
     public synchronized void decrementRunningJobsCount() {
         runningJobsCount--;
+    }
+
+    public synchronized int getRunningJobsCount() {
+        return runningJobsCount;
     }
 }
