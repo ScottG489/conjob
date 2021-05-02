@@ -21,8 +21,10 @@ import conjob.resource.auth.BasicAuthenticator;
 import conjob.resource.convert.JobResponseConverter;
 import conjob.resource.convert.ResponseCreator;
 import conjob.resource.filter.EveryResponseFilter;
+import conjob.service.ConcurrentJobCountLimiter;
 import conjob.service.JobService;
-import conjob.service.RunJobRateLimiter;
+import conjob.service.RunJobLimiter;
+import conjob.service.RunJobRateLimit;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
@@ -113,10 +115,16 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         return new JobResource(
                 new JobService(
                         new DockerAdapter(docker),
-                        new RunJobRateLimiter(limitConfig),
+                        createRunJobLimiter(limitConfig),
                         limitConfig),
                 new ResponseCreator(),
                 new JobResponseConverter());
+    }
+
+    private RunJobLimiter createRunJobLimiter(JobConfig.LimitConfig limitConfig) {
+        return new RunJobLimiter(
+                new ConcurrentJobCountLimiter(limitConfig),
+                new RunJobRateLimit(limitConfig));
     }
 
     private void configureBasicAuth(AuthConfig config, Environment environment) {

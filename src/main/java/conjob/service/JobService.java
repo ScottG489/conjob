@@ -11,7 +11,7 @@ import conjob.core.secret.SecretStoreException;
 
 public class JobService {
 
-    private final RunJobRateLimiter runJobRateLimiter;
+    private final RunJobLimiter runJobLimiter;
     private final JobConfig.LimitConfig limitConfig;
     private final JobRunCreationStrategyDeterminer jobRunCreationStrategyDeterminer;
     private final JobRunner jobRunner;
@@ -22,8 +22,8 @@ public class JobService {
 
     public JobService(
             DockerAdapter dockerAdapter,
-            RunJobRateLimiter runJobRateLimiter, JobConfig.LimitConfig limitConfig) {
-        this.runJobRateLimiter = runJobRateLimiter;
+            RunJobLimiter runJobLimiter, JobConfig.LimitConfig limitConfig) {
+        this.runJobLimiter = runJobLimiter;
         this.limitConfig = limitConfig;
 
         this.secretStore = new SecretStore(dockerAdapter);
@@ -48,7 +48,7 @@ public class JobService {
         long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
         int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
 
-        if (runJobRateLimiter.isLimitingOrIncrement()) {
+        if (runJobLimiter.isLimitingOrIncrement()) {
             return new JobRun(JobRunConclusion.REJECTED, "", -1);
         }
 
@@ -60,7 +60,7 @@ public class JobService {
         try {
             jobId = jobRunCreationStrategy.createJobRun(jobRunConfig);
         } catch (CreateJobRunException | JobUpdateException e2) {
-            runJobRateLimiter.decrementRunningJobsCount();
+            runJobLimiter.markJobRunComplete();
             return new JobRun(JobRunConclusion.NOT_FOUND, "", -1);
         }
 
@@ -68,7 +68,7 @@ public class JobService {
                 .runContainer(jobId, maxTimeoutSeconds, maxKillTimeoutSeconds);
         JobRunConclusion jobRunConclusion = outcomeDeterminer.determineOutcome(outcome);
 
-        runJobRateLimiter.decrementRunningJobsCount();
+        runJobLimiter.markJobRunComplete();
         return new JobRun(jobRunConclusion, outcome.getOutput(), outcome.getExitStatusCode());
     }
 
