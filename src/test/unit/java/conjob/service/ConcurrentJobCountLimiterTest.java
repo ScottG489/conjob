@@ -68,8 +68,9 @@ class ConcurrentJobCountLimiterTest {
     @Provide
     Arbitrary<ConcurrentJobCountLimiter> smallLimiter() {
         LongArbitrary longArbitrary = Arbitraries.longs().between(0, 100);
+        Long max = Long.MAX_VALUE;
         return longArbitrary
-                .map(l -> new JobConfig.LimitConfig(l, l, l, l))
+                .map(l -> new JobConfig.LimitConfig(max, l, max, max))
                 .map(ConcurrentJobCountLimiter::new);
     }
 
