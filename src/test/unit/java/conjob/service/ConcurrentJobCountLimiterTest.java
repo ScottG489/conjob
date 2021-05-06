@@ -24,17 +24,6 @@ class ConcurrentJobCountLimiterTest {
         assertThat(jobCountLimiter.isAtLimit(), is(false));
     }
 
-    @Property
-    @Label("Given job count limiter, " +
-            "and it has no limits, " +
-            "when checking if it's at the limit, " +
-            "then it should always be false.")
-    void foo(
-            @ForAll("noLimit") ConcurrentJobCountLimiter jobCountLimiter
-    ) {
-        assertThat(jobCountLimiter.isAtLimit(), is(false));
-    }
-
     @Test
     @DisplayName("Given job count limiter, " +
             "and it is always at the limit, " +
