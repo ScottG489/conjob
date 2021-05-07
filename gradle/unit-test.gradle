@@ -25,6 +25,9 @@ task unitTest(type: Test) {
 }
 
 dependencies {
+    unitTestAnnotationProcessor 'org.projectlombok:lombok:1.18.10'
+    unitTestCompileOnly 'org.projectlombok:lombok:1.18.10'
+
     unitTestImplementation "org.mockito:mockito-core:3.8.0"
     unitTestImplementation platform('org.junit:junit-bom:5.7.1')
     unitTestImplementation 'org.junit.jupiter:junit-jupiter'
