@@ -41,13 +41,14 @@ class ConcurrentJobCountLimiterTest {
 
 
     @Property
-    @Label("Given , " +
-            "and , " +
-            "when , " +
-            "then .")
-    void f(
+    @Label("Given a valid sequence of actions, " +
+            "and a max allowed runs of less than 100, " +
+            "when they are all run, " +
+            "then they should be successful, " +
+            "and the running job count should never be less than 0.")
+    void validActions(
             @ForAll("actions") ActionSequence<ConcurrentJobCountLimiter> actions,
-            @ForAll("smallLimiter") ConcurrentJobCountLimiter limiter) {
+            @ForAll("reasonablyLowLimiter") ConcurrentJobCountLimiter limiter) {
         actions
                 .withInvariant((ConcurrentJobCountLimiter l) ->
                         assertThat(
@@ -66,7 +67,7 @@ class ConcurrentJobCountLimiterTest {
     }
 
     @Provide
-    Arbitrary<ConcurrentJobCountLimiter> smallLimiter() {
+    Arbitrary<ConcurrentJobCountLimiter> reasonablyLowLimiter() {
         LongArbitrary longArbitrary = Arbitraries.longs().between(0, 100);
         Long max = Long.MAX_VALUE;
         return longArbitrary
