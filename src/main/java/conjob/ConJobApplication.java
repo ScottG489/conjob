@@ -2,7 +2,6 @@ package conjob;
 
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.auth.FixedRegistryAuthSupplier;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.RegistryAuth;
@@ -11,6 +10,8 @@ import conjob.config.AuthConfig;
 import conjob.config.JobConfig;
 import conjob.core.job.DockerAdapter;
 import conjob.healthcheck.VersionCheck;
+import conjob.init.AuthedDockerClientCreator;
+import conjob.init.DockerClientCreator;
 import conjob.resource.GlobalErrorHandler;
 import conjob.resource.GlobalExceptionMapper;
 import conjob.resource.JobResource;
@@ -33,7 +34,6 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.AdminEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import org.apache.http.HttpStatus;
 import org.eclipse.jetty.security.AbstractLoginService.UserPrincipal;
 import org.eclipse.jetty.util.security.Password;
 import org.glassfish.jersey.server.ServerProperties;
@@ -65,9 +65,7 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         environment.jersey().property(ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, 0);
         environment.jersey().register(new EveryResponseFilter());
 
-        DockerClient docker = createDockerClient(
-                configuration.getConjob().getDocker().getUsername(),
-                configuration.getConjob().getDocker().getPassword());
+        DockerClient docker = createDockerClient(configuration);
 
         environment.jersey().register(createJobResource(configuration.getConjob().getJob().getLimit(), docker));
         environment.jersey().register(new SecretResource(docker));
@@ -84,30 +82,15 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         configureBasicAuth(configuration.getConjob().getAuth(), environment);
     }
 
-    private DockerClient createDockerClient(String username, String password) throws DockerCertificateException, DockerException, InterruptedException {
-        DefaultDockerClient docker;
+    private DockerClient createDockerClient(ConJobConfiguration configuration) throws DockerCertificateException, DockerException, InterruptedException {
         DefaultDockerClient.Builder dockerBuilder = DefaultDockerClient.fromEnv();
-        if (Objects.nonNull(username) && Objects.nonNull(password)) {
-            RegistryAuth registryAuth = RegistryAuth.builder()
-                    .username(username)
-                    .password(password)
-                    .build();
-            docker = dockerBuilder.registryAuthSupplier(
-                    new FixedRegistryAuthSupplier(registryAuth, null))
-                    .build();
-            validateCredentials(docker, registryAuth);
-        } else {
-            docker = dockerBuilder.build();
-        }
-
-        return docker;
-    }
-
-    private void validateCredentials(DefaultDockerClient docker, RegistryAuth registryAuth) throws DockerException, InterruptedException {
-        final int statusCode = docker.auth(registryAuth);
-        if (statusCode != HttpStatus.SC_OK) {
-            throw new RuntimeException("Incorrect docker credentials");
-        }
+        RegistryAuth.Builder authBuilder = RegistryAuth.builder();
+        return new DockerClientCreator(
+                dockerBuilder,
+                new AuthedDockerClientCreator(dockerBuilder, authBuilder))
+                .createDockerClient(
+                        configuration.getConjob().getDocker().getUsername(),
+                        configuration.getConjob().getDocker().getPassword());
     }
 
     private JobResource createJobResource(JobConfig.LimitConfig limitConfig, DockerClient docker) {
