@@ -39,10 +39,6 @@ public class JobService {
         this.configUtil = configUtil;
     }
 
-    public JobRun runJob(String imageName, String input) throws SecretStoreException {
-        return runJob(imageName, input, PullStrategy.ALWAYS.name());
-    }
-
     public JobRun runJob(String imageName, String input, String pullStrategyName) throws SecretStoreException {
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
         return runJob(imageName, input, pullStrategy);
