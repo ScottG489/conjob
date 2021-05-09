@@ -1,6 +1,6 @@
 package conjob.core.job.exception;
 
-public class RunJobException extends Exception {
+public class RunJobException extends JobRunException {
     public RunJobException(Exception e) {
         super(e);
     }
