@@ -44,7 +44,7 @@ jacoco {
     applyTo run
 }
 
-task jacocoApplicationReport(type:JacocoReport) {
+task jacocoApplicationReport(type: JacocoReport) {
     executionData run
     sourceSets sourceSets.main
 }

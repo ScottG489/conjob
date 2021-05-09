@@ -25,7 +25,7 @@ dependencies {
     integrationTestImplementation "net.jqwik:jqwik:${integrationTestJqwikVersion}"
 }
 
-task jacocoIntegrationTestReport(type:JacocoReport) {
+task jacocoIntegrationTestReport(type: JacocoReport) {
     dependsOn integrationTest
     executionData integrationTest
     sourceSets sourceSets.main
