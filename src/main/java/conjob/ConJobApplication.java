@@ -67,7 +67,8 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
 
         DockerClient docker = createDockerClient(configuration);
 
-        environment.jersey().register(createJobResource(configuration.getConjob().getJob().getLimit(), docker));
+        environment.jersey().register(
+                createJobResource(configuration.getConjob().getJob().getLimit(), docker));
         environment.jersey().register(new SecretResource(docker));
 
         environment.admin().addTask(new ConfigTask(configuration));
