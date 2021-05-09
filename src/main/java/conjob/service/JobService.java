@@ -21,17 +21,22 @@ public class JobService {
     private final OutcomeDeterminer outcomeDeterminer;
 
     public JobService(
-            DockerAdapter dockerAdapter,
-            RunJobLimiter runJobLimiter, JobConfig.LimitConfig limitConfig) {
+            RunJobLimiter runJobLimiter,
+            JobConfig.LimitConfig limitConfig,
+            SecretStore secretStore,
+            JobRunCreationStrategyDeterminer jobRunCreationStrategyDeterminer,
+            JobRunner jobRunner,
+            JobRunConfigCreator jobRunConfigCreator,
+            OutcomeDeterminer outcomeDeterminer,
+            ConfigUtil configUtil) {
         this.runJobLimiter = runJobLimiter;
         this.limitConfig = limitConfig;
-
-        this.secretStore = new SecretStore(dockerAdapter);
-        this.jobRunCreationStrategyDeterminer = new JobRunCreationStrategyDeterminer(dockerAdapter);
-        this.jobRunner = new JobRunner(dockerAdapter);
-        this.jobRunConfigCreator = new JobRunConfigCreator();
-        this.outcomeDeterminer = new OutcomeDeterminer();
-        this.configUtil = new ConfigUtil();
+        this.secretStore = secretStore;
+        this.jobRunCreationStrategyDeterminer = jobRunCreationStrategyDeterminer;
+        this.jobRunner = jobRunner;
+        this.jobRunConfigCreator = jobRunConfigCreator;
+        this.outcomeDeterminer = outcomeDeterminer;
+        this.configUtil = configUtil;
     }
 
     public JobRun runJob(String imageName, String input) throws SecretStoreException {
@@ -45,12 +50,12 @@ public class JobService {
 
     private JobRun runJob(String imageName, String input, PullStrategy pullStrategy)
             throws SecretStoreException {
-        long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
-        int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
-
         if (runJobLimiter.isLimitingOrIncrement()) {
             return new JobRun(JobRunConclusion.REJECTED, "", -1);
         }
+
+        long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
+        int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
 
         JobRunConfig jobRunConfig = getJobRunConfig(imageName, input);
         JobRunCreationStrategy jobRunCreationStrategy =

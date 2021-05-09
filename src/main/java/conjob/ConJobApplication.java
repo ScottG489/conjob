@@ -9,6 +9,11 @@ import conjob.config.AdminConfig;
 import conjob.config.AuthConfig;
 import conjob.config.JobConfig;
 import conjob.core.job.DockerAdapter;
+import conjob.core.job.JobRunConfigCreator;
+import conjob.core.job.JobRunner;
+import conjob.core.job.OutcomeDeterminer;
+import conjob.core.job.config.ConfigUtil;
+import conjob.core.secret.SecretStore;
 import conjob.healthcheck.VersionCheck;
 import conjob.init.AuthedDockerClientCreator;
 import conjob.init.DockerClientCreator;
@@ -22,10 +27,7 @@ import conjob.resource.auth.BasicAuthenticator;
 import conjob.resource.convert.JobResponseConverter;
 import conjob.resource.convert.ResponseCreator;
 import conjob.resource.filter.EveryResponseFilter;
-import conjob.service.ConcurrentJobCountLimiter;
-import conjob.service.JobService;
-import conjob.service.RunJobLimiter;
-import conjob.service.RunJobRateLimit;
+import conjob.service.*;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
@@ -95,11 +97,17 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
     }
 
     private JobResource createJobResource(JobConfig.LimitConfig limitConfig, DockerClient docker) {
+        DockerAdapter dockerAdapter = new DockerAdapter(docker);
         return new JobResource(
                 new JobService(
-                        new DockerAdapter(docker),
                         createRunJobLimiter(limitConfig),
-                        limitConfig),
+                        limitConfig,
+                        new SecretStore(dockerAdapter),
+                        new JobRunCreationStrategyDeterminer(dockerAdapter),
+                        new JobRunner(dockerAdapter),
+                        new JobRunConfigCreator(),
+                        new OutcomeDeterminer(),
+                        new ConfigUtil()),
                 new ResponseCreator(),
                 new JobResponseConverter());
     }
