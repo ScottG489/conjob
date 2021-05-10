@@ -36,6 +36,7 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.AdminEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import lombok.Getter;
 import org.eclipse.jetty.security.AbstractLoginService.UserPrincipal;
 import org.eclipse.jetty.util.security.Password;
 import org.glassfish.jersey.server.ServerProperties;
@@ -44,6 +45,9 @@ import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import java.util.Objects;
 
 public class ConJobApplication extends Application<ConJobConfiguration> {
+    @Getter
+    private Environment environment;
+
     public static void main(String[] args) throws Exception {
         new ConJobApplication().run(args);
     }
@@ -63,6 +67,7 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
 
     @Override
     public void run(ConJobConfiguration configuration, Environment environment) throws DockerCertificateException, DockerException, InterruptedException {
+        this.environment = environment;
         // TODO: We probably want to make this something higher than 0, though not too high
         environment.jersey().property(ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, 0);
         environment.jersey().register(new EveryResponseFilter());
