@@ -5,7 +5,6 @@ import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.RegistryAuth;
-import conjob.config.AdminConfig;
 import conjob.config.JobConfig;
 import conjob.core.job.DockerAdapter;
 import conjob.core.job.JobRunConfigCreator;
@@ -22,7 +21,6 @@ import conjob.resource.GlobalExceptionMapper;
 import conjob.resource.JobResource;
 import conjob.resource.SecretResource;
 import conjob.resource.admin.task.ConfigTask;
-import conjob.resource.auth.AdminConstraintSecurityHandler;
 import conjob.resource.convert.JobResponseConverter;
 import conjob.resource.convert.ResponseCreator;
 import conjob.resource.filter.EveryResponseFilter;
@@ -30,15 +28,10 @@ import conjob.service.*;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.setup.AdminEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import lombok.Getter;
-import org.eclipse.jetty.security.AbstractLoginService.UserPrincipal;
-import org.eclipse.jetty.util.security.Password;
 import org.glassfish.jersey.server.ServerProperties;
-
-import java.util.Objects;
 
 public class ConJobApplication extends Application<ConJobConfiguration> {
     @Getter
@@ -81,7 +74,8 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
 
         environment.healthChecks().register("version", new VersionCheck());
 
-        configureAdminEnv(configuration.getConjob().getAdmin(), environment.admin());
+        new AdminBasicAuthConfigurator()
+                .configureAdminBasicAuth(configuration.getConjob().getAdmin(), environment.admin());
 
         new BasicAuthConfigurator()
                 .configureBasicAuth(configuration.getConjob().getAuth(), environment.jersey());
@@ -118,16 +112,5 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         return new RunJobLimiter(
                 new ConcurrentJobCountLimiter(limitConfig),
                 new RunJobRateLimit(limitConfig));
-    }
-
-    private void configureAdminEnv(AdminConfig config, AdminEnvironment adminEnv) {
-        if (Objects.nonNull(config.getUsername()) && Objects.nonNull(config.getPassword())) {
-            adminEnv.setSecurityHandler(
-                    new AdminConstraintSecurityHandler(
-                            new AdminConstraintSecurityHandler.AdminLoginService(
-                                    new UserPrincipal(
-                                            config.getUsername(),
-                                            new Password(config.getPassword())))));
-        }
     }
 }
