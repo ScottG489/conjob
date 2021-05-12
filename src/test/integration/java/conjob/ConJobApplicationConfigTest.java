@@ -53,7 +53,7 @@ public class ConJobApplicationConfigTest {
     public void basicAuthConfig() throws Exception {
         String expectStartsWith = "\nHello from Docker!";
 
-        app.run("server", "src/test/unit/resources/basic_auth_config.yml");
+        app.run("server", "src/test/integration/resources/basic_auth_config.yml");
 
         given()
                 .auth().basic("basic_username", "basic_password")
@@ -78,7 +78,7 @@ public class ConJobApplicationConfigTest {
     public void adminBasicAuthConfig() throws Exception {
         String expectStartsWith = "pong";
 
-        app.run("server", "src/test/unit/resources/admin_basic_auth_config.yml");
+        app.run("server", "src/test/integration/resources/admin_basic_auth_config.yml");
 
         given()
                 .port(8081)
