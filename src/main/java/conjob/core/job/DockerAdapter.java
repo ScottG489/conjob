@@ -20,9 +20,15 @@ public class DockerAdapter {
     private static final String SECRETS_VOLUME_MOUNT_OPTIONS = "ro";
 
     private final DockerClient dockerClient;
+    private final Runtime containerRuntime;
 
     public DockerAdapter(DockerClient dockerClient) {
+        this(dockerClient, Runtime.SYSBOX_RUNC);
+    }
+
+    public DockerAdapter(DockerClient dockerClient, Runtime containerRuntime) {
         this.dockerClient = dockerClient;
+        this.containerRuntime = containerRuntime;
     }
 
     public List<String> listAllVolumeNames() throws DockerException, InterruptedException {
@@ -31,11 +37,7 @@ public class DockerAdapter {
     }
 
     public String createJobRun(JobRunConfig jobRunConfig) throws CreateJobRunException {
-        return createJobRun(jobRunConfig, Runtime.SYSBOX_RUNC);
-    }
-
-    public String createJobRun(JobRunConfig jobRunConfig, Runtime runtime) throws CreateJobRunException {
-        HostConfig hostConfig = getHostConfig(jobRunConfig.getSecretsVolumeName(), runtime);
+        HostConfig hostConfig = getHostConfig(jobRunConfig.getSecretsVolumeName());
 
         ContainerConfig containerConfig = getContainerConfig(
                 jobRunConfig.getJobName(),
@@ -104,8 +106,8 @@ public class DockerAdapter {
         return containerConfigBuilder.build();
     }
 
-    private HostConfig getHostConfig(String secretsVolumeName, Runtime runtime) {
-        HostConfig.Builder hostConfigBuilder = getHostConfigBuilderFor(runtime);
+    private HostConfig getHostConfig(String secretsVolumeName) {
+        HostConfig.Builder hostConfigBuilder = getHostConfigBuilderFor(containerRuntime);
         if (secretsVolumeName != null) {
             hostConfigBuilder.appendBinds(
                     secretsVolumeName
