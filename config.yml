@@ -2,6 +2,7 @@ conjob:
     docker:
         username: ${DOCKER_USERNAME:-}
         password: ${DOCKER_PASSWORD:-}
+        containerRuntime: ${CONTAINER_RUNTIME:-sysbox_runc}
     admin:
         username: ${ADMIN_USERNAME:-}
         password: ${ADMIN_PASSWORD:-}

@@ -27,14 +27,14 @@ public class ConJobApplicationConfigTest {
     }
 
     @Test
-    @DisplayName("Given the default prod config, " +
+    @DisplayName("Given the default config, " +
             "when running the application, " +
             "then it should start successfully, " +
             "and successfully process a simple request.")
     public void defaultConfig() throws Exception {
         String expectStartsWith = "\nHello from Docker!";
 
-        app.run("server", "config.yml");
+        app.run("server", "src/test/integration/resources/default_config.yml");
 
         given()
                 .get(JOB_RUN_PATH + "?image=library/hello-world:latest")

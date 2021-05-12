@@ -64,7 +64,10 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         DockerClient docker = createDockerClient(configuration);
 
         environment.jersey().register(
-                createJobResource(configuration.getConjob().getJob().getLimit(), docker));
+                createJobResource(
+                        docker,
+                        configuration.getConjob().getDocker().getContainerRuntime(),
+                        configuration.getConjob().getJob().getLimit()));
         environment.jersey().register(new SecretResource(docker));
 
         environment.admin().addTask(new ConfigTask(configuration));
@@ -92,8 +95,10 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
                         configuration.getConjob().getDocker().getPassword());
     }
 
-    private JobResource createJobResource(JobConfig.LimitConfig limitConfig, DockerClient docker) {
-        DockerAdapter dockerAdapter = new DockerAdapter(docker);
+    private JobResource createJobResource(DockerClient docker,
+                                          DockerAdapter.Runtime containerRuntime,
+                                          JobConfig.LimitConfig limitConfig) {
+        DockerAdapter dockerAdapter = new DockerAdapter(docker, containerRuntime);
         return new JobResource(
                 new JobService(
                         createRunJobLimiter(limitConfig),

@@ -7,8 +7,8 @@ conjob:
         username: ${ADMIN_USERNAME:-}
         password: ${ADMIN_PASSWORD:-}
     auth:
-        username: basic_username
-        password: basic_password
+        username: ${USERNAME:-}
+        password: ${PASSWORD:-}
     job:
         limit:
             maxGlobalRequestsPerSecond: ${JOB_LIMIT_REQ:-5}
