@@ -6,6 +6,7 @@ import conjob.core.job.exception.StopJobRunException;
 import conjob.core.job.model.JobRunOutcome;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.LongRange;
+import org.mockito.AdditionalAnswers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -87,6 +88,8 @@ class JobRunnerTest {
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = 0;
         int givenKillTimeout = Integer.MAX_VALUE;
+        when(adapterMock.startContainerThenWaitForExit(givenContainerId))
+                .thenAnswer(AdditionalAnswers.answersWithDelay(1000, (foo) -> null));
         when(adapterMock.stopContainer(givenContainerId, givenKillTimeout))
                 .thenReturn(givenContainerExitCode);
         when(adapterMock.readAllLogsUntilExit(givenContainerId))
@@ -116,6 +119,8 @@ class JobRunnerTest {
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = 0;
         int givenKillTimeout = Integer.MAX_VALUE;
+        when(adapterMock.startContainerThenWaitForExit(givenContainerId))
+                .thenAnswer(AdditionalAnswers.answersWithDelay(1000, (foo) -> null));
         when(adapterMock.stopContainer(givenContainerId, givenKillTimeout))
                 .thenReturn(givenContainerExitCode);
         when(adapterMock.readAllLogsUntilExit(givenContainerId))
@@ -144,6 +149,8 @@ class JobRunnerTest {
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = 0;
         int givenKillTimeout = Integer.MAX_VALUE;
+        when(adapterMock.startContainerThenWaitForExit(givenContainerId))
+                .thenAnswer(AdditionalAnswers.answersWithDelay(1000, (foo) -> null));
         when(adapterMock.stopContainer(givenContainerId, givenKillTimeout))
                 .thenThrow(new StopJobRunException(new Exception()));
         when(adapterMock.readAllLogsUntilExit(givenContainerId))
