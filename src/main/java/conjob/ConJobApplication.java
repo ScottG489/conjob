@@ -68,7 +68,7 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
                         docker,
                         configuration.getConjob().getDocker().getContainerRuntime(),
                         configuration.getConjob().getJob().getLimit()));
-        environment.jersey().register(new SecretResource(docker));
+        environment.jersey().register(createSecretsResource(docker));
 
         environment.admin().addTask(new ConfigTask(configuration));
 
@@ -117,5 +117,9 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         return new RunJobLimiter(
                 new ConcurrentJobCountLimiter(limitConfig),
                 new RunJobRateLimit(limitConfig));
+    }
+
+    private SecretResource createSecretsResource(DockerClient docker) throws DockerException, InterruptedException {
+        return new SecretResource(new SecretsService(docker, new ConfigUtil()));
     }
 }
