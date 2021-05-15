@@ -54,7 +54,7 @@ public class DockerAdapterStopContainerTest {
     ) throws StopJobRunException, DockerException, InterruptedException {
         int killTimeout = 999;
         containerId = dockerClient.createContainer(ContainerConfig.builder()
-                .image(TEST_SUPPORT_CONTAINER).cmd("0||" + givenExitCode).build())
+                .image(TEST_SUPPORT_CONTAINER).cmd("0|||" + givenExitCode).build())
                 .id();
         dockerClient.startContainer(containerId);
         dockerClient.waitContainer(containerId);
@@ -74,7 +74,7 @@ public class DockerAdapterStopContainerTest {
     ) throws StopJobRunException, DockerException, InterruptedException {
         int killTimeout = 0;
         containerId = dockerClient.createContainer(ContainerConfig.builder()
-                .image(TEST_SUPPORT_CONTAINER).cmd("0||" + givenExitCode).build())
+                .image(TEST_SUPPORT_CONTAINER).cmd("0|||" + givenExitCode).build())
                 .id();
         dockerClient.startContainer(containerId);
         dockerClient.waitContainer(containerId);
@@ -95,7 +95,7 @@ public class DockerAdapterStopContainerTest {
         double containerRunDuration = .5;
         int killTimeout = (int) (containerRunDuration + 1);
         containerId = dockerClient.createContainer(ContainerConfig.builder()
-                .image(TEST_SUPPORT_CONTAINER).cmd(containerRunDuration + "||" + givenExitCode).build())
+                .image(TEST_SUPPORT_CONTAINER).cmd(containerRunDuration + "|||" + givenExitCode).build())
                 .id();
         dockerClient.startContainer(containerId);
 
@@ -115,7 +115,7 @@ public class DockerAdapterStopContainerTest {
         int killTimeout = 0;
         double containerRunDuration = killTimeout + 1;
         containerId = dockerClient.createContainer(ContainerConfig.builder()
-                .image(TEST_SUPPORT_CONTAINER).cmd(containerRunDuration + "||" + givenExitCode).build())
+                .image(TEST_SUPPORT_CONTAINER).cmd(containerRunDuration + "|||" + givenExitCode).build())
                 .id();
         dockerClient.startContainer(containerId);
 

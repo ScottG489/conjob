@@ -52,7 +52,7 @@ public class DockerAdapterStartContainerTest {
     void startContainerThenWaitForExit(@ForAll @LongRange(max = 255) long givenExitCode)
             throws RunJobException, DockerException, InterruptedException {
         containerId = dockerClient.createContainer(ContainerConfig.builder()
-                .image(TEST_SUPPORT_CONTAINER).cmd("0||" + givenExitCode).build())
+                .image(TEST_SUPPORT_CONTAINER).cmd("0|||" + givenExitCode).build())
                 .id();
         Long exitStatusCode = dockerAdapter.startContainerThenWaitForExit(containerId);
 
