@@ -117,9 +117,12 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
     }
 
     private SecretResource createSecretsResource(DockerClient docker) throws DockerException, InterruptedException {
+        SecretsDockerAdapter secretsAdapter = new SecretsDockerAdapter(docker);
         return new SecretResource(
                 new SecretsService(
-                        new SecretsDockerAdapter(docker),
+                        secretsAdapter,
+                        new SecretsContainerCreator(secretsAdapter),
+                        new TempSecretsFileUtil(),
                         new ConfigUtil()));
     }
 }
