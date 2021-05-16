@@ -2,83 +2,85 @@ package conjob.service;
 
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.exceptions.ImageNotFoundException;
-import com.spotify.docker.client.exceptions.ImagePullFailedException;
-import com.spotify.docker.client.messages.ContainerConfig;
-import com.spotify.docker.client.messages.ContainerCreation;
-import com.spotify.docker.client.messages.HostConfig;
+import conjob.core.job.SecretsDockerAdapter;
 import conjob.core.job.config.ConfigUtil;
+import conjob.core.job.exception.CreateJobRunException;
+import conjob.core.job.model.SecretsConfig;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.UUID;
 
 public class SecretsService {
     // This image is required to be on the build server to create secrets
     private static final String INTERMEDIARY_CONTAINER_IMAGE = "tianon/true";
-    private final DockerClient docker;
+    private final SecretsDockerAdapter secretsAdapter;
     private final ConfigUtil configUtil;
 
-    public SecretsService(DockerClient docker, ConfigUtil configUtil) throws DockerException, InterruptedException {
-        this.docker = docker;
+    public SecretsService(
+            SecretsDockerAdapter secretsDockerAdapter,
+            DockerClient docker,
+            ConfigUtil configUtil) throws DockerException, InterruptedException {
+        this.secretsAdapter = secretsDockerAdapter;
         this.configUtil = configUtil;
         if (docker.listImages(DockerClient.ListImagesParam.byName(INTERMEDIARY_CONTAINER_IMAGE)).isEmpty()) {
             docker.pull(INTERMEDIARY_CONTAINER_IMAGE);
         }
     }
 
-    public void createSecret(String imageName,
-                             String input)
-            throws DockerException, InterruptedException, IOException {
+    public void createSecret(String imageName, String secretContents)
+            throws IOException {
         String secretsVolumeName = configUtil.translateToVolumeName(imageName);
         // TODO: Could there be a race condition if two of these containers are running at the same time?
         String intermediaryContainerName = "temp-container-" + UUID.randomUUID().toString();
         String destinationPath = "/temp";
 
-        ContainerConfig containerConfig = getContainerConfig(secretsVolumeName, destinationPath);
-        ContainerCreation container = createIntermediaryContainer(intermediaryContainerName, containerConfig, docker);
+        SecretsConfig secretsConfig =
+                new SecretsConfig(
+                        secretsVolumeName,
+                        destinationPath,
+                        INTERMEDIARY_CONTAINER_IMAGE,
+                        intermediaryContainerName);
+        String containerId = doCreateIntermediaryContainer(secretsConfig);
 
-        String secretsTempDir = "secrets-temp-dir";
+        Path tempSecretsDirPath = createTempSecretsFile(secretContents).getParentFile().toPath();
+
+        // TODO: It's not ideal to write the secret file to disk, if only momentarily. Refactor this to
+        // TODO:   use the overloaded copyToContainer() which takes a tar stream instead.
+        secretsAdapter.copySecretsToVolume(tempSecretsDirPath, containerId, destinationPath);
+
+        Files.walk(tempSecretsDirPath)
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete);
+
+        secretsAdapter.removeContainer(containerId);
+    }
+
+    private String doCreateIntermediaryContainer(SecretsConfig secretsConfig) {
+        String containerId;
+        try {
+            containerId = secretsAdapter.createVolumeCreatorContainer(secretsConfig);
+        } catch (CreateJobRunException e) {
+            secretsAdapter.pullImage(secretsConfig.getIntermediaryContainerImage());
+            containerId = secretsAdapter.createVolumeCreatorContainer(secretsConfig);
+        }
+        return containerId;
+    }
+
+    private File createTempSecretsFile(String secrets) throws IOException {
+        File tempSecretsFile;
+        String secretsTempDirPrefix = "secrets-temp-dir-";
         String secretsFileName = "secrets";
 
-        File tempDirectory = getTempSecretsDir(secretsTempDir);
-        File tempFile = getTempSecretsFile(secretsFileName, tempDirectory);
-        Files.write(new File(tempDirectory, tempFile.getName()).toPath(), input.getBytes());
-        docker.copyToContainer(tempDirectory.toPath(), container.id(), destinationPath);
+        File tempDirectory = getTempSecretsDir(secretsTempDirPrefix);
+        tempSecretsFile = getTempSecretsFile(secretsFileName, tempDirectory);
+        Files.write(tempSecretsFile.toPath(), secrets.getBytes());
 
-        tempFile.delete();
-        tempDirectory.delete();
-        docker.removeContainer(container.id());
-    }
-
-    private ContainerConfig getContainerConfig(String secretsVolumeName, String destinationPath) {
-        HostConfig hostConfig = HostConfig.builder().binds(secretsVolumeName + ":" + destinationPath).build();
-
-        return ContainerConfig.builder()
-                .hostConfig(hostConfig)
-                .image(SecretsService.INTERMEDIARY_CONTAINER_IMAGE)
-                .build();
-    }
-
-    private ContainerCreation createIntermediaryContainer(
-            String intermediaryContainerName,
-            ContainerConfig containerConfig,
-            DockerClient dockerClient) throws DockerException, InterruptedException {
-        ContainerCreation container;
-        // Pull-if-absent logic
-        try {
-            container = dockerClient.createContainer(containerConfig, intermediaryContainerName);
-        } catch (ImageNotFoundException e) {
-            try {
-                dockerClient.pull(containerConfig.image());
-                container = dockerClient.createContainer(containerConfig, intermediaryContainerName);
-            } catch (ImageNotFoundException | ImagePullFailedException e2) {
-                // The pull will fail if no tag is specified but it's still pulled so we can run it
-                container = dockerClient.createContainer(containerConfig, intermediaryContainerName);
-            }
-        }
-        return container;
+        return tempSecretsFile;
     }
 
     private File getTempSecretsFile(String secretsFileName, File tempDirectory) throws IOException {

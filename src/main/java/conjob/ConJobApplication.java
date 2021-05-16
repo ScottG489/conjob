@@ -6,10 +6,7 @@ import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.RegistryAuth;
 import conjob.config.JobConfig;
-import conjob.core.job.DockerAdapter;
-import conjob.core.job.JobRunConfigCreator;
-import conjob.core.job.JobRunner;
-import conjob.core.job.OutcomeDeterminer;
+import conjob.core.job.*;
 import conjob.core.job.config.ConfigUtil;
 import conjob.core.secret.SecretStore;
 import conjob.healthcheck.VersionCheck;
@@ -120,6 +117,10 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
     }
 
     private SecretResource createSecretsResource(DockerClient docker) throws DockerException, InterruptedException {
-        return new SecretResource(new SecretsService(docker, new ConfigUtil()));
+        return new SecretResource(
+                new SecretsService(
+                        new SecretsDockerAdapter(docker),
+                        docker,
+                        new ConfigUtil()));
     }
 }
