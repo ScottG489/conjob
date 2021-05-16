@@ -120,7 +120,6 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         return new SecretResource(
                 new SecretsService(
                         new SecretsDockerAdapter(docker),
-                        docker,
                         new ConfigUtil()));
     }
 }

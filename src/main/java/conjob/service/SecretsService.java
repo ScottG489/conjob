@@ -1,10 +1,8 @@
 package conjob.service;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerException;
 import conjob.core.job.SecretsDockerAdapter;
 import conjob.core.job.config.ConfigUtil;
-import conjob.core.job.exception.CreateJobRunException;
+import conjob.core.job.exception.CreateSecretsContainerException;
 import conjob.core.job.model.SecretsConfig;
 
 import java.io.File;
@@ -22,13 +20,9 @@ public class SecretsService {
 
     public SecretsService(
             SecretsDockerAdapter secretsDockerAdapter,
-            DockerClient docker,
-            ConfigUtil configUtil) throws DockerException, InterruptedException {
+            ConfigUtil configUtil) {
         this.secretsAdapter = secretsDockerAdapter;
         this.configUtil = configUtil;
-        if (docker.listImages(DockerClient.ListImagesParam.byName(INTERMEDIARY_CONTAINER_IMAGE)).isEmpty()) {
-            docker.pull(INTERMEDIARY_CONTAINER_IMAGE);
-        }
     }
 
     public void createSecret(String imageName, String secretContents)
@@ -64,7 +58,7 @@ public class SecretsService {
         String containerId;
         try {
             containerId = secretsAdapter.createVolumeCreatorContainer(secretsConfig);
-        } catch (CreateJobRunException e) {
+        } catch (CreateSecretsContainerException e) {
             secretsAdapter.pullImage(secretsConfig.getIntermediaryContainerImage());
             containerId = secretsAdapter.createVolumeCreatorContainer(secretsConfig);
         }
