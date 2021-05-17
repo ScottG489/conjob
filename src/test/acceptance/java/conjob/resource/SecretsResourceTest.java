@@ -10,7 +10,7 @@ import javax.ws.rs.core.MediaType;
 
 import static conjob.util.RestAssuredUtil.configTest;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
 
 public class SecretsResourceTest {
     private static final String SECRET_RUN_PATH = "/secrets";

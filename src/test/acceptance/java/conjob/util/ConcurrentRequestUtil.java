@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
-import static conjob.util.ConfigUtil.getFromConfig;
 import static io.restassured.RestAssured.given;
 
 public class ConcurrentRequestUtil {
