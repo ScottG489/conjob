@@ -13,7 +13,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 
 public class DockerAdapterListVolumesTest {
     private static final String EXISTING_VOLUME_NAME = "conjob-test-volume-870dbba3";
