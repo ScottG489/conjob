@@ -1,7 +1,6 @@
 package conjob.service;
 
-import conjob.core.job.DockerAdapter;
-import conjob.core.job.model.*;
+import conjob.core.job.*;
 
 import java.util.Map;
 
