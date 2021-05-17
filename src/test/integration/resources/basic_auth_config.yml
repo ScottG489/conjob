@@ -1,20 +1,20 @@
 conjob:
-    docker:
-        username: ${DOCKER_USERNAME:-}
-        password: ${DOCKER_PASSWORD:-}
-        containerRuntime: ${CONTAINER_RUNTIME:-default}
-    admin:
-        username: ${ADMIN_USERNAME:-}
-        password: ${ADMIN_PASSWORD:-}
-    auth:
-        username: basic_username
-        password: basic_password
-    job:
-        limit:
-            maxGlobalRequestsPerSecond: ${JOB_LIMIT_REQ:-5}
-            maxConcurrentRuns: ${JOB_LIMIT_CONCURRENT:-5}
-            maxTimeoutSeconds: ${JOB_LIMIT_TIMEOUT:-1800}
-            maxKillTimeoutSeconds: ${JOB_LIMIT_KILL_TIMEOUT:-60}
+  docker:
+    username: ${DOCKER_USERNAME:-}
+    password: ${DOCKER_PASSWORD:-}
+    containerRuntime: ${CONTAINER_RUNTIME:-default}
+  admin:
+    username: ${ADMIN_USERNAME:-}
+    password: ${ADMIN_PASSWORD:-}
+  auth:
+    username: basic_username
+    password: basic_password
+  job:
+    limit:
+      maxGlobalRequestsPerSecond: ${JOB_LIMIT_REQ:-5}
+      maxConcurrentRuns: ${JOB_LIMIT_CONCURRENT:-5}
+      maxTimeoutSeconds: ${JOB_LIMIT_TIMEOUT:-1800}
+      maxKillTimeoutSeconds: ${JOB_LIMIT_KILL_TIMEOUT:-60}
 
 server:
-    registerDefaultExceptionMappers: false
+  registerDefaultExceptionMappers: false
