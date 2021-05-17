@@ -1,4 +1,4 @@
-package conjob.service;
+package conjob.core.secrets;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 
 public class TempSecretsFileUtil {
-    File createSecretsFile(String secrets) throws IOException {
+    public File createSecretsFile(String secrets) throws IOException {
         File tempSecretsFile;
         String secretsTempDirPrefix = "secrets-temp-dir-";
         String secretsFileName = "secrets";

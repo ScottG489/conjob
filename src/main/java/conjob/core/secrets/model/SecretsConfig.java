@@ -1,4 +1,4 @@
-package conjob.core.job.model;
+package conjob.core.secrets.model;
 
 import lombok.Value;
 

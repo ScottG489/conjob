@@ -1,4 +1,4 @@
-package conjob.core.job.exception;
+package conjob.core.secrets.exception;
 
 public class UpdateSecretsImageException extends RuntimeException {
     public UpdateSecretsImageException(Exception cause) {

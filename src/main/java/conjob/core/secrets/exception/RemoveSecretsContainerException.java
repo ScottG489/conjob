@@ -1,4 +1,4 @@
-package conjob.core.job.exception;
+package conjob.core.secrets.exception;
 
 public class RemoveSecretsContainerException extends RuntimeException {
     public RemoveSecretsContainerException(Exception cause) {

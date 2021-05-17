@@ -1,5 +1,6 @@
 package conjob.service;
 
+import conjob.core.secrets.TempSecretsFileUtil;
 import net.jqwik.api.*;
 import net.jqwik.api.lifecycle.BeforeTry;
 

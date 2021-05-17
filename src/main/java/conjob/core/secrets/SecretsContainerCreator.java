@@ -1,8 +1,7 @@
-package conjob.service;
+package conjob.core.secrets;
 
-import conjob.core.job.SecretsDockerAdapter;
-import conjob.core.job.exception.CreateSecretsContainerException;
-import conjob.core.job.model.SecretsConfig;
+import conjob.core.secrets.exception.CreateSecretsContainerException;
+import conjob.core.secrets.model.SecretsConfig;
 
 public class SecretsContainerCreator {
     private final SecretsDockerAdapter secretsAdapter;
@@ -11,7 +10,7 @@ public class SecretsContainerCreator {
         this.secretsAdapter = secretsAdapter;
     }
 
-    String createIntermediaryContainer(SecretsConfig secretsConfig) {
+    public String createIntermediaryContainer(SecretsConfig secretsConfig) {
         String containerId;
         try {
             containerId = secretsAdapter.createVolumeCreatorContainer(secretsConfig);

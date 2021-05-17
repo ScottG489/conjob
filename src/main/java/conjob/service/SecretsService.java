@@ -1,8 +1,10 @@
 package conjob.service;
 
-import conjob.core.job.SecretsDockerAdapter;
+import conjob.core.secrets.SecretsContainerCreator;
+import conjob.core.secrets.SecretsDockerAdapter;
 import conjob.core.job.config.ConfigUtil;
-import conjob.core.job.model.SecretsConfig;
+import conjob.core.secrets.TempSecretsFileUtil;
+import conjob.core.secrets.model.SecretsConfig;
 
 import java.io.IOException;
 import java.nio.file.Path;

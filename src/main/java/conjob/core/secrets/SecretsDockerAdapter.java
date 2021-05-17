@@ -1,11 +1,14 @@
-package conjob.core.job;
+package conjob.core.secrets;
 
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.HostConfig;
-import conjob.core.job.exception.*;
-import conjob.core.job.model.SecretsConfig;
+import conjob.core.secrets.exception.CopySecretsToContainerException;
+import conjob.core.secrets.exception.CreateSecretsContainerException;
+import conjob.core.secrets.exception.RemoveSecretsContainerException;
+import conjob.core.secrets.exception.UpdateSecretsImageException;
+import conjob.core.secrets.model.SecretsConfig;
 
 import java.io.IOException;
 import java.nio.file.Path;

@@ -1,9 +1,10 @@
 package conjob.service;
 
-import conjob.core.job.SecretsDockerAdapter;
-import conjob.core.job.exception.CreateSecretsContainerException;
-import conjob.core.job.exception.UpdateSecretsImageException;
-import conjob.core.job.model.SecretsConfig;
+import conjob.core.secrets.SecretsContainerCreator;
+import conjob.core.secrets.SecretsDockerAdapter;
+import conjob.core.secrets.exception.CreateSecretsContainerException;
+import conjob.core.secrets.exception.UpdateSecretsImageException;
+import conjob.core.secrets.model.SecretsConfig;
 import net.jqwik.api.*;
 import net.jqwik.api.lifecycle.BeforeTry;
 

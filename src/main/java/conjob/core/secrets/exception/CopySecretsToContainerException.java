@@ -1,4 +1,6 @@
-package conjob.core.job.exception;
+package conjob.core.secrets.exception;
+
+import conjob.core.job.exception.JobRunException;
 
 public class CopySecretsToContainerException extends JobRunException {
     public CopySecretsToContainerException(Exception cause) {
