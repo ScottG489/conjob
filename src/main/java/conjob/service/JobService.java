@@ -5,7 +5,10 @@ import conjob.core.job.*;
 import conjob.core.job.config.ConfigUtil;
 import conjob.core.job.exception.CreateJobRunException;
 import conjob.core.job.exception.JobUpdateException;
-import conjob.core.job.model.*;
+import conjob.core.job.model.JobRun;
+import conjob.core.job.model.JobRunConclusion;
+import conjob.core.job.model.JobRunConfig;
+import conjob.core.job.model.JobRunOutcome;
 import conjob.core.secrets.SecretsStore;
 import conjob.core.secrets.SecretsStoreException;
 

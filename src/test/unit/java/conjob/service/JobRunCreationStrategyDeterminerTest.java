@@ -2,6 +2,7 @@ package conjob.service;
 
 
 import conjob.core.job.DockerAdapter;
+import conjob.core.job.JobRunCreationStrategyDeterminer;
 import conjob.core.job.exception.CreateJobRunException;
 import conjob.core.job.exception.JobUpdateException;
 import conjob.core.job.model.JobRunConfig;

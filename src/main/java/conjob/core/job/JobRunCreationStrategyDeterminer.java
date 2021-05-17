@@ -1,6 +1,4 @@
-package conjob.service;
-
-import conjob.core.job.*;
+package conjob.core.job;
 
 import java.util.Map;
 

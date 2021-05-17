@@ -2,8 +2,6 @@ package conjob.resource.convert;
 
 import conjob.api.JobRunConclusionResponse;
 import conjob.api.JobRunResponse;
-import conjob.core.job.model.JobRun;
-import conjob.core.job.model.JobRunConclusion;
 
 import javax.ws.rs.core.Response;
 import java.util.Map;

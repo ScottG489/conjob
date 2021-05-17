@@ -28,8 +28,8 @@ public class JobRunner {
             } catch (StopJobRunException e) {
                 exitStatusCode = -1L;
             }
-        // TODO: Does this need to be in a finally block?
         } finally {
+            // TODO: Does this need to be in a finally block?
             executor.shutdownNow();
         }
 

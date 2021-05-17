@@ -1,8 +1,8 @@
 package conjob.service;
 
+import conjob.core.job.config.ConfigUtil;
 import conjob.core.secrets.SecretsContainerCreator;
 import conjob.core.secrets.SecretsDockerAdapter;
-import conjob.core.job.config.ConfigUtil;
 import conjob.core.secrets.TempSecretsFileUtil;
 import conjob.core.secrets.model.SecretsConfig;
 
