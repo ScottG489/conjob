@@ -26,7 +26,7 @@ public class SecretsResource {
 
     @POST
 
-    public Response doPost(
+    public Response handlePost(
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             String input) throws IOException {
         secretsService.createsSecret(imageName, input);
