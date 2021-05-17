@@ -7,17 +7,17 @@ import util.ConfigUtil
 
 import scala.concurrent.duration.DurationInt
 
-class SecretSimulation extends Simulation {
+class SecretsSimulation extends Simulation {
 
   private val baseUrl: String = ConfigUtil.getFromConfig("baseUri")
 
   private val httpProtocol: HttpProtocolBuilder = http
     .baseUrl(baseUrl)
   private val request = http("Secrets request")
-    .post("/secret")
+    .post("/secrets")
     .queryParam("image", "${image}")
     .body(StringBody("some secret"))
-  private val secretScenario: ScenarioBuilder = scenario("Secrets Simulation")
+  private val secretsScenario: ScenarioBuilder = scenario("Secrets Simulation")
     .exec(_.set("image", "library/hello-world:latest"))
     .exec(request)
 
@@ -26,13 +26,13 @@ class SecretSimulation extends Simulation {
     .exec(_.set("image", "library/hello-world:latest"))
     .exec(warmUpRequest)
 
-  private val all: ScenarioBuilder = warmUpScenario.exec(secretScenario)
+  private val all: ScenarioBuilder = warmUpScenario.exec(secretsScenario)
 
   setUp(
     warmUpScenario.inject(
       constantUsersPerSec(1) during (1.seconds),
     ).andThen(
-      secretScenario.inject(
+      secretsScenario.inject(
         constantUsersPerSec(1) during (10.seconds))
     ))
     .protocols(httpProtocol)

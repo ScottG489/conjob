@@ -1,7 +1,7 @@
 package conjob.resource;
 
 import conjob.core.job.model.JobRun;
-import conjob.core.secret.SecretStoreException;
+import conjob.core.secrets.SecretsStoreException;
 import conjob.resource.convert.JobResponseConverter;
 import conjob.resource.convert.ResponseCreator;
 import conjob.service.JobService;
@@ -40,7 +40,7 @@ public class JobResource {
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             String input,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
-            throws SecretStoreException {
+            throws SecretsStoreException {
         return createResponse(imageName, input, pullStrategy);
     }
 
@@ -50,7 +50,7 @@ public class JobResource {
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             String input,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
-            throws SecretStoreException {
+            throws SecretsStoreException {
         return createJsonResponse(imageName, input, pullStrategy);
     }
 
@@ -59,7 +59,7 @@ public class JobResource {
     public Response handleTextGet(
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
-            throws SecretStoreException {
+            throws SecretsStoreException {
         return createResponse(imageName, "", pullStrategy);
     }
 
@@ -68,19 +68,19 @@ public class JobResource {
     public Response handleJsonGet(
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
-            throws SecretStoreException {
+            throws SecretsStoreException {
         return createJsonResponse(imageName, "", pullStrategy);
     }
 
     private Response createResponse(String imageName, String input, String pullStrategy)
-            throws SecretStoreException {
+            throws SecretsStoreException {
         log.info("Running image: '{}'", imageName);
         JobRun jobRun = jobService.runJob(imageName, input, pullStrategy);
         return responseCreator.createResponseFrom(jobResponseConverter.from(jobRun));
     }
 
     private Response createJsonResponse(String imageName, String input, String pullStrategy)
-            throws SecretStoreException {
+            throws SecretsStoreException {
         log.info("Running image: '{}'", imageName);
         JobRun jobRun = jobService.runJob(imageName, input, pullStrategy);
         return responseCreator.createJsonResponseFrom(jobResponseConverter.from(jobRun));

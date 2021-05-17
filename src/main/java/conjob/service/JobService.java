@@ -6,8 +6,8 @@ import conjob.core.job.config.ConfigUtil;
 import conjob.core.job.exception.CreateJobRunException;
 import conjob.core.job.exception.JobUpdateException;
 import conjob.core.job.model.*;
-import conjob.core.secret.SecretStore;
-import conjob.core.secret.SecretStoreException;
+import conjob.core.secrets.SecretsStore;
+import conjob.core.secrets.SecretsStoreException;
 
 public class JobService {
 
@@ -17,13 +17,13 @@ public class JobService {
     private final JobRunner jobRunner;
     private final JobRunConfigCreator jobRunConfigCreator;
     private final ConfigUtil configUtil;
-    private final SecretStore secretStore;
+    private final SecretsStore secretsStore;
     private final OutcomeDeterminer outcomeDeterminer;
 
     public JobService(
             RunJobLimiter runJobLimiter,
             JobConfig.LimitConfig limitConfig,
-            SecretStore secretStore,
+            SecretsStore secretsStore,
             JobRunCreationStrategyDeterminer jobRunCreationStrategyDeterminer,
             JobRunner jobRunner,
             JobRunConfigCreator jobRunConfigCreator,
@@ -31,7 +31,7 @@ public class JobService {
             ConfigUtil configUtil) {
         this.runJobLimiter = runJobLimiter;
         this.limitConfig = limitConfig;
-        this.secretStore = secretStore;
+        this.secretsStore = secretsStore;
         this.jobRunCreationStrategyDeterminer = jobRunCreationStrategyDeterminer;
         this.jobRunner = jobRunner;
         this.jobRunConfigCreator = jobRunConfigCreator;
@@ -39,13 +39,13 @@ public class JobService {
         this.configUtil = configUtil;
     }
 
-    public JobRun runJob(String imageName, String input, String pullStrategyName) throws SecretStoreException {
+    public JobRun runJob(String imageName, String input, String pullStrategyName) throws SecretsStoreException {
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
         return runJob(imageName, input, pullStrategy);
     }
 
     private JobRun runJob(String imageName, String input, PullStrategy pullStrategy)
-            throws SecretStoreException {
+            throws SecretsStoreException {
         if (runJobLimiter.isLimitingOrIncrement()) {
             return new JobRun(JobRunConclusion.REJECTED, "", -1);
         }
@@ -73,12 +73,12 @@ public class JobService {
         return new JobRun(jobRunConclusion, outcome.getOutput(), outcome.getExitStatusCode());
     }
 
-    private JobRunConfig getJobRunConfig(String imageName, String input) throws SecretStoreException {
+    private JobRunConfig getJobRunConfig(String imageName, String input) throws SecretsStoreException {
         String correspondingSecretsVolumeName = configUtil.translateToVolumeName(imageName);
-        String secretId = secretStore
-                .findSecret(correspondingSecretsVolumeName)
+        String secretsVolumeName = secretsStore
+                .findSecrets(correspondingSecretsVolumeName)
                 .orElse(null);
 
-        return jobRunConfigCreator.getContainerConfig(imageName, input, secretId);
+        return jobRunConfigCreator.getContainerConfig(imageName, input, secretsVolumeName);
     }
 }

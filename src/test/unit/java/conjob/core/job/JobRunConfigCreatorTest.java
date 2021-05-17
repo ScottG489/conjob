@@ -21,37 +21,37 @@ class JobRunConfigCreatorTest {
     @Property
     @Label("Given an image name, " +
             "and not null or empty input, " +
-            "and secret volume name, " +
+            "and secrets volume name, " +
             "when getting the container config, " +
             "should have all the same input values.")
     void getContainerConfig(
             @ForAll String givenImageName,
             @ForAll @NotEmpty String givenInput,
-            @ForAll String givenSecretId) {
+            @ForAll String givenSecretsVolumeName) {
         JobRunConfig containerConfig =
-                jobRunConfigCreator.getContainerConfig(givenImageName, givenInput, givenSecretId);
+                jobRunConfigCreator.getContainerConfig(givenImageName, givenInput, givenSecretsVolumeName);
 
         assertThat(containerConfig.getJobName(), is(givenImageName));
         assertThat(containerConfig.getInput(), is(givenInput));
-        assertThat(containerConfig.getSecretsVolumeName(), is(givenSecretId));
+        assertThat(containerConfig.getSecretsVolumeName(), is(givenSecretsVolumeName));
     }
 
     @Property
     @Label("Given an image name, " +
             "and a null or empty input, " +
-            "and secret volume name, " +
+            "and secrets volume name, " +
             "when getting the container config, " +
             "should have all the same input values.")
     void getContainerConfigNoInput(
             @ForAll String givenImageName,
             @ForAll("nullOrEmpty") String givenInput,
-            @ForAll String givenSecretId) {
+            @ForAll String givenSecretsVolumeName) {
         JobRunConfig containerConfig =
-                jobRunConfigCreator.getContainerConfig(givenImageName, givenInput, givenSecretId);
+                jobRunConfigCreator.getContainerConfig(givenImageName, givenInput, givenSecretsVolumeName);
 
         assertThat(containerConfig.getJobName(), is(givenImageName));
         assertThat(containerConfig.getInput(), is(nullValue()));
-        assertThat(containerConfig.getSecretsVolumeName(), is(givenSecretId));
+        assertThat(containerConfig.getSecretsVolumeName(), is(givenSecretsVolumeName));
     }
 
     @Provide

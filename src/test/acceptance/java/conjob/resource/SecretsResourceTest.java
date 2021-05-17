@@ -13,7 +13,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 public class SecretsResourceTest {
-    private static final String SECRET_RUN_PATH = "/secret";
+    private static final String SECRET_RUN_PATH = "/secrets";
     private static final String JOB_RUN_PATH = "/job/run";
     private static final String TEST_SUPPORT_CONTAINER = "scottg489/test-support-job:latest";
     private static final String SECRET_FILE_MOUNT_LOCATION = "/run/build/secrets/secrets";
@@ -29,7 +29,7 @@ public class SecretsResourceTest {
             "when creating the secret, " +
             "and running the given job, " +
             "should have access to the secret the job was associated with.")
-    public void createSecret() {
+    public void createsSecret() {
         String givenSecret = "this_is_a_secret";
 
         given()

@@ -27,7 +27,7 @@ public class SecretsService {
         this.configUtil = configUtil;
     }
 
-    public void createSecret(String imageName, String secretContents)
+    public void createsSecret(String imageName, String secrets)
             throws IOException {
         String secretsVolumeName = configUtil.translateToVolumeName(imageName);
         // TODO: Could there be a race condition if two of these containers are running at the same time?
@@ -42,7 +42,7 @@ public class SecretsService {
                         intermediaryContainerName);
         String containerId = secretsContainerCreator.createIntermediaryContainer(secretsConfig);
 
-        Path tempSecretsDirPath = tempSecretsFileUtil.createSecretsFile(secretContents)
+        Path tempSecretsDirPath = tempSecretsFileUtil.createSecretsFile(secrets)
                 .getParentFile().toPath();
 
         // TODO: It's not ideal to write the secret file to disk, if only momentarily. Refactor this to

@@ -22,7 +22,7 @@ public class DockerAdapterCreateContainerTest {
 
     private DockerAdapter dockerAdapter;
     private String jobRunId;
-    private String secretVolumeName;
+    private String secretsVolumeName;
 
     @BeforeContainer
     static void beforeContainer() throws DockerCertificateException, DockerException, InterruptedException {
@@ -43,7 +43,7 @@ public class DockerAdapterCreateContainerTest {
     @AfterTry
     void tearDown() throws DockerException, InterruptedException {
         if (jobRunId != null && !jobRunId.isBlank()) dockerClient.removeContainer(jobRunId);
-        if (secretVolumeName != null && !secretVolumeName.isBlank()) dockerClient.removeVolume(secretVolumeName);
+        if (secretsVolumeName != null && !secretsVolumeName.isBlank()) dockerClient.removeVolume(secretsVolumeName);
     }
 
     @Property(tries = 100)
@@ -53,10 +53,10 @@ public class DockerAdapterCreateContainerTest {
     void createJobRun(
             @ForAll("existingJob") String jobName,
             @ForAll @WithNull String input,
-            @ForAll("secretVolumeName") String secretVolumeName
+            @ForAll("secretsVolumeName") String secretsVolumeName
     ) throws CreateJobRunException {
-        this.secretVolumeName = secretVolumeName;
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretVolumeName);
+        this.secretsVolumeName = secretsVolumeName;
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeName);
         jobRunId = dockerAdapter.createJobRun(jobRunConfig);
 
         assertThat(jobRunId, matchesPattern("[a-f0-9]{64}"));
@@ -69,8 +69,8 @@ public class DockerAdapterCreateContainerTest {
     void createJobRunNonExistantJob(
             @ForAll("nonexistantJob") String jobName,
             @ForAll @WithNull String input,
-            @ForAll("secretVolumeName") @WithNull String secretVolumeName) {
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretVolumeName);
+            @ForAll("secretsVolumeName") @WithNull String secretsVolumeName) {
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeName);
 
         assertThrows(CreateJobRunException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
     }
@@ -86,7 +86,7 @@ public class DockerAdapterCreateContainerTest {
     }
 
     @Provide
-    Arbitrary<String> secretVolumeName() {
+    Arbitrary<String> secretsVolumeName() {
         Arbitrary<String> firstChar = Arbitraries.strings().alpha().numeric().ofLength(1);
         Arbitrary<String> lastChars = Arbitraries.strings().alpha().numeric().ofMinLength(1).ofMaxLength(254);
         return Combinators.combine(firstChar, lastChars).as((first, last) -> first + last);

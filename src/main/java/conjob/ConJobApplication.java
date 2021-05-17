@@ -8,7 +8,7 @@ import com.spotify.docker.client.messages.RegistryAuth;
 import conjob.config.JobConfig;
 import conjob.core.job.*;
 import conjob.core.job.config.ConfigUtil;
-import conjob.core.secret.SecretStore;
+import conjob.core.secrets.SecretsStore;
 import conjob.healthcheck.VersionCheck;
 import conjob.init.AuthedDockerClientCreator;
 import conjob.init.BasicAuthConfigurator;
@@ -16,7 +16,7 @@ import conjob.init.DockerClientCreator;
 import conjob.resource.GlobalErrorHandler;
 import conjob.resource.GlobalExceptionMapper;
 import conjob.resource.JobResource;
-import conjob.resource.SecretResource;
+import conjob.resource.SecretsResource;
 import conjob.resource.admin.task.ConfigTask;
 import conjob.resource.convert.JobResponseConverter;
 import conjob.resource.convert.ResponseCreator;
@@ -100,7 +100,7 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
                 new JobService(
                         createRunJobLimiter(limitConfig),
                         limitConfig,
-                        new SecretStore(dockerAdapter),
+                        new SecretsStore(dockerAdapter),
                         new JobRunCreationStrategyDeterminer(dockerAdapter),
                         new JobRunner(dockerAdapter),
                         new JobRunConfigCreator(),
@@ -116,9 +116,9 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
                 new RunJobRateLimit(limitConfig));
     }
 
-    private SecretResource createSecretsResource(DockerClient docker) throws DockerException, InterruptedException {
+    private SecretsResource createSecretsResource(DockerClient docker) throws DockerException, InterruptedException {
         SecretsDockerAdapter secretsAdapter = new SecretsDockerAdapter(docker);
-        return new SecretResource(
+        return new SecretsResource(
                 new SecretsService(
                         secretsAdapter,
                         new SecretsContainerCreator(secretsAdapter),

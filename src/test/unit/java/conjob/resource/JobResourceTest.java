@@ -2,7 +2,7 @@ package conjob.resource;
 
 import conjob.api.JobRunResponse;
 import conjob.core.job.model.JobRun;
-import conjob.core.secret.SecretStoreException;
+import conjob.core.secrets.SecretsStoreException;
 import conjob.resource.convert.JobResponseConverter;
 import conjob.resource.convert.ResponseCreator;
 import conjob.service.JobService;
@@ -38,7 +38,7 @@ class JobResourceTest {
             @ForAll String givenPullStrategy,
             @ForAll @UseType JobRun jobRun,
             @ForAll @UseType JobRunResponse jobRunResponse,
-            @ForAll("responseMock") Response givenMockResponse) throws SecretStoreException {
+            @ForAll("responseMock") Response givenMockResponse) throws SecretsStoreException {
         when(jobServiceMock.runJob(givenImageName, givenInput, givenPullStrategy))
                 .thenReturn(jobRun);
         when(responseConverterMock.from(jobRun))
@@ -58,7 +58,7 @@ class JobResourceTest {
             @ForAll String givenPullStrategy,
             @ForAll @UseType JobRun jobRun,
             @ForAll @UseType JobRunResponse jobRunResponse,
-            @ForAll("responseMock") Response givenMockResponse) throws SecretStoreException {
+            @ForAll("responseMock") Response givenMockResponse) throws SecretsStoreException {
         when(jobServiceMock.runJob(givenImageName, givenInput, givenPullStrategy))
                 .thenReturn(jobRun);
         when(responseConverterMock.from(jobRun))
@@ -78,7 +78,7 @@ class JobResourceTest {
             @ForAll String givenPullStrategy,
             @ForAll @UseType JobRun jobRun,
             @ForAll @UseType JobRunResponse jobRunResponse,
-            @ForAll("responseMock") Response givenMockResponse) throws SecretStoreException {
+            @ForAll("responseMock") Response givenMockResponse) throws SecretsStoreException {
         when(jobServiceMock.runJob(givenImageName, givenInput, givenPullStrategy))
                 .thenReturn(jobRun);
         when(responseConverterMock.from(jobRun))
@@ -98,7 +98,7 @@ class JobResourceTest {
             @ForAll String givenPullStrategy,
             @ForAll @UseType JobRun jobRun,
             @ForAll @UseType JobRunResponse jobRunResponse,
-            @ForAll("responseMock") Response givenMockResponse) throws SecretStoreException {
+            @ForAll("responseMock") Response givenMockResponse) throws SecretsStoreException {
         when(jobServiceMock.runJob(givenImageName, givenInput, givenPullStrategy))
                 .thenReturn(jobRun);
         when(responseConverterMock.from(jobRun))
