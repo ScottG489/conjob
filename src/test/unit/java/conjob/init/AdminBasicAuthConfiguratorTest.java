@@ -1,4 +1,4 @@
-package conjob;
+package conjob.init;
 
 import conjob.config.AdminConfig;
 import conjob.init.AdminBasicAuthConfigurator;

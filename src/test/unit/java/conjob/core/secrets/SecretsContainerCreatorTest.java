@@ -1,4 +1,4 @@
-package conjob.service;
+package conjob.core.secrets;
 
 import conjob.core.secrets.SecretsContainerCreator;
 import conjob.core.secrets.SecretsDockerAdapter;
