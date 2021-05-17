@@ -7,7 +7,6 @@ import conjob.core.job.model.JobRunConclusion;
 import net.jqwik.api.*;
 import net.jqwik.api.arbitraries.LongArbitrary;
 import net.jqwik.api.lifecycle.BeforeTry;
-import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;

@@ -3,10 +3,10 @@ package conjob.service;
 
 import conjob.core.job.DockerAdapter;
 import conjob.core.job.JobRunCreationStrategyDeterminer;
+import conjob.core.job.PullStrategy;
 import conjob.core.job.exception.CreateJobRunException;
 import conjob.core.job.exception.JobUpdateException;
 import conjob.core.job.model.JobRunConfig;
-import conjob.core.job.PullStrategy;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.lifecycle.BeforeTry;
