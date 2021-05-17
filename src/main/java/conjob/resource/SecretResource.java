@@ -29,7 +29,7 @@ public class SecretResource {
 
     public Response doPost(
             @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
-            String input) throws DockerException, InterruptedException, IOException {
+            String input) throws IOException {
         secretsService.createSecret(imageName, input);
         return Response.ok().build();
     }
