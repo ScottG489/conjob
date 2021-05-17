@@ -1,4 +1,4 @@
-package conjob.job.secrets;
+package conjob.resource.secrets;
 
 import conjob.ConJobApplication;
 import io.restassured.http.ContentType;

@@ -1,6 +1,7 @@
-package conjob.service;
+package conjob.service.job;
 
 import conjob.config.JobConfig;
+import conjob.service.job.ConcurrentJobCountLimiter;
 import net.jqwik.api.*;
 import net.jqwik.api.arbitraries.LongArbitrary;
 import net.jqwik.api.stateful.Action;

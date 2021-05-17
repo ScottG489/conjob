@@ -1,6 +1,6 @@
 package conjob.resource;
 
-import conjob.service.SecretsService;
+import conjob.service.secrets.SecretsService;
 import net.jqwik.api.*;
 import net.jqwik.api.lifecycle.BeforeTry;
 

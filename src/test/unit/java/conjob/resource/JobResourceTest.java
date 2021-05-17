@@ -5,7 +5,7 @@ import conjob.core.job.model.JobRun;
 import conjob.core.secrets.SecretsStoreException;
 import conjob.resource.convert.JobResponseConverter;
 import conjob.resource.convert.ResponseCreator;
-import conjob.service.JobService;
+import conjob.service.job.JobService;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.UseType;
 import net.jqwik.api.lifecycle.BeforeTry;

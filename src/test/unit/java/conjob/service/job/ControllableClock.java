@@ -1,4 +1,4 @@
-package conjob.service;
+package conjob.service.job;
 
 import lombok.AllArgsConstructor;
 

@@ -1,4 +1,4 @@
-package conjob.job;
+package conjob.core.job;
 
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;

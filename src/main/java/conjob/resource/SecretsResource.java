@@ -1,6 +1,6 @@
 package conjob.resource;
 
-import conjob.service.SecretsService;
+import conjob.service.secrets.SecretsService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.security.PermitAll;

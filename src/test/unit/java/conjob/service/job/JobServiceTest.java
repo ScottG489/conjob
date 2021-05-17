@@ -1,4 +1,4 @@
-package conjob.service;
+package conjob.service.job;
 
 import conjob.config.JobConfig;
 import conjob.core.job.*;
@@ -12,6 +12,8 @@ import conjob.core.job.model.JobRunConfig;
 import conjob.core.job.model.JobRunOutcome;
 import conjob.core.secrets.SecretsStore;
 import conjob.core.secrets.SecretsStoreException;
+import conjob.service.job.JobService;
+import conjob.service.job.RunJobLimiter;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.UseType;
 import net.jqwik.api.lifecycle.BeforeTry;

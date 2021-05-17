@@ -4,7 +4,7 @@ import conjob.core.job.model.JobRun;
 import conjob.core.secrets.SecretsStoreException;
 import conjob.resource.convert.JobResponseConverter;
 import conjob.resource.convert.ResponseCreator;
-import conjob.service.JobService;
+import conjob.service.job.JobService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.security.PermitAll;

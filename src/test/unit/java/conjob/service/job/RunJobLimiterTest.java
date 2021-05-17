@@ -1,5 +1,7 @@
-package conjob.service;
+package conjob.service.job;
 
+import conjob.service.job.RunJobLimitMeter;
+import conjob.service.job.RunJobLimiter;
 import net.jqwik.api.*;
 import net.jqwik.api.arbitraries.ArrayArbitrary;
 import net.jqwik.api.constraints.NotEmpty;

@@ -1,4 +1,4 @@
-package conjob.service;
+package conjob.service.job;
 
 import java.util.Arrays;
 import java.util.List;

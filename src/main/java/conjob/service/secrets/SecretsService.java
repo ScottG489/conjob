@@ -1,4 +1,4 @@
-package conjob.service;
+package conjob.service.secrets;
 
 import conjob.core.job.config.ConfigUtil;
 import conjob.core.secrets.SecretsContainerCreator;
