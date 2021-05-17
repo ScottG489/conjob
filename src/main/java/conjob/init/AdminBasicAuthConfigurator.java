@@ -1,4 +1,4 @@
-package conjob;
+package conjob.init;
 
 import conjob.config.AdminConfig;
 import conjob.resource.auth.AdminConstraintSecurityHandler;
@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class AdminBasicAuthConfigurator {
-    Optional<AbstractLoginService.UserPrincipal> configureAdminBasicAuth(AdminConfig adminConfig, AdminEnvironment adminEnv) {
+    public Optional<AbstractLoginService.UserPrincipal> configureAdminBasicAuth(AdminConfig adminConfig, AdminEnvironment adminEnv) {
         Optional<AbstractLoginService.UserPrincipal> userPrincipal = Optional.empty();
         if (credentialsAreSet(adminConfig)) {
             userPrincipal = Optional.of(enableBasicAuth(adminConfig, adminEnv));

@@ -13,6 +13,7 @@ import conjob.core.secrets.SecretsDockerAdapter;
 import conjob.core.secrets.SecretsStore;
 import conjob.core.secrets.TempSecretsFileUtil;
 import conjob.healthcheck.VersionCheck;
+import conjob.init.AdminBasicAuthConfigurator;
 import conjob.init.AuthedDockerClientCreator;
 import conjob.init.BasicAuthConfigurator;
 import conjob.init.DockerClientCreator;

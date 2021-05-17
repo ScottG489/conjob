@@ -1,6 +1,7 @@
 package conjob;
 
 import conjob.config.AdminConfig;
+import conjob.init.AdminBasicAuthConfigurator;
 import conjob.resource.auth.AdminConstraintSecurityHandler;
 import io.dropwizard.setup.AdminEnvironment;
 import net.jqwik.api.*;
