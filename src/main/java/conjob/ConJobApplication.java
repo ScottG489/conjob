@@ -30,6 +30,7 @@ import conjob.service.job.JobService;
 import conjob.service.job.RunJobLimiter;
 import conjob.service.job.RunJobRateLimit;
 import conjob.service.secrets.SecretsService;
+import conjob.service.secrets.UniqueContainerNameGenerator;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -131,6 +132,7 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
                         secretsAdapter,
                         new SecretsContainerCreator(secretsAdapter),
                         new TempSecretsFileUtil(),
+                        new UniqueContainerNameGenerator(),
                         new ConfigUtil()));
     }
 }
