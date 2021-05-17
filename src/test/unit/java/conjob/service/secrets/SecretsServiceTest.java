@@ -42,11 +42,10 @@ class SecretsServiceTest {
     }
 
     @Property
-    @Label("Given a limiter that's not at the limit, " +
-            "and the job concludes, " +
-            "when the job is run, " +
-            "should return a job run, " +
-            "and it's fields should be from the run's conclusion and outcome.")
+    @Label("Given an image name, " +
+            "and secrets, " +
+            "when the secrets are associated with the image, " +
+            "should be successful.")
     void jobNotFound(
             @ForAll String imageName,
             @ForAll String secrets,
@@ -79,7 +78,7 @@ class SecretsServiceTest {
     @Provide
     Arbitrary<Path> secretsDir() {
         return Arbitraries.strings()
-                .alpha().numeric().whitespace()
+                .alpha().numeric()
                 .map(Path::of);
     }
 }
