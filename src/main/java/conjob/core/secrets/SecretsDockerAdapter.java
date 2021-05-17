@@ -39,7 +39,7 @@ public class SecretsDockerAdapter {
         }
     }
 
-    public void pullImage(String imageName) throws JobUpdateException {
+    public void pullImage(String imageName) {
         try {
             dockerClient.pull(imageName);
         } catch (DockerException | InterruptedException e) {
