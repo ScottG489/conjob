@@ -12,14 +12,15 @@ import conjob.core.job.model.JobRunConfig;
 import conjob.core.job.model.JobRunOutcome;
 import conjob.core.secrets.SecretsStore;
 import conjob.core.secrets.SecretsStoreException;
-import conjob.service.job.JobService;
-import conjob.service.job.RunJobLimiter;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.UseType;
 import net.jqwik.api.lifecycle.BeforeTry;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Random;
+import java.util.stream.Collector;
+import java.util.stream.IntStream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -153,6 +154,20 @@ class JobServiceTest {
         return Arbitraries.of(
                 Arrays.stream(PullStrategy.values())
                         .map(Enum::name)
+                        .map(String::chars)
+                        .map(this::randomizeCase)
                         .toArray(String[]::new));
+    }
+
+    private String randomizeCase(IntStream is) {
+        Random random = new Random();
+        return is.mapToObj(i -> (char) i)
+                .map(ch ->
+                        random.nextBoolean() ? Character.toLowerCase(ch) : ch)
+                .collect(Collector.of(
+                        StringBuilder::new,
+                        StringBuilder::append,
+                        StringBuilder::append,
+                        StringBuilder::toString));
     }
 }
