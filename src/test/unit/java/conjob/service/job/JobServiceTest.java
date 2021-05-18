@@ -65,14 +65,14 @@ class JobServiceTest {
             "when the job is run, " +
             "should return a job run, " +
             "and it's fields should be from the run's conclusion and outcome.")
-    void jobNotFound(@ForAll String imageName,
-                     @ForAll String input,
-                     @ForAll("pullStrategyNames") String givenPullStrategyName,
-                     @ForAll String givenSecretsVolumeName,
-                     @ForAll @UseType JobRunConfig givenJobRunConfig,
-                     @ForAll String givenJobId,
-                     @ForAll @UseType JobRunOutcome givenJobRunOutcome,
-                     @ForAll JobRunConclusion givenJobRunConclusion) throws SecretsStoreException, CreateJobRunException, JobUpdateException {
+    void jobRunSuccessful(@ForAll String imageName,
+                          @ForAll String input,
+                          @ForAll("pullStrategyNames") String givenPullStrategyName,
+                          @ForAll String givenSecretsVolumeName,
+                          @ForAll @UseType JobRunConfig givenJobRunConfig,
+                          @ForAll String givenJobId,
+                          @ForAll @UseType JobRunOutcome givenJobRunOutcome,
+                          @ForAll JobRunConclusion givenJobRunConclusion) throws SecretsStoreException, CreateJobRunException, JobUpdateException {
         boolean isLimiting = false;
         long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
         int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
