@@ -68,11 +68,21 @@ class ResponseCreatorTest {
     @Provide
     private Arbitrary<Map.Entry<JobRunConclusionResponse, Response.Status>> conclusionExpectedStatus() {
         return Arbitraries.oneOf(
-                Arbitraries.of(Map.entry(JobRunConclusionResponse.SUCCESS, Response.ok().build().getStatusInfo().toEnum())),
-                Arbitraries.of(Map.entry(JobRunConclusionResponse.FAILURE, Response.status(Response.Status.BAD_REQUEST).build().getStatusInfo().toEnum())),
-                Arbitraries.of(Map.entry(JobRunConclusionResponse.NOT_FOUND, Response.status(Response.Status.NOT_FOUND).build().getStatusInfo().toEnum())),
-                Arbitraries.of(Map.entry(JobRunConclusionResponse.REJECTED, Response.status(Response.Status.SERVICE_UNAVAILABLE).build().getStatusInfo().toEnum())),
-                Arbitraries.of(Map.entry(JobRunConclusionResponse.TIMED_OUT, Response.status(Response.Status.REQUEST_TIMEOUT).build().getStatusInfo().toEnum())),
+                Arbitraries.of(Map.entry(
+                        JobRunConclusionResponse.SUCCESS,
+                        Response.ok().build().getStatusInfo().toEnum())),
+                Arbitraries.of(Map.entry(
+                        JobRunConclusionResponse.FAILURE,
+                        Response.status(Response.Status.BAD_REQUEST).build().getStatusInfo().toEnum())),
+                Arbitraries.of(Map.entry(
+                        JobRunConclusionResponse.NOT_FOUND,
+                        Response.status(Response.Status.NOT_FOUND).build().getStatusInfo().toEnum())),
+                Arbitraries.of(Map.entry(
+                        JobRunConclusionResponse.REJECTED,
+                        Response.status(Response.Status.SERVICE_UNAVAILABLE).build().getStatusInfo().toEnum())),
+                Arbitraries.of(Map.entry(
+                        JobRunConclusionResponse.TIMED_OUT,
+                        Response.status(Response.Status.REQUEST_TIMEOUT).build().getStatusInfo().toEnum())),
                 Arbitraries.of(Map.entry(
                         JobRunConclusionResponse.UNKNOWN,
                         Response.status(Response.Status.INTERNAL_SERVER_ERROR).build().getStatusInfo().toEnum())));
