@@ -1,0 +1,68 @@
+package conjob.core.secrets;
+
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.exceptions.DockerException;
+import conjob.core.job.exception.JobUpdateException;
+import conjob.core.secrets.exception.UpdateSecretsImageException;
+import net.jqwik.api.ForAll;
+import net.jqwik.api.Label;
+import net.jqwik.api.Property;
+import net.jqwik.api.lifecycle.BeforeTry;
+import org.junit.jupiter.api.BeforeEach;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
+public class SecretsDockerAdapterPullImageTest {
+    private SecretsDockerAdapter secretsAdapter;
+    private DockerClient mockClient;
+
+    @BeforeEach
+    @BeforeTry
+    void setUp() {
+        mockClient = mock(DockerClient.class);
+        secretsAdapter = new SecretsDockerAdapter(mockClient);
+    }
+
+    @Property
+    @Label("Given an image name, " +
+            "when pulling that image, " +
+            "should finish successfully.")
+    void pullImageSuccessfully(@ForAll String imageName) throws JobUpdateException, DockerException, InterruptedException {
+        secretsAdapter.pullImage(imageName);
+        verify(mockClient).pull(imageName);
+    }
+
+    @Property
+    @Label("Given an image name, " +
+            "when pulling that image, " +
+            "and a DockerException is thrown, " +
+            "should throw a UpdateSecretsImageException.")
+    void pullImageDockerException(@ForAll String imageName) throws DockerException, InterruptedException {
+        doThrow(new DockerException("")).when(mockClient).pull(imageName);
+
+        assertThrows(UpdateSecretsImageException.class, () -> secretsAdapter.pullImage(imageName));
+    }
+
+    @Property
+    @Label("Given an image name, " +
+            "when pulling that image, " +
+            "and an InterruptedException is thrown, " +
+            "should throw a UpdateSecretsImageException.")
+    void pullImageInterruptedException(@ForAll String imageName) throws DockerException, InterruptedException {
+        doThrow(new InterruptedException("")).when(mockClient).pull(imageName);
+
+        assertThrows(UpdateSecretsImageException.class, () -> secretsAdapter.pullImage(imageName));
+    }
+
+    @Property
+    @Label("Given an image name, " +
+            "when pulling that image, " +
+            "and an unexpected Exception is thrown, " +
+            "should throw that exception.")
+    void pullImageUnexpectedException(@ForAll String imageName) throws DockerException, InterruptedException {
+        doThrow(new RuntimeException("")).when(mockClient).pull(imageName);
+
+        assertThrows(RuntimeException.class, () -> secretsAdapter.pullImage(imageName));
+    }
+}
