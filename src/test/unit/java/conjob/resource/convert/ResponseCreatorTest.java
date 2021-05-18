@@ -66,11 +66,6 @@ class ResponseCreatorTest {
     }
 
     @Provide
-    private Arbitrary<JobRunResponse> foo() {
-        return Arbitraries.forType(JobRunResponse.class);
-    }
-
-    @Provide
     private Arbitrary<Map.Entry<JobRunConclusionResponse, Response.Status>> conclusionExpectedStatus() {
         return Arbitraries.oneOf(
                 Arbitraries.of(Map.entry(JobRunConclusionResponse.SUCCESS, Response.ok().build().getStatusInfo().toEnum())),
