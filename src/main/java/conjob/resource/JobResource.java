@@ -76,6 +76,7 @@ public class JobResource {
             throws SecretsStoreException {
         log.info("Running image: '{}'", imageName);
         JobRun jobRun = jobService.runJob(imageName, input, pullStrategy);
+        log.info("Job run finished: '{}'", jobRun);
         return responseCreator.createResponseFrom(jobResponseConverter.from(jobRun));
     }
 
