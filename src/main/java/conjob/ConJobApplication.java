@@ -24,6 +24,7 @@ import conjob.resource.SecretsResource;
 import conjob.resource.admin.task.ConfigTask;
 import conjob.resource.convert.JobResponseConverter;
 import conjob.resource.convert.ResponseCreator;
+import conjob.resource.filter.EveryRequestFilter;
 import conjob.resource.filter.EveryResponseFilter;
 import conjob.service.job.ConcurrentJobCountLimiter;
 import conjob.service.job.JobService;
@@ -66,6 +67,7 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         // TODO: We probably want to make this something higher than 0, though not too high
         environment.jersey().property(ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, 0);
         environment.jersey().register(new EveryResponseFilter());
+        environment.jersey().register(new EveryRequestFilter());
 
         DockerClient docker = createDockerClient(configuration);
 
