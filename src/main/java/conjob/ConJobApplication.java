@@ -67,8 +67,9 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         this.environment = environment;
         // TODO: We probably want to make this something higher than 0, though not too high
         environment.jersey().property(ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, 0);
-        environment.jersey().register(new EveryResponseFilter(new MDCAdapter()));
-        environment.jersey().register(new EveryRequestFilter());
+        MDCAdapter mdcAdapter = new MDCAdapter();
+        environment.jersey().register(new EveryResponseFilter(mdcAdapter));
+        environment.jersey().register(new EveryRequestFilter(mdcAdapter));
 
         DockerClient docker = createDockerClient(configuration);
 
