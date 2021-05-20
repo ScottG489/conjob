@@ -16,11 +16,12 @@ import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.startsWith;
+import static org.hamcrest.Matchers.*;
 
 public class ConJobApplicationConfigTest {
     private static final String JOB_RUN_PATH = "/job/run";
+    private static final String TRACE_ID_HEADER_NAME = "X-B3-TraceId";
+
     private ConJobApplication app;
 
     @BeforeEach
@@ -50,6 +51,7 @@ public class ConJobApplicationConfigTest {
         .then()
                 .statusCode(HttpStatus.SC_OK)
                 .contentType(MediaType.TEXT_PLAIN)
+                .header(TRACE_ID_HEADER_NAME, matchesPattern("[0-9a-f]{12}"))
                 .body(startsWith(expectStartsWith));
 
         assertThat(hasTraceId(logEvents), is(true));
