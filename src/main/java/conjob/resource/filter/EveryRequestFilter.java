@@ -9,8 +9,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class EveryRequestFilter implements ContainerRequestFilter {
-    static final String TRACE_ID_HEADER_NAME = "X-B3-TraceId";
-    static final String TRACE_ID_NAME = "traceId";
+    private static final String TRACE_ID_HEADER_NAME = "X-B3-TraceId";
+    private static final String TRACE_ID_NAME = "traceId";
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
