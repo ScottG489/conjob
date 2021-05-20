@@ -1,7 +1,5 @@
 package conjob.resource.filter;
 
-import org.slf4j.MDC;
-
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
@@ -10,6 +8,11 @@ import java.util.Optional;
 public class EveryResponseFilter implements ContainerResponseFilter {
     private static final String TRACE_ID_HEADER_NAME = "X-B3-TraceId";
     private static final String TRACE_ID_NAME = "traceId";
+    private final MDCAdapter mdcAdapter;
+
+    public EveryResponseFilter(MDCAdapter mdcAdapter) {
+        this.mdcAdapter = mdcAdapter;
+    }
 
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
@@ -18,7 +21,7 @@ public class EveryResponseFilter implements ContainerResponseFilter {
     }
 
     private void addTraceIdHeader(ContainerResponseContext responseContext) {
-        Optional.ofNullable(MDC.get(TRACE_ID_NAME))
+        Optional.ofNullable(mdcAdapter.get(TRACE_ID_NAME))
                 .ifPresent(traceId ->
                         responseContext.getHeaders().add(TRACE_ID_HEADER_NAME, traceId));
     }
