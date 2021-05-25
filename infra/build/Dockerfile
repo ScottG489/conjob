@@ -4,7 +4,7 @@ RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
   git \
   awscli \
-  openjdk-11-jdk \
+  openjdk-13-jdk \
   jq \
   ansible \
   curl \
