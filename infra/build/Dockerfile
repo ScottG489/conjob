@@ -5,16 +5,24 @@ RUN apt-get update && \
   git \
   awscli \
   openjdk-11-jdk \
-  iptables \
   jq \
   ansible \
   curl \
+  apt-transport-https \
+  ca-certificates \
+  gnupg \
+  lsb-release \
   unzip
 
-RUN curl https://download.docker.com/linux/static/stable/x86_64/docker-20.10.2.tgz -o /tmp/docker.tgz && \
-  tar xzvf /tmp/docker.tgz && \
-  cp docker/* /usr/bin/ && \
-  rm -rf docker /tmp/docker.tgz
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+  echo \
+    "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+    | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+  apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+  docker-ce \
+  docker-ce-cli \
+  containerd.io
 
 RUN curl https://releases.hashicorp.com/terraform/0.12.26/terraform_0.12.26_linux_amd64.zip -o /tmp/terraform.zip && \
   unzip -d /usr/local/bin /tmp/terraform.zip && \
