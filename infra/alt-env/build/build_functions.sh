@@ -68,7 +68,7 @@ tf_apply() {
   [[ -n $HOSTED_ZONE_DNS_NAME ]]
   readonly EXISTING_ZONE_ID=$(aws route53 list-hosted-zones-by-name |
     jq --raw-output --arg name "$HOSTED_ZONE_DNS_NAME" '.HostedZones | .[] | select(.Name == "\($name).") | .Id')
-  terraform import module.conjob.aws_route53_zone.r53_zone "$EXISTING_ZONE_ID" || true
+  terraform import module.alt_conjob.aws_route53_zone.r53_zone "$EXISTING_ZONE_ID" || true
 
   terraform plan
   terraform apply --auto-approve
@@ -117,6 +117,6 @@ ansible_deploy() {
   readonly PUBLIC_IP=$(terraform show --json | jq --raw-output '.values.outputs.instance_public_ip.value')
   [[ -n $PUBLIC_IP ]]
 
-  cd "$ROOT_DIR/infra/ansible"
+  cd "$ROOT_DIR/infra/alt-env/ansible"
   ansible-playbook -v -u ubuntu -e ansible_ssh_private_key_file=/root/.ssh/mainkeypair.pem --inventory "$PUBLIC_IP", master-playbook.yml
 }
