@@ -30,17 +30,6 @@ setup_credentials() {
   chmod 400 /root/.ssh/mainkeypair.pem
 }
 
-build_push_application() {
-  local ROOT_DIR
-  readonly ROOT_DIR=$(get_git_root_dir)
-  cd "$ROOT_DIR"
-
-  ./gradlew --info build unitTest install
-
-  docker build -t scottg489/conjob:latest .
-  docker push scottg489/conjob:latest
-}
-
 tf_backend_init() {
   local ROOT_DIR
   local TFSTATE_BACKEND_BUCKET_NAME
