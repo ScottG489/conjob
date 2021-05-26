@@ -27,7 +27,6 @@ class ConfigTaskTest {
         configTask = new ConfigTask(conJobConfiguration);
     }
 
-    @Property
     @Label("Given a conjob configuration, " +
             "and new config values, " +
             "when updating the config with new values, " +
@@ -53,7 +52,6 @@ class ConfigTaskTest {
         verify(writerMock).write(contains("conjob.job.limit.maxKillTimeoutSeconds" + "=" + originalMaxKillTimeoutSeconds));
     }
 
-    @Property
     @Label("Given a conjob configuration, " +
             "and new config values, " +
             "when updating the config with new values, " +

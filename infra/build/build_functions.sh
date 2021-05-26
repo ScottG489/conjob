@@ -35,7 +35,7 @@ build_push_application() {
   readonly ROOT_DIR=$(get_git_root_dir)
   cd "$ROOT_DIR"
 
-  ./gradlew --info build unitTest integrationTest install
+  ./gradlew --info build unitTest
 
   docker build -t scottg489/conjob:latest .
   docker push scottg489/conjob:latest
