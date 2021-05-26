@@ -19,6 +19,7 @@ class TempSecretsFileUtilTest {
         tempSecretsFileUtil = new TempSecretsFileUtil();
     }
 
+    @Property
     void createSecretsFile(@ForAll("ascii") String givenSecretsContents) throws IOException {
         File tempSecretsFile = tempSecretsFileUtil.createSecretsFile(givenSecretsContents);
 
@@ -27,6 +28,7 @@ class TempSecretsFileUtilTest {
         assertThat(tempSecretsFile.exists(), is(true));
     }
 
+    @Property
     void deleteSecretsFile(@ForAll String givenSecretsContents) throws IOException {
         File tempSecretsFile = tempSecretsFileUtil.createSecretsFile(givenSecretsContents);
         tempSecretsFileUtil.delete(tempSecretsFile.toPath());
