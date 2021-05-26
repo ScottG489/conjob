@@ -1,5 +1,5 @@
 #FROM ubuntu:latest
-FROM openjdk:13
+FROM openjdk:11
 
 COPY build/install/conjob /opt/conjob
 COPY config.yml /opt/app/config.yml
