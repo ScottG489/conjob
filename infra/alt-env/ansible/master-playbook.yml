@@ -20,10 +20,25 @@
       sudo growpart /dev/xvda 1
       sudo resize2fs /dev/xvda1
 
+  - name: Import the Docker signing key (apt-key)
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+
+  - name: Install Docker apt repository
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+
+  - name: Register kernel release version variable
+    command: uname --kernel-release
+    register: kernel_release_version
+
   - name: Install packages
     package:
       name:
-        - docker.io
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - linux-headers-{{ kernel_release_version.stdout }}
 
   - name: Download and install sysbox runtime
     apt:
