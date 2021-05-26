@@ -42,7 +42,7 @@
 
   - name: Download and install sysbox runtime
     apt:
-      deb: https://github.com/nestybox/sysbox/releases/download/v0.2.1/sysbox_0.2.1-0.ubuntu-focal_amd64.deb
+      deb: https://github.com/nestybox/sysbox/releases/download/v0.3.0/sysbox-ce_0.3.0-0.ubuntu-focal_amd64.deb
 
   # TODO: We're going to do it this way because the ansible docker module was a pain to set up
   # TODO:   because it needs to be installed via pip (python2) which was a pain to install
