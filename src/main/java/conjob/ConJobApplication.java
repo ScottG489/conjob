@@ -13,10 +13,7 @@ import conjob.core.secrets.SecretsDockerAdapter;
 import conjob.core.secrets.SecretsStore;
 import conjob.core.secrets.TempSecretsFileUtil;
 import conjob.healthcheck.VersionCheck;
-import conjob.init.AdminBasicAuthConfigurator;
-import conjob.init.AuthedDockerClientCreator;
-import conjob.init.BasicAuthConfigurator;
-import conjob.init.DockerClientCreator;
+import conjob.init.*;
 import conjob.resource.GlobalErrorHandler;
 import conjob.resource.GlobalExceptionMapper;
 import conjob.resource.JobResource;
@@ -80,7 +77,7 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
                         configuration.getConjob().getJob().getLimit()));
         environment.jersey().register(createSecretsResource(docker));
 
-        environment.admin().addTask(new ConfigTask(configuration));
+        environment.admin().addTask(new ConfigTask(new ConfigStore(configuration.getConjob())));
 
         environment.jersey().register(new GlobalExceptionMapper());
         environment.getApplicationContext().setErrorHandler(new GlobalErrorHandler());

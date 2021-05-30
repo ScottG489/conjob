@@ -1,9 +1,8 @@
 package conjob.resource.admin.task;
 
-import conjob.ConJobConfiguration;
 import conjob.config.*;
+import conjob.init.ConfigStore;
 import net.jqwik.api.*;
-import net.jqwik.api.lifecycle.BeforeTry;
 
 import java.io.PrintWriter;
 import java.util.List;
@@ -18,15 +17,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 class ConfigTaskTest {
-    private ConJobConfiguration conJobConfiguration;
-    private ConfigTask configTask;
-
-    @BeforeTry
-    void beforeEach() {
-        conJobConfiguration = new ConJobConfiguration();
-        configTask = new ConfigTask(conJobConfiguration);
-    }
-
     @Property
     @Label("Given a conjob configuration, " +
             "and new config values, " +
@@ -42,10 +32,10 @@ class ConfigTaskTest {
         Long originalMaxTimeoutSeconds = conjobConfig.getJob().getLimit().getMaxTimeoutSeconds();
         Long originalMaxKillTimeoutSeconds = conjobConfig.getJob().getLimit().getMaxKillTimeoutSeconds();
 
-        conJobConfiguration.setConjob(conjobConfig);
         PrintWriter writerMock = mock(PrintWriter.class);
 
-        configTask.execute(parameters, writerMock);
+        new ConfigTask(new ConfigStore(conjobConfig))
+                .execute(parameters, writerMock);
 
         verify(writerMock).write(contains("conjob.job.limit.maxGlobalRequestsPerSecond" + "=" + originalMaxGlobalRequestsPerSecond));
         verify(writerMock).write(contains("conjob.job.limit.maxConcurrentRuns" + "=" + originalMaxConcurrentRuns));
@@ -69,10 +59,10 @@ class ConfigTaskTest {
         String originalMaxTimeoutSeconds = String.valueOf(conjobConfig.getJob().getLimit().getMaxTimeoutSeconds());
         String originalMaxKillTimeoutSeconds = String.valueOf(conjobConfig.getJob().getLimit().getMaxKillTimeoutSeconds());
 
-        conJobConfiguration.setConjob(conjobConfig);
         PrintWriter writerMock = mock(PrintWriter.class);
 
-        configTask.execute(parameters, writerMock);
+        new ConfigTask(new ConfigStore(conjobConfig))
+                .execute(parameters, writerMock);
 
         String maxGlobalRequestsPerSecond = String.valueOf(conjobConfig.getJob().getLimit().getMaxGlobalRequestsPerSecond());
         String maxConcurrentRuns = String.valueOf(conjobConfig.getJob().getLimit().getMaxConcurrentRuns());
