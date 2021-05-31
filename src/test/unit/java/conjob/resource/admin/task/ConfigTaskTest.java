@@ -3,18 +3,14 @@ package conjob.resource.admin.task;
 import conjob.config.*;
 import conjob.init.ConfigStore;
 import net.jqwik.api.*;
+import net.jqwik.api.constraints.NotEmpty;
 
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Stream;
 
-import static java.util.function.Predicate.not;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 class ConfigTaskTest {
     @Property
@@ -23,24 +19,24 @@ class ConfigTaskTest {
             "when updating the config with new values, " +
             "then the response output should contain the original configuration.")
     void respondWithOriginalConfig(
-            @ForAll("conjobConfig") ConJobConfig conjobConfig,
+            @ForAll String givenQueryString,
             @ForAll Map<
                     @From("jobLimitConfigKey") String,
                     List<@From("stringLong") String>> parameters) {
-        Long originalMaxGlobalRequestsPerSecond = conjobConfig.getJob().getLimit().getMaxGlobalRequestsPerSecond();
-        Long originalMaxConcurrentRuns = conjobConfig.getJob().getLimit().getMaxConcurrentRuns();
-        Long originalMaxTimeoutSeconds = conjobConfig.getJob().getLimit().getMaxTimeoutSeconds();
-        Long originalMaxKillTimeoutSeconds = conjobConfig.getJob().getLimit().getMaxKillTimeoutSeconds();
-
         PrintWriter writerMock = mock(PrintWriter.class);
 
-        new ConfigTask(new ConfigStore(conjobConfig), new ConfigMapper())
+        ConfigMapper configMapper = mock(ConfigMapper.class);
+        ConfigStore configStore = mock(ConfigStore.class);
+        Stream<Map.Entry<String, Long>> mockStream = Stream.empty();
+
+        when(configStore.getAll()).thenReturn(mockStream);
+        when(configMapper.toQueryString(configStore.getAll())).thenReturn(givenQueryString);
+
+        new ConfigTask(configStore, configMapper)
                 .execute(parameters, writerMock);
 
-        verify(writerMock).write(contains("conjob.job.limit.maxGlobalRequestsPerSecond" + "=" + originalMaxGlobalRequestsPerSecond));
-        verify(writerMock).write(contains("conjob.job.limit.maxConcurrentRuns" + "=" + originalMaxConcurrentRuns));
-        verify(writerMock).write(contains("conjob.job.limit.maxTimeoutSeconds" + "=" + originalMaxTimeoutSeconds));
-        verify(writerMock).write(contains("conjob.job.limit.maxKillTimeoutSeconds" + "=" + originalMaxKillTimeoutSeconds));
+        verify(configMapper, times(1)).toQueryString(mockStream);
+        verify(writerMock).write(givenQueryString);
     }
 
     @Property
@@ -50,36 +46,27 @@ class ConfigTaskTest {
             "then fields in the config should be updated with new values, " +
             "and fields not updated should be the same as the originals.")
     void updateConfigWithNewValues(
-            @ForAll("conjobConfig") ConJobConfig conjobConfig,
+            @ForAll String givenQueryString,
             @ForAll Map<
                     @From("jobLimitConfigKey") String,
-                    List<@From("stringLong") String>> parameters) {
-        String originalMaxGlobalRequestsPerSecond = String.valueOf(conjobConfig.getJob().getLimit().getMaxGlobalRequestsPerSecond());
-        String originalMaxConcurrentRuns = String.valueOf(conjobConfig.getJob().getLimit().getMaxConcurrentRuns());
-        String originalMaxTimeoutSeconds = String.valueOf(conjobConfig.getJob().getLimit().getMaxTimeoutSeconds());
-        String originalMaxKillTimeoutSeconds = String.valueOf(conjobConfig.getJob().getLimit().getMaxKillTimeoutSeconds());
-
+                    @NotEmpty List<@From("stringLong") String>> parameters) {
         PrintWriter writerMock = mock(PrintWriter.class);
 
-        new ConfigTask(new ConfigStore(conjobConfig), new ConfigMapper())
+        ConfigMapper configMapper = mock(ConfigMapper.class);
+        ConfigStore configStore = mock(ConfigStore.class);
+        Stream<Map.Entry<String, Long>> mockStream = Stream.empty();
+
+        when(configStore.getAll()).thenReturn(mockStream);
+        when(configMapper.toQueryString(configStore.getAll())).thenReturn(givenQueryString);
+
+        new ConfigTask(configStore, configMapper)
                 .execute(parameters, writerMock);
 
-        String maxGlobalRequestsPerSecond = String.valueOf(conjobConfig.getJob().getLimit().getMaxGlobalRequestsPerSecond());
-        String maxConcurrentRuns = String.valueOf(conjobConfig.getJob().getLimit().getMaxConcurrentRuns());
-        String maxTimeoutSeconds = String.valueOf(conjobConfig.getJob().getLimit().getMaxTimeoutSeconds());
-        String maxKillTimeoutSeconds = String.valueOf(conjobConfig.getJob().getLimit().getMaxKillTimeoutSeconds());
-
-        assertThat(maxGlobalRequestsPerSecond, is(newValueOrOriginalIfNoChange(parameters.get("conjob.job.limit.maxGlobalRequestsPerSecond"), originalMaxGlobalRequestsPerSecond)));
-        assertThat(maxConcurrentRuns, is(newValueOrOriginalIfNoChange(parameters.get("conjob.job.limit.maxConcurrentRuns"), originalMaxConcurrentRuns)));
-        assertThat(maxTimeoutSeconds, is(newValueOrOriginalIfNoChange(parameters.get("conjob.job.limit.maxTimeoutSeconds"), originalMaxTimeoutSeconds)));
-        assertThat(maxKillTimeoutSeconds, is(newValueOrOriginalIfNoChange(parameters.get("conjob.job.limit.maxKillTimeoutSeconds"), originalMaxKillTimeoutSeconds)));
-    }
-
-    private String newValueOrOriginalIfNoChange(List<String> configKey, String original) {
-        return Optional.ofNullable(configKey)
-                .filter(not(List::isEmpty))
-                .map(this::firstElement)
-                .orElse(original);
+        verify(configMapper, times(1)).toQueryString(mockStream);
+        parameters.forEach((f, v) -> {
+            verify(configStore, times(1)).setByKey(f, Long.valueOf(v.get(0)));
+        });
+        verify(writerMock).write(givenQueryString);
     }
 
     String firstElement(List<String> l) {
