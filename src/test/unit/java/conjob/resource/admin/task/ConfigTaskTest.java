@@ -34,7 +34,7 @@ class ConfigTaskTest {
 
         PrintWriter writerMock = mock(PrintWriter.class);
 
-        new ConfigTask(new ConfigStore(conjobConfig))
+        new ConfigTask(new ConfigStore(conjobConfig), new ConfigMapper())
                 .execute(parameters, writerMock);
 
         verify(writerMock).write(contains("conjob.job.limit.maxGlobalRequestsPerSecond" + "=" + originalMaxGlobalRequestsPerSecond));
@@ -61,7 +61,7 @@ class ConfigTaskTest {
 
         PrintWriter writerMock = mock(PrintWriter.class);
 
-        new ConfigTask(new ConfigStore(conjobConfig))
+        new ConfigTask(new ConfigStore(conjobConfig), new ConfigMapper())
                 .execute(parameters, writerMock);
 
         String maxGlobalRequestsPerSecond = String.valueOf(conjobConfig.getJob().getLimit().getMaxGlobalRequestsPerSecond());

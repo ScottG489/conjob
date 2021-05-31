@@ -7,26 +7,23 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 // TODO: Make sure to review the usage of all the configurations updated here. Need to make sure that the
 // TODO:   values aren't being used in a way where they may cause a race condition or update in the middle
 // TODO:   of processing.
 public class ConfigTask extends Task {
     private final ConfigStore configStore;
+    private final ConfigMapper configMapper;
 
-    public ConfigTask(ConfigStore configStore) {
+    public ConfigTask(ConfigStore configStore, ConfigMapper configMapper) {
         super("config");
         this.configStore = configStore;
+        this.configMapper = configMapper;
     }
 
     @Override
     public void execute(Map<String, List<String>> parameters, PrintWriter output) {
-        String originalConfig = configStore.getAll()
-                .map(configEntry ->
-                        configEntry.getKey() + "=" + configEntry.getValue() + "&")
-                .collect(Collectors.joining());
-        originalConfig = originalConfig.substring(0, originalConfig.length() - 1);
+        String originalConfig = configMapper.toQueryString(configStore.getAll());
         parameters.forEach(this::updateConfig);
 
         output.write(originalConfig);

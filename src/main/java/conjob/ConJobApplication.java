@@ -18,6 +18,7 @@ import conjob.resource.GlobalErrorHandler;
 import conjob.resource.GlobalExceptionMapper;
 import conjob.resource.JobResource;
 import conjob.resource.SecretsResource;
+import conjob.resource.admin.task.ConfigMapper;
 import conjob.resource.admin.task.ConfigTask;
 import conjob.resource.convert.JobResponseConverter;
 import conjob.resource.convert.ResponseCreator;
@@ -77,7 +78,8 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
                         configuration.getConjob().getJob().getLimit()));
         environment.jersey().register(createSecretsResource(docker));
 
-        environment.admin().addTask(new ConfigTask(new ConfigStore(configuration.getConjob())));
+        environment.admin().addTask(
+                new ConfigTask(new ConfigStore(configuration.getConjob()), new ConfigMapper()));
 
         environment.jersey().register(new GlobalExceptionMapper());
         environment.getApplicationContext().setErrorHandler(new GlobalErrorHandler());
