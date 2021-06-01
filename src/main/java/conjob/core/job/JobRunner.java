@@ -4,9 +4,11 @@ import conjob.core.job.exception.ReadLogsException;
 import conjob.core.job.exception.RunJobException;
 import conjob.core.job.exception.StopJobRunException;
 import conjob.core.job.model.JobRunOutcome;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.*;
 
+@Slf4j
 public class JobRunner {
     private final DockerAdapter dockerAdapter;
 
@@ -20,7 +22,8 @@ public class JobRunner {
         Future<Long> future = executor.submit(new WaitForContainer(dockerAdapter, containerId));
         try {
             exitStatusCode = future.get(timeoutSeconds, TimeUnit.SECONDS);
-        } catch (ExecutionException | TimeoutException | InterruptedException ignored) {
+        } catch (ExecutionException | TimeoutException | InterruptedException ex) {
+            log.warn("Problem finishing job: {}", ex.getMessage(), ex);
             try {
                 exitStatusCode = dockerAdapter.stopContainer(containerId, killTimeoutSeconds);
                 // The container could finish naturally before the job timeout but before the stop-to-kill timeout.

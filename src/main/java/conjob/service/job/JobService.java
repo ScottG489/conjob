@@ -11,7 +11,9 @@ import conjob.core.job.model.JobRunConfig;
 import conjob.core.job.model.JobRunOutcome;
 import conjob.core.secrets.SecretsStore;
 import conjob.core.secrets.SecretsStoreException;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class JobService {
 
     private final RunJobLimiter runJobLimiter;
@@ -63,7 +65,8 @@ public class JobService {
         String jobId;
         try {
             jobId = jobRunCreationStrategy.createJobRun(jobRunConfig);
-        } catch (CreateJobRunException | JobUpdateException e2) {
+        } catch (CreateJobRunException | JobUpdateException ex) {
+            log.warn("Problem creating job: {}", ex.getMessage(), ex);
             runJobLimiter.markJobRunComplete();
             return new JobRun(JobRunConclusion.NOT_FOUND, "", -1);
         }
