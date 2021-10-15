@@ -3,7 +3,7 @@ plugins {
     id 'scala'
     id 'application'
     id 'org.ajoberstar.grgit' version '4.0.2'
-    id "io.gatling.gradle" version "3.5.1"
+    id "io.gatling.gradle" version "3.6.1"
     id 'jacoco'
     id 'info.solidsoft.pitest' version '1.5.1'
 }
