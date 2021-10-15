@@ -12,6 +12,9 @@ out
 # jqwik
 .jqwik-database
 
+# Vagrant
+.vagrant
+
 # Terraform (Taken from https://raw.githubusercontent.com/github/gitignore/master/Terraform.gitignore)
 # Local .terraform directories
 **/.terraform/*
