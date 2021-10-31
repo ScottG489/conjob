@@ -135,24 +135,27 @@ ansible_deploy() {
 run_tests() {
   local ROOT_DIR
   local RELATIVE_PATH_TO_TF_DIR
+  local DF_DOMAIN_NAME
   local PUBLIC_IP
 
   readonly RELATIVE_PATH_TO_TF_DIR=$1
   readonly ROOT_DIR=$(get_git_root_dir)
 
   cd "$ROOT_DIR/$RELATIVE_PATH_TO_TF_DIR"
+  readonly DF_DOMAIN_NAME=$(terraform show --json | jq --raw-output '.values.outputs.df_dist_domain_name.value')
   readonly PUBLIC_IP=$(terraform show --json | jq --raw-output '.values.outputs.instance_public_ip.value')
+  [[ -n $DF_DOMAIN_NAME ]]
   [[ -n $PUBLIC_IP ]]
 
   cd "$ROOT_DIR"
 
   # Acceptance test configuration
-  echo "baseUri=http://${PUBLIC_IP}:80" >"$ROOT_DIR/src/test/acceptance/resource/config.properties"
+  echo "baseUri=https://${DF_DOMAIN_NAME}" >"$ROOT_DIR/src/test/acceptance/resource/config.properties"
   echo "adminBaseUri=http://${PUBLIC_IP}:8081" >>"$ROOT_DIR/src/test/acceptance/resource/config.properties"
   echo "adminUsername=${_ADMIN_USERNAME}" >>"$ROOT_DIR/src/test/acceptance/resource/config.properties"
   echo "adminPassword=${_ADMIN_PASSWORD}" >>"$ROOT_DIR/src/test/acceptance/resource/config.properties"
   # Performance test configuration
-  echo "baseUri=http://${PUBLIC_IP}:80" >"$ROOT_DIR/src/test/performance/resources/config.properties"
+  echo "baseUri=https://${DF_DOMAIN_NAME}" >"$ROOT_DIR/src/test/performance/resources/config.properties"
   echo "adminBaseUri=http://${PUBLIC_IP}:8081" >>"$ROOT_DIR/src/test/performance/resources/config.properties"
 
   ./gradlew --info acceptanceTest performanceTest
