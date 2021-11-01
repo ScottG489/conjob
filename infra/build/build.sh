@@ -16,7 +16,7 @@ EOM
 
 curl -v -sS -w '\n%{http_code}' \
   --data-binary "$JSON_BODY" \
-  "https://alt.conjob.io/job/run?image=$IMAGE_NAME" \
+  "http://alt.conjob.io/job/run?image=$IMAGE_NAME" \
   | tee /tmp/foo \
   | sed '$d' && \
   [ "$(tail -1 /tmp/foo)" -eq 200 ]
