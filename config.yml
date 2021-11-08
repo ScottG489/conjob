@@ -18,6 +18,13 @@ conjob:
 
 server:
   registerDefaultExceptionMappers: false
+  applicationConnectors:
+    - type: http
+      port: 8080
+    - type: https
+      port: 8443
+      keyStorePath: /opt/keystore.p12
+      keyStorePassword: ${KEYSTORE_PASSWORD:-}
 
 logging:
   appenders:

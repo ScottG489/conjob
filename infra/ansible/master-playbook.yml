@@ -66,16 +66,20 @@
     shell: |
       docker rm --force {{ container_name }}
       docker pull {{ image_name }}
-      docker run --detach \
+      docker create \
         -v /var/run/docker.sock:/var/run/docker.sock \
         --userns=host \
         -p 80:8080 \
         -p 8081:8081 \
+        -p 443:8443 \
         -e DOCKER_USERNAME={{ dockerUsername }} \
         -e DOCKER_PASSWORD={{ dockerPassword }} \
         -e ADMIN_USERNAME={{ adminUsername }} \
         -e ADMIN_PASSWORD={{ adminPassword }} \
+        -e KEYSTORE_PASSWORD={{ keystorePassword }} \
         --name {{ container_name }} {{ image_name }}
+      docker cp {{ keystore_temp_file.path }} {{ container_name }}:/opt/keystore.p12
+      docker start {{ container_name }}
 
   - name: Wait for service to be healthy
     uri:
