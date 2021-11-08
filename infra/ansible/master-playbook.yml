@@ -1,6 +1,7 @@
 - hosts: all
   become: yes
   gather_facts: no
+  force_handlers: True
   vars_files:
     - vars.yml
   pre_tasks:
@@ -42,6 +43,17 @@
     apt:
       deb: https://downloads.nestybox.com/sysbox/releases/v0.4.1/sysbox-ce_0.4.1-0.ubuntu-focal_amd64.deb
 
+  - name: Create temp file for keystore
+    tempfile:
+    register: keystore_temp_file
+
+  - name: Copy keystore to temp file
+    copy:
+      src: keystore.p12
+      dest: "{{ keystore_temp_file.path }}"
+    notify:
+      - "Delete temp keystore file"
+
   # TODO: We're going to do it this way because the ansible docker module was a pain to set up
   # TODO:   because it needs to be installed via pip (python2) which was a pain to install
   # TODO: I'm not sure why I need to manually pull here but it doesn't seem to pick up the latest
@@ -82,3 +94,9 @@
 #    docker_container:
 #      name: conjob
 #      image: scottg489/conjob
+
+  handlers:
+    - name: Delete temp keystore file
+      file:
+        path: "{{ keystore_temp_file.path }}"
+        state: absent
