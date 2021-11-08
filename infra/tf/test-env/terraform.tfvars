@@ -1,4 +1,5 @@
-domain_name = "conjob-test.io"
+second_level_domain_name = "conjob-test"
+top_level_domain_name = "io"
 subdomain_name = "api"
 instance_type = "t2.small"
 spot_type = "one-time"

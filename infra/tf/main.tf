@@ -13,13 +13,13 @@ terraform {
 module "helpers_instance_ssh" {
   source = "ScottG489/helpers/aws//modules/instance_ssh"
   version = "0.0.4"
-  name = var.domain_name
+  name = "${var.subdomain_name}.${var.second_level_domain_name}.${var.top_level_domain_name}"
   public_key = var.public_key
 }
 
 module "conjob" {
   source = "./modules/conjob_core"
-  domain_name = var.domain_name
+  domain_name = "${var.second_level_domain_name}.${var.top_level_domain_name}"
   subdomain_name = var.subdomain_name
   public_ip = module.helpers_instance_ssh.public_ip
 }
