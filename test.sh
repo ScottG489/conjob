@@ -21,7 +21,7 @@ ID_RSA_CONTENTS_BASE64=$(base64 ~/.ssh/id_rsa | tr -d '\n') ;
 AWS_CREDENTIALS_CONTENTS_BASE64=$(base64 ~/.aws/credentials | tr -d '\n') ;
 MAINKEYPAIR_CONTENTS_BASE64=$(base64 ~/.ssh/mainkeypair.pem | tr -d '\n') ;
 DOCKER_CONFIG_CONTENTS_BASE64=$(base64 ~/.docker/config.json | tr -d '\n') ;
-KEYSTORE_PASSWORD=MTIzNDU2
+KEYSTORE_PASSWORD='MTIzNDU2Cg=='
 [[ -n $ID_RSA_CONTENTS_BASE64 ]]
 [[ -n $AWS_CREDENTIALS_CONTENTS_BASE64 ]]
 [[ -n $MAINKEYPAIR_CONTENTS_BASE64 ]]
