@@ -30,4 +30,4 @@ jobs:
         ${{ secrets.ADMIN_PASSWORD }} \
         ${{ secrets.DOCKER_USERNAME }} \
         ${{ secrets.DOCKER_PASSWORD }} \
-        '123456'
+        'MTIzNDU2Cg=='
