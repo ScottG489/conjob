@@ -80,7 +80,7 @@ tf_apply() {
   terraform init
 
   # We need to import the zone because it is a shared resource and may already exist
-  readonly HOSTED_ZONE_DNS_NAME=$(echo '"${var.second_level_domain_name}.${var.top_level_domain_name}"' | terraform console)
+  readonly HOSTED_ZONE_DNS_NAME=$(echo '"${var.second_level_domain_name}.${var.top_level_domain_name}"' | terraform console | tr -d \")
   [[ -n $HOSTED_ZONE_DNS_NAME ]]
   readonly EXISTING_ZONE_ID=$(aws route53 list-hosted-zones-by-name |
     jq --raw-output --arg name "$HOSTED_ZONE_DNS_NAME" '.HostedZones | .[] | select(.Name == "\($name).") | .Id')
