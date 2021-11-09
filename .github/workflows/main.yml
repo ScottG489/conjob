@@ -29,4 +29,5 @@ jobs:
         ${{ secrets.ADMIN_USERNAME }} \
         ${{ secrets.ADMIN_PASSWORD }} \
         ${{ secrets.DOCKER_USERNAME }} \
-        ${{ secrets.DOCKER_PASSWORD }}
+        ${{ secrets.DOCKER_PASSWORD }} \
+        '123456'
