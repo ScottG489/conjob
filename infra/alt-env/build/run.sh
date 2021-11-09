@@ -15,8 +15,9 @@ declare -r _PROJECT_NAME='conjob'
 declare -r _GIT_REPO='git@github.com:ScottG489/conjob.git'
 declare -r _TFSTATE_BUCKET_NAME='tfstate-alt-conjob'
 
-git clone $_GIT_REPO
-cd $_PROJECT_NAME
+#git clone $_GIT_REPO
+cp -r $_PROJECT_NAME "$_PROJECT_NAME"_build
+cd "$_PROJECT_NAME"_build
 
 # We don't really need to build the application. The latest changes should have been pushed to docker hub and we aren't trying to deploy with local changes
 #build_push_application

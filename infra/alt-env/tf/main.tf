@@ -13,7 +13,7 @@ terraform {
 module "helpers_spot_instance_ssh" {
   source = "ScottG489/helpers/aws//modules/spot_instance_ssh"
   version = "0.1.4"
-  name = "alt-${var.domain_name}"
+  name = "alt-${var.subdomain_name}.${var.second_level_domain_name}.${var.top_level_domain_name}"
   instance_type = var.instance_type
   spot_type = var.spot_type
   spot_price = var.spot_price
@@ -23,7 +23,7 @@ module "helpers_spot_instance_ssh" {
 
 module "alt_conjob" {
   source = "./modules/conjob_core"
-  domain_name = var.domain_name
+  domain_name = "${var.second_level_domain_name}.${var.top_level_domain_name}"
   subdomain_name = var.subdomain_name
   public_ip = module.helpers_spot_instance_ssh.public_ip
 }
