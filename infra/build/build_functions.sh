@@ -11,25 +11,20 @@ setup_credentials() {
   local MAINKEYPAIR_CONTENTS
   local AWS_CREDENTIALS_CONTENTS
   local DOCKER_CONFIG_CONTENTS
-  local KEYSTORE_PASSWORD
 
   readonly ID_RSA_CONTENTS=$(echo -n "$1" | jq -r .ID_RSA | base64 --decode)
   readonly MAINKEYPAIR_CONTENTS=$(echo -n "$1" | jq -r .MAIN_KEY_PAIR | base64 --decode)
   readonly AWS_CREDENTIALS_CONTENTS=$(echo -n "$1" | jq -r .AWS_CREDENTIALS | base64 --decode)
   readonly DOCKER_CONFIG_CONTENTS=$(echo -n "$1" | jq -r .DOCKER_CONFIG | base64 --decode)
-  readonly KEYSTORE_PASSWORD=$(echo -n "$1" | jq -r .KEYSTORE_PASSWORD | base64 --decode)
   [[ -n $ID_RSA_CONTENTS ]]
   [[ -n $MAINKEYPAIR_CONTENTS ]]
   [[ -n $AWS_CREDENTIALS_CONTENTS ]]
   [[ -n $DOCKER_CONFIG_CONTENTS ]]
-  [[ -n $KEYSTORE_PASSWORD ]]
 
   printf -- "$ID_RSA_CONTENTS" >/root/.ssh/id_rsa
   printf -- "$MAINKEYPAIR_CONTENTS" >/root/.ssh/mainkeypair.pem
   printf -- "$AWS_CREDENTIALS_CONTENTS" >/root/.aws/credentials
   printf -- "$DOCKER_CONFIG_CONTENTS" >/root/.docker/config.json
-  export _KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD
-  export TF_VAR_keystore_password=$KEYSTORE_PASSWORD
 
   chmod 400 /root/.ssh/id_rsa
   chmod 400 /root/.ssh/mainkeypair.pem
@@ -125,6 +120,8 @@ ansible_deploy() {
   local RELATIVE_PATH_TO_TF_DIR
   local PUBLIC_IP
   local KEYSTORE_TEMP_FILE
+  local KEYSTORE_PASSWORD
+  local _KEYSTORE_PASSWORD
 
   readonly ROOT_DIR=$(get_git_root_dir)
   readonly RELATIVE_PATH_TO_TF_DIR=$1
@@ -135,13 +132,23 @@ ansible_deploy() {
   [[ -n $PUBLIC_IP ]]
   readonly KEYSTORE_TEMP_FILE=$(mktemp)
   terraform show --json | jq --raw-output '.values.outputs.certificate_p12.value' | base64 --decode > "$KEYSTORE_TEMP_FILE"
+  set +x
+  readonly KEYSTORE_PASSWORD=$(terraform show --json | jq --raw-output '.values.outputs.keystore_password.value')
+  [[ -n $KEYSTORE_PASSWORD ]]
+  set -x
 
   cd "$ROOT_DIR/infra/ansible"
 
   mkdir -p files
-  printf -- "$_KEYSTORE_PASSWORD"\\n"$_KEYSTORE_PASSWORD"\\n"$_KEYSTORE_PASSWORD" | keytool -v -importkeystore -srckeystore $KEYSTORE_TEMP_FILE -srcstoretype PKCS12 -destkeystore files/keystore.p12 -deststoretype PKCS12
+  set +x
+  printf -- "$KEYSTORE_PASSWORD"\\n"$KEYSTORE_PASSWORD"\\n"$KEYSTORE_PASSWORD" |
+    keytool -v -importkeystore -srckeystore "$KEYSTORE_TEMP_FILE" -srcstoretype PKCS12 -destkeystore files/keystore.p12 -deststoretype PKCS12
+  set -x
   [[ -f files/keystore.p12 ]]
 
+  set +x
+  export _KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD
+  set -x
   ansible-playbook -v -u ubuntu -e ansible_ssh_private_key_file=/root/.ssh/mainkeypair.pem --inventory "$PUBLIC_IP", master-playbook.yml
   rm -rf files
 }

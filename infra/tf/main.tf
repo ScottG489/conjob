@@ -41,7 +41,7 @@ resource "acme_registration" "reg" {
 
 resource "acme_certificate" "certificate" {
   account_key_pem           = "${acme_registration.reg.account_key_pem}"
-  certificate_p12_password  = var.keystore_password
+  certificate_p12_password  = module.conjob.random_keystore_password
   common_name               = "${var.subdomain_name}.${var.second_level_domain_name}.${var.top_level_domain_name}"
 
   dns_challenge {
