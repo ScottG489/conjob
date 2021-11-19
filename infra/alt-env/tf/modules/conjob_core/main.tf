@@ -15,3 +15,7 @@ resource "aws_route53_record" "r53_record_A_api" {
   ttl = 300
   type = "A"
 }
+
+resource "random_id" "random_keystore_password" {
+  byte_length = 8
+}
