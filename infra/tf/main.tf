@@ -35,12 +35,12 @@ resource "acme_registration" "reg" {
   depends_on = [
     module.conjob,
   ]
-  account_key_pem = "${tls_private_key.private_key.private_key_pem}"
+  account_key_pem = tls_private_key.private_key.private_key_pem
   email_address   = "nobody@gmail.com"
 }
 
 resource "acme_certificate" "certificate" {
-  account_key_pem           = "${acme_registration.reg.account_key_pem}"
+  account_key_pem           = acme_registration.reg.account_key_pem
   certificate_p12_password  = module.conjob.random_keystore_password
   common_name               = "${var.subdomain_name}.${var.second_level_domain_name}.${var.top_level_domain_name}"
 
