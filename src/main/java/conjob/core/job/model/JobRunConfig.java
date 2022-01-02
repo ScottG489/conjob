@@ -7,5 +7,6 @@ import lombok.Value;
 public class JobRunConfig {
     String jobName;
     String input;
+    String dockerCacheVolumeName;
     String secretsVolumeName;
 }

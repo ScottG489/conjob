@@ -36,7 +36,7 @@ public class SecretsService {
 
     public void createsSecret(String imageName, String secrets)
             throws IOException {
-        String secretsVolumeName = configUtil.translateToVolumeName(imageName);
+        String secretsVolumeName = configUtil.translateToSecretsVolumeName(imageName);
         // TODO: Could there be a race condition if two of these containers are running at the same time?
         String intermediaryContainerName =
                 uniqueContainerNameGenerator.generate(CONTAINER_NAME_PREFIX);

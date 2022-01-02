@@ -37,7 +37,7 @@ public class DockerAdapter {
     }
 
     public String createJobRun(JobRunConfig jobRunConfig) throws CreateJobRunException {
-        HostConfig hostConfig = getHostConfig(jobRunConfig.getSecretsVolumeName());
+        HostConfig hostConfig = getHostConfig(jobRunConfig.getDockerCacheVolumeName(), jobRunConfig.getSecretsVolumeName());
 
         ContainerConfig containerConfig = getContainerConfig(
                 jobRunConfig.getJobName(),
@@ -106,8 +106,11 @@ public class DockerAdapter {
         return containerConfigBuilder.build();
     }
 
-    private HostConfig getHostConfig(String secretsVolumeName) {
+    private HostConfig getHostConfig(String dockerCacheVolumeName, String secretsVolumeName) {
         HostConfig.Builder hostConfigBuilder = getHostConfigBuilderFor(containerRuntime);
+
+        hostConfigBuilder.appendBinds(dockerCacheVolumeName + ":" + "/var/lib/docker");
+
         if (secretsVolumeName != null) {
             hostConfigBuilder.appendBinds(
                     secretsVolumeName

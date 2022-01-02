@@ -80,11 +80,12 @@ public class JobService {
     }
 
     private JobRunConfig getJobRunConfig(String imageName, String input) throws SecretsStoreException {
-        String correspondingSecretsVolumeName = configUtil.translateToVolumeName(imageName);
+        String correspondingSecretsVolumeName = configUtil.translateToSecretsVolumeName(imageName);
+        String dockerCacheVolumeName = configUtil.translateToDockerCacheVolumeName(imageName);
         String secretsVolumeName = secretsStore
                 .findSecrets(correspondingSecretsVolumeName)
                 .orElse(null);
 
-        return jobRunConfigCreator.getContainerConfig(imageName, input, secretsVolumeName);
+        return jobRunConfigCreator.getContainerConfig(imageName, input, dockerCacheVolumeName, secretsVolumeName);
     }
 }
