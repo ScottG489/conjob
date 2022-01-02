@@ -35,6 +35,7 @@ public class DockerAdapterCreateContainerTest {
     void createJobRun(
             @ForAll String jobName,
             @ForAll @WithNull String input,
+            @ForAll @WithNull String dockerCacheVolumeName,
             @ForAll @WithNull String secretsVolumeName,
             @ForAll String givenJobRunId
     ) throws CreateJobRunException, DockerException, InterruptedException {
@@ -43,7 +44,7 @@ public class DockerAdapterCreateContainerTest {
         when(mockClient.createContainer(any())).thenReturn(mockContainerCreation);
         when(mockContainerCreation.id()).thenReturn(givenJobRunId);
 
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeName);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName);
         String jobRunId = dockerAdapter.createJobRun(jobRunConfig);
 
         assertThat(jobRunId, is(givenJobRunId));
@@ -56,11 +57,12 @@ public class DockerAdapterCreateContainerTest {
     void createJobRunDockerException(
             @ForAll String jobName,
             @ForAll @WithNull String input,
+            @ForAll @WithNull String dockerCacheVolumeName,
             @ForAll @WithNull String secretsVolumeName
     ) throws DockerException, InterruptedException {
         when(mockClient.createContainer(any())).thenThrow(new DockerException(""));
 
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeName);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName);
 
         assertThrows(CreateJobRunException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
     }
@@ -72,11 +74,12 @@ public class DockerAdapterCreateContainerTest {
     void createJobRunInterruptedException(
             @ForAll String jobName,
             @ForAll @WithNull String input,
-            @ForAll @WithNull String secretsVolumeNames
+            @ForAll @WithNull String dockerCacheVolumeName,
+            @ForAll @WithNull String secretsVolumeName
     ) throws DockerException, InterruptedException {
         when(mockClient.createContainer(any())).thenThrow(new InterruptedException());
 
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeNames);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName);
 
         assertThrows(CreateJobRunException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
     }
@@ -88,11 +91,12 @@ public class DockerAdapterCreateContainerTest {
     void createJobRunUnexpectedException(
             @ForAll String jobName,
             @ForAll @WithNull String input,
-            @ForAll @WithNull String secretsVolumeNames
+            @ForAll @WithNull String dockerCacheVolumeName,
+            @ForAll @WithNull String secretsVolumeName
     ) throws DockerException, InterruptedException {
         when(mockClient.createContainer(any())).thenThrow(new RuntimeException());
 
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeNames);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName);
 
         assertThrows(RuntimeException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
     }

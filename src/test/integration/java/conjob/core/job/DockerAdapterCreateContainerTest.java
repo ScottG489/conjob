@@ -53,10 +53,11 @@ public class DockerAdapterCreateContainerTest {
     void createJobRun(
             @ForAll("existingJob") String jobName,
             @ForAll @WithNull String input,
+            @ForAll("dockerCacheVolumeName") String dockerCacheVolumeName,
             @ForAll("secretsVolumeName") String secretsVolumeName
     ) throws CreateJobRunException {
         this.secretsVolumeName = secretsVolumeName;
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeName);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName);
         jobRunId = dockerAdapter.createJobRun(jobRunConfig);
 
         assertThat(jobRunId, matchesPattern("[a-f0-9]{64}"));
@@ -69,8 +70,9 @@ public class DockerAdapterCreateContainerTest {
     void createJobRunNonExistantJob(
             @ForAll("nonexistantJob") String jobName,
             @ForAll @WithNull String input,
+            @ForAll("dockerCacheVolumeName") String dockerCacheVolumeName,
             @ForAll("secretsVolumeName") @WithNull String secretsVolumeName) {
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeName);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName,  secretsVolumeName);
 
         assertThrows(CreateJobRunException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
     }
@@ -83,6 +85,13 @@ public class DockerAdapterCreateContainerTest {
     @Provide
     Arbitrary<String> nonexistantJob() {
         return Arbitraries.just("local/job-that-does-not-exist-aeec82aa:latest");
+    }
+
+    @Provide
+    Arbitrary<String> dockerCacheVolumeName() {
+        Arbitrary<String> firstChar = Arbitraries.strings().alpha().numeric().ofLength(1);
+        Arbitrary<String> lastChars = Arbitraries.strings().alpha().numeric().ofMinLength(1).ofMaxLength(254);
+        return Combinators.combine(firstChar, lastChars).as((first, last) -> first + last);
     }
 
     @Provide

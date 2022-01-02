@@ -1,14 +1,12 @@
 package conjob.core.job;
 
 
-import conjob.core.job.DockerAdapter;
-import conjob.core.job.JobRunCreationStrategyDeterminer;
-import conjob.core.job.PullStrategy;
 import conjob.core.job.exception.CreateJobRunException;
 import conjob.core.job.exception.JobUpdateException;
 import conjob.core.job.model.JobRunConfig;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
+import net.jqwik.api.constraints.UseType;
 import net.jqwik.api.lifecycle.BeforeTry;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,92 +23,77 @@ class JobRunCreationStrategyDeterminerTest {
     }
 
     @Property
-    void determineStrategyAlwaysPull(@ForAll String jobName,
-                                     @ForAll String input,
-                                     @ForAll String secretsVolumeName,
+    void determineStrategyAlwaysPull(@ForAll @UseType JobRunConfig givenJobRunConfig,
                                      @ForAll String givenJobRunId)
             throws CreateJobRunException, JobUpdateException {
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeName);
-        when(dockerAdapter.createJobRun(jobRunConfig)).thenReturn(givenJobRunId);
+        when(dockerAdapter.createJobRun(givenJobRunConfig)).thenReturn(givenJobRunId);
 
         String jobRunId = new JobRunCreationStrategyDeterminer(dockerAdapter)
                 .determineStrategy(PullStrategy.ALWAYS)
-                .createJobRun(jobRunConfig);
+                .createJobRun(givenJobRunConfig);
 
         assertThat(jobRunId, is(givenJobRunId));
-        verify(dockerAdapter, times(1)).pullImage(jobName);
-        verify(dockerAdapter, times(1)).createJobRun(jobRunConfig);
+        verify(dockerAdapter, times(1)).pullImage(givenJobRunConfig.getJobName());
+        verify(dockerAdapter, times(1)).createJobRun(givenJobRunConfig);
     }
 
     @Property
-    void determineStrategyNeverPull(@ForAll String jobName,
-                                    @ForAll String input,
-                                    @ForAll String secretsVolumeName,
+    void determineStrategyNeverPull(@ForAll @UseType JobRunConfig givenJobRunConfig,
                                     @ForAll String givenJobRunId)
             throws CreateJobRunException, JobUpdateException {
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeName);
-        when(dockerAdapter.createJobRun(jobRunConfig)).thenReturn(givenJobRunId);
+        when(dockerAdapter.createJobRun(givenJobRunConfig)).thenReturn(givenJobRunId);
 
         String jobRunId = new JobRunCreationStrategyDeterminer(dockerAdapter)
                 .determineStrategy(PullStrategy.NEVER)
-                .createJobRun(jobRunConfig);
+                .createJobRun(givenJobRunConfig);
 
         assertThat(jobRunId, is(givenJobRunId));
-        verify(dockerAdapter, times(0)).pullImage(jobName);
-        verify(dockerAdapter, times(1)).createJobRun(jobRunConfig);
+        verify(dockerAdapter, times(0)).pullImage(givenJobRunConfig.getJobName());
+        verify(dockerAdapter, times(1)).createJobRun(givenJobRunConfig);
     }
 
     @Property
-    void determineStrategyNotAbsent(@ForAll String jobName,
-                                    @ForAll String input,
-                                    @ForAll String secretsVolumeName,
+    void determineStrategyNotAbsent(@ForAll @UseType JobRunConfig givenJobRunConfig,
                                     @ForAll String givenJobRunId)
             throws CreateJobRunException, JobUpdateException {
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeName);
-        when(dockerAdapter.createJobRun(jobRunConfig)).thenReturn(givenJobRunId);
+        when(dockerAdapter.createJobRun(givenJobRunConfig)).thenReturn(givenJobRunId);
 
         String jobRunId = new JobRunCreationStrategyDeterminer(dockerAdapter)
                 .determineStrategy(PullStrategy.ABSENT)
-                .createJobRun(jobRunConfig);
+                .createJobRun(givenJobRunConfig);
 
         assertThat(jobRunId, is(givenJobRunId));
-        verify(dockerAdapter, times(0)).pullImage(jobName);
-        verify(dockerAdapter, times(1)).createJobRun(jobRunConfig);
+        verify(dockerAdapter, times(0)).pullImage(givenJobRunConfig.getJobName());
+        verify(dockerAdapter, times(1)).createJobRun(givenJobRunConfig);
     }
 
     @Property
-    void determineStrategyAbsentPull(@ForAll String jobName,
-                                     @ForAll String input,
-                                     @ForAll String secretsVolumeName,
+    void determineStrategyAbsentPull(@ForAll @UseType JobRunConfig givenJobRunConfig,
                                      @ForAll String givenJobRunId)
             throws CreateJobRunException, JobUpdateException {
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeName);
-        when(dockerAdapter.createJobRun(jobRunConfig))
+        when(dockerAdapter.createJobRun(givenJobRunConfig))
                 .thenThrow(CreateJobRunException.class)
                 .thenReturn(givenJobRunId);
 
         String jobRunId = new JobRunCreationStrategyDeterminer(dockerAdapter)
                 .determineStrategy(PullStrategy.ABSENT)
-                .createJobRun(jobRunConfig);
+                .createJobRun(givenJobRunConfig);
 
         assertThat(jobRunId, is(givenJobRunId));
-        verify(dockerAdapter, times(1)).pullImage(jobName);
-        verify(dockerAdapter, times(2)).createJobRun(jobRunConfig);
+        verify(dockerAdapter, times(1)).pullImage(givenJobRunConfig.getJobName());
+        verify(dockerAdapter, times(2)).createJobRun(givenJobRunConfig);
     }
 
     @Property
     void determineStrategyCreateJobRunFailure(@ForAll PullStrategy pullStrategy,
-                                              @ForAll String jobName,
-                                              @ForAll String input,
-                                              @ForAll String secretsVolumeName)
+                                              @ForAll @UseType JobRunConfig givenJobRunConfig)
             throws CreateJobRunException {
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, secretsVolumeName);
-        when(dockerAdapter.createJobRun(jobRunConfig))
+        when(dockerAdapter.createJobRun(givenJobRunConfig))
                 .thenThrow(CreateJobRunException.class);
 
         assertThrows(CreateJobRunException.class, () ->
                 new JobRunCreationStrategyDeterminer(dockerAdapter)
                         .determineStrategy(pullStrategy)
-                        .createJobRun(jobRunConfig));
+                        .createJobRun(givenJobRunConfig));
     }
 }

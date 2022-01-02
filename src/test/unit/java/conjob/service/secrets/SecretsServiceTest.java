@@ -6,7 +6,6 @@ import conjob.core.secrets.SecretsDockerAdapter;
 import conjob.core.secrets.TempSecretsFileUtil;
 import conjob.core.secrets.model.SecretsConfig;
 import net.jqwik.api.*;
-import net.jqwik.api.arbitraries.StringArbitrary;
 import net.jqwik.api.lifecycle.BeforeTry;
 
 import java.io.IOException;
@@ -60,7 +59,7 @@ class SecretsServiceTest {
                 INTERMEDIARY_CONTAINER_IMAGE,
                 givenContainerName);
 
-        when(mockConfigUtil.translateToVolumeName(imageName)).thenReturn(givenSecretsVolumeName);
+        when(mockConfigUtil.translateToSecretsVolumeName(imageName)).thenReturn(givenSecretsVolumeName);
         when(mockNameGenerator.generate(CONTAINER_NAME_PREFIX)).thenReturn(givenContainerName);
         when(mockSecretsContainerCreator.createIntermediaryContainer(secretsConfig))
                 .thenReturn(givenContainerId);

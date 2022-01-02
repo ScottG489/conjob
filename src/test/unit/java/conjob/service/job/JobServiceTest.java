@@ -68,6 +68,7 @@ class JobServiceTest {
     void jobRunSuccessful(@ForAll String imageName,
                           @ForAll String input,
                           @ForAll("pullStrategyNames") String givenPullStrategyName,
+                          @ForAll String givenDockerCacheVolumeName,
                           @ForAll String givenSecretsVolumeName,
                           @ForAll @UseType JobRunConfig givenJobRunConfig,
                           @ForAll String givenJobId,
@@ -80,7 +81,7 @@ class JobServiceTest {
         JobRun expectedJobRun =
                 new JobRun(givenJobRunConclusion, givenJobRunOutcome.getOutput(), givenJobRunOutcome.getExitStatusCode());
         JobRunCreationStrategy mockJobRunCreationStrategy = mock(JobRunCreationStrategy.class);
-        mockCommonCallChain(imageName, input, givenSecretsVolumeName, givenJobRunConfig, isLimiting, pullStrategy, mockJobRunCreationStrategy);
+        mockCommonCallChain(imageName, input, givenDockerCacheVolumeName, givenSecretsVolumeName, givenJobRunConfig, isLimiting, pullStrategy, mockJobRunCreationStrategy);
         when(mockJobRunCreationStrategy.createJobRun(givenJobRunConfig)).thenReturn(givenJobId);
         when(mockJobRunner.runContainer(givenJobId, maxTimeoutSeconds, maxKillTimeoutSeconds))
                 .thenReturn(givenJobRunOutcome);
@@ -102,13 +103,14 @@ class JobServiceTest {
     void jobNotFound(@ForAll String imageName,
                      @ForAll String input,
                      @ForAll("pullStrategyNames") String givenPullStrategyName,
+                     @ForAll String givenDockerCacheVolumeName,
                      @ForAll String givenSecretsVolumeName,
                      @ForAll @UseType JobRunConfig givenJobRunConfig,
                      @ForAll("createOrUpdateJobRunException") JobRunException givenJobRunException) throws SecretsStoreException, CreateJobRunException, JobUpdateException {
         boolean isLimiting = false;
         PullStrategy pullStrategy = PullStrategy.valueOf(givenPullStrategyName.toUpperCase());
         JobRunCreationStrategy mockJobRunCreationStrategy = mock(JobRunCreationStrategy.class);
-        mockCommonCallChain(imageName, input, givenSecretsVolumeName, givenJobRunConfig, isLimiting, pullStrategy, mockJobRunCreationStrategy);
+        mockCommonCallChain(imageName, input, givenDockerCacheVolumeName, givenSecretsVolumeName, givenJobRunConfig, isLimiting, pullStrategy, mockJobRunCreationStrategy);
         when(mockJobRunCreationStrategy.createJobRun(givenJobRunConfig)).thenThrow(givenJobRunException);
 
         JobRun jobRun = jobService.runJob(imageName, input, givenPullStrategyName);
@@ -132,13 +134,21 @@ class JobServiceTest {
         assertThat(jobRun, is(new JobRun(JobRunConclusion.REJECTED, "", -1)));
     }
 
-    private void mockCommonCallChain(@ForAll String imageName, @ForAll String input, @ForAll String givenSecretsVolumeName, @UseType @ForAll JobRunConfig givenJobRunConfig, boolean isLimiting, PullStrategy pullStrategy, JobRunCreationStrategy mockJobRunCreationStrategy) throws SecretsStoreException {
+    private void mockCommonCallChain(@ForAll String imageName,
+                                     @ForAll String input,
+                                     @ForAll String givenDockerCacheVolumeName,
+                                     @ForAll String givenSecretsVolumeName,
+                                     @UseType @ForAll JobRunConfig givenJobRunConfig,
+                                     boolean isLimiting,
+                                     PullStrategy pullStrategy,
+                                     JobRunCreationStrategy mockJobRunCreationStrategy) throws SecretsStoreException {
         when(mockRunJobLimiter.isLimitingOrIncrement()).thenReturn(isLimiting);
-        when(mockConfigUtil.translateToVolumeName(imageName)).thenReturn(givenSecretsVolumeName);
+        when(mockConfigUtil.translateToSecretsVolumeName(imageName)).thenReturn(givenSecretsVolumeName);
+        when(mockConfigUtil.translateToDockerCacheVolumeName(imageName)).thenReturn(givenDockerCacheVolumeName);
         when(mockSecretsStore.findSecrets(givenSecretsVolumeName)).thenReturn(Optional.empty());
         when(mockCreationStrategyDeterminer.determineStrategy(pullStrategy))
                 .thenReturn(mockJobRunCreationStrategy);
-        when(mockJobRunConfigCreator.getContainerConfig(imageName, input, null))
+        when(mockJobRunConfigCreator.getContainerConfig(imageName, input, givenDockerCacheVolumeName, null))
                 .thenReturn(givenJobRunConfig);
     }
 
