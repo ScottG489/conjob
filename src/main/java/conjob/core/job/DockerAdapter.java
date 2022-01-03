@@ -94,6 +94,25 @@ public class DockerAdapter {
         }
     }
 
+    public void removeVolume(String volumeId) {
+        try {
+            dockerClient.removeVolume(volumeId);
+        } catch (DockerException | InterruptedException e) {
+            throw new RemoveVolumeException(e);
+        }
+    }
+
+    public void removeContainer(String containerId) {
+        try {
+            dockerClient.removeContainer(
+                    containerId,
+                    DockerClient.RemoveContainerParam.forceKill(),
+                    DockerClient.RemoveContainerParam.removeVolumes());
+        } catch (DockerException | InterruptedException e) {
+            throw new RemoveContainerException(e);
+        }
+    }
+
     private ContainerConfig getContainerConfig(String jobName, String input, HostConfig hostConfig) {
         ContainerConfig.Builder containerConfigBuilder = ContainerConfig.builder()
                 .image(jobName)
