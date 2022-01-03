@@ -7,7 +7,7 @@ sourceSets {
     }
 }
 
-ext.unitTestJqwikVersion = '1.5.1'
+ext.unitTestJqwikVersion = '1.6.2'
 
 pitest {
     testSourceSets.set([sourceSets.unitTest])
