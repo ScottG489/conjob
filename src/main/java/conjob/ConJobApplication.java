@@ -20,6 +20,7 @@ import conjob.resource.JobResource;
 import conjob.resource.SecretsResource;
 import conjob.resource.admin.task.ConfigMapper;
 import conjob.resource.admin.task.ConfigTask;
+import conjob.resource.admin.task.DockerVolumeRemoveTask;
 import conjob.resource.convert.JobResponseConverter;
 import conjob.resource.convert.ResponseCreator;
 import conjob.resource.filter.EveryRequestFilter;
@@ -70,16 +71,17 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         environment.jersey().register(new EveryRequestFilter(mdcAdapter));
 
         DockerClient docker = createDockerClient(configuration);
+        DockerAdapter dockerAdapter = new DockerAdapter(docker, configuration.getConjob().getDocker().getContainerRuntime());
 
         environment.jersey().register(
                 createJobResource(
-                        docker,
-                        configuration.getConjob().getDocker().getContainerRuntime(),
+                        dockerAdapter,
                         configuration.getConjob().getJob().getLimit()));
         environment.jersey().register(createSecretsResource(docker));
 
         environment.admin().addTask(
                 new ConfigTask(new ConfigStore(configuration.getConjob()), new ConfigMapper()));
+        environment.admin().addTask(new DockerVolumeRemoveTask(dockerAdapter));
 
         environment.jersey().register(new GlobalExceptionMapper());
         environment.getApplicationContext().setErrorHandler(new GlobalErrorHandler());
@@ -104,10 +106,8 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
                         configuration.getConjob().getDocker().getPassword());
     }
 
-    private JobResource createJobResource(DockerClient docker,
-                                          DockerAdapter.Runtime containerRuntime,
+    private JobResource createJobResource(DockerAdapter dockerAdapter,
                                           JobConfig.LimitConfig limitConfig) {
-        DockerAdapter dockerAdapter = new DockerAdapter(docker, containerRuntime);
         return new JobResource(
                 new JobService(
                         createRunJobLimiter(limitConfig),
