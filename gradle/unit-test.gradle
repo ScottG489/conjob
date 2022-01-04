@@ -11,7 +11,7 @@ ext.unitTestJqwikVersion = '1.6.2'
 
 pitest {
     testSourceSets.set([sourceSets.unitTest])
-    junit5PluginVersion = '0.12'
+    junit5PluginVersion = '0.15'
     timestampedReports = false
     // If you want to run all mutators: https://pitest.org/quickstart/mutators/
 //    mutators = ["ALL"]
