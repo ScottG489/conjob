@@ -1,42 +1,63 @@
 # ConJob
 ![CI](https://github.com/ScottG489/conjob/workflows/CI/badge.svg)
 
-## Project core philosophy
-
-- Simplicity for the user
-- Statelessness
+**ConJob** is a web service for running containers as jobs. It's intended to run specified images that will do some
+work and then exit on their own. Any output from the job is returned to the caller.
 
 ## Usage
 It's recommended to run **ConJob** using docker, but it can also be built then run from source.
-## Docker
-```shell script
-docker run -it -v /var/run/docker.sock:/var/run/docker.sock \
+
+### Docker
+```shell
+docker run -it \
+  -p 8080:8080 \
+  -p 8081:8081 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
   --name conjob scottg489/conjob
 ```
-## Build and run from source
+
+### Build and run from source
 ```shell script
-git clone git@github.com:ScottG489/conjob.git && cd conjob
-./gradlew install && ./build/install/ConJob/bin/ConJob server config.yml
+git clone git@github.com:ScottG489/conjob.git \
+  && cd conjob \
+  && cp default-config.yml local-config.yml \
+  && ./gradlew run --args="server local-config.yml"
 ```
+`local-config.yml` can be edited to configure the server.
+
+### Make a request
+```shell
+curl 'localhost:8080/job/run?image=library/hello-world:latest'
+```
+Which should display the output of the `hello-world` image. Similar to if you run `docker run hello-world`.
+
+You can also supply input:
+```shell
+curl -X POST --data 'foobar' 'localhost:8080/job/run?image=scottg489/echo-job:latest'
+```
+POST data is supplied as arguments to the application. Similar to if you run
+`docker run scottg489/echo-job:latest foobar`.
 
 ## Development
-### Building
-You can build and run unit tests using the following:
-```shell script
-./gradlew build unitTest
-```
+### Common gradle tasks
+- `unitTest` - Unit tests and [ArchUnit](https://www.archunit.org/) architecture tests
+- `integrationTest` - Integration tests
+- `run --args="server local-config.yml"` - Starts service using local config
+- `acceptanceTest` - Acceptance tests
+- `performanceTest` - Performance tests using [Gatling](https://gatling.io/)
+- `piTest` - Mutation tests using [Pitest](https://pitest.org/)
+- `jacocoApplicationReport` - Generate JaCoCo coverage report for application
+- `jacocoAllTestReport` - Generate accumulative JaCoCo coverage report for all tests
 
-### Installing and running within your project
-You can install the server into your local project then run it using the following:
-```shell script
-./gradlew install && ./build/install/ConJob/bin/ConJob server config.yml
-```
+### Test coverage
+Unit and integration test coverage is captured via [JaCoCo](https://www.jacoco.org/jacoco/).
 
-### Running acceptance tests
-After running the server locally you can run acceptance tests against it with the following:
-```shell script
-./gradlew acceptanceTest
-```
+Acceptance test coverage is also capturing via JaCoCo. However, it's instrumented on the service itself.
+In order for the coverage data file to be created, the service needs to be shut down.
+After which the `jacocoAllTestReport` can be run.
+
+Additionally, after coverage data files are generated, the `jacocoAllTestReport` task can be run to generate cumulative
+coverage data for all tests.
 
 ### Complete build testing
 To fully test your changes run `./test.sh` at the root of the project. However, first make
