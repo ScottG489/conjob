@@ -139,5 +139,5 @@ ansible_deploy() {
   export _KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD
   set -x
   ansible-playbook -v -u ubuntu -e ansible_ssh_private_key_file=/root/.ssh/mainkeypair.pem --inventory "$PUBLIC_IP", master-playbook.yml
-  rm -rf files
+  rm files/keystore.p12
 }

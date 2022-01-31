@@ -43,6 +43,17 @@
     apt:
       deb: https://downloads.nestybox.com/sysbox/releases/v0.4.1/sysbox-ce_0.4.1-0.ubuntu-focal_amd64.deb
 
+  - name: Create temp file for config
+    tempfile:
+    register: config_temp_file
+
+  - name: Copy config
+    copy:
+      src: config.yml
+      dest: "{{ config_temp_file.path }}"
+    notify:
+      - "Delete temp config file"
+
   - name: Create temp file for keystore
     tempfile:
     register: keystore_temp_file
@@ -78,6 +89,7 @@
         -e ADMIN_PASSWORD={{ adminPassword }} \
         -e KEYSTORE_PASSWORD={{ keystorePassword }} \
         --name {{ container_name }} {{ image_name }}
+      docker cp {{ config_temp_file.path }} {{ container_name }}:/opt/app/config.yml
       docker cp {{ keystore_temp_file.path }} {{ container_name }}:/opt/keystore.p12
       docker start {{ container_name }}
 
@@ -100,6 +112,10 @@
 #      image: scottg489/conjob
 
   handlers:
+    - name: Delete temp config file
+      file:
+        path: "{{ config_temp_file.path }}"
+        state: absent
     - name: Delete temp keystore file
       file:
         path: "{{ keystore_temp_file.path }}"
