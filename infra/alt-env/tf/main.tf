@@ -4,10 +4,11 @@ provider "aws" {
 
 module "helpers_spot_instance_ssh" {
   source = "ScottG489/helpers/aws//modules/spot_instance_ssh"
-  version = "0.1.4"
+  version = "0.1.10"
   name = "${var.subdomain_name}.${var.second_level_domain_name}.${var.top_level_domain_name}"
   instance_type = var.instance_type
   spot_type = var.spot_type
+  instance_interruption_behavior="stop"
   spot_price = var.spot_price
   volume_size = var.volume_size
   public_key = var.public_key
