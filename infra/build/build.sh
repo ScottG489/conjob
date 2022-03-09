@@ -14,7 +14,7 @@ read -r -d '' JSON_BODY <<- EOM
   }
 EOM
 
-curl -v -sS -w '\n%{http_code}' \
+curl -v -sS --insecure -w '\n%{http_code}' \
   --data-binary "$JSON_BODY" \
   "https://alt.conjob.io/job/run?image=$IMAGE_NAME" \
   | tee /tmp/foo \
