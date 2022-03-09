@@ -4,7 +4,7 @@ provider "aws" {
 
 module "helpers_spot_instance_ssh" {
   source = "ScottG489/helpers/aws//modules/spot_instance_ssh"
-  version = "0.1.10"
+  version = "0.1.11"
   name = "${var.subdomain_name}.${var.second_level_domain_name}.${var.top_level_domain_name}"
   instance_type = var.instance_type
   spot_type = var.spot_type
@@ -18,7 +18,7 @@ module "alt_conjob" {
   source = "./modules/conjob_core"
   domain_name = "${var.second_level_domain_name}.${var.top_level_domain_name}"
   subdomain_name = var.subdomain_name
-  public_ip = module.helpers_spot_instance_ssh.public_ip
+  public_ip = aws_eip.eip.public_ip
 }
 
 module "helpers_route53_domain_name_servers" {
@@ -26,6 +26,15 @@ module "helpers_route53_domain_name_servers" {
   version = "0.1.9"
   route53_zone_name = module.alt_conjob.r53_zone_name
   route53_zone_name_servers = module.alt_conjob.r53_zone_name_servers
+}
+
+resource "aws_eip" "eip" {
+  vpc      = true
+}
+# The association is necessary because the aws_eip resource requires the instance be available, which it may not be since it's a spot instance.
+resource "aws_eip_association" "eip_assoc" {
+  instance_id = module.helpers_spot_instance_ssh.spot_instance_id
+  allocation_id = aws_eip.eip.id
 }
 
 provider "acme" {
