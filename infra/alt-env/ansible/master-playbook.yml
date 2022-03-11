@@ -93,6 +93,18 @@
       docker cp {{ keystore_temp_file.path }} {{ container_name }}:/opt/keystore.p12
       docker start {{ container_name }}
 
+  - name: Copy service file for conjob-start service
+    copy:
+      src: service/conjob-start.service
+      dest: /etc/systemd/system/conjob-start.service
+
+  - name: Enable conjob start service
+    ansible.builtin.systemd:
+      name: conjob-start
+      state: started
+      enabled: yes
+      daemon_reload: yes
+
   - name: Wait for service to be healthy
     uri:
       url: "http://localhost:8081/healthcheck"
