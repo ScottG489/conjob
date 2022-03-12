@@ -4,7 +4,7 @@ provider "aws" {
 
 module "helpers_instance_ssh" {
   source = "ScottG489/helpers/aws//modules/instance_ssh"
-  version = "0.0.4"
+  version = "0.1.12"
   name = "${var.subdomain_name}.${var.second_level_domain_name}.${var.top_level_domain_name}"
   public_key = var.public_key
 }
@@ -21,6 +21,16 @@ module "helpers_route53_domain_name_servers" {
   version = "0.0.4"
   route53_zone_name = module.conjob.r53_zone_name
   route53_zone_name_servers = module.conjob.r53_zone_name_servers
+}
+
+resource "aws_eip" "eip" {
+  vpc      = true
+}
+
+# The association is necessary because the aws_eip resource requires the instance be in a running status, which it may not be even if terraform considers the resource created.
+resource "aws_eip_association" "eip_assoc" {
+  instance_id = module.helpers_instance_ssh.instance_id
+  allocation_id = aws_eip.eip.id
 }
 
 provider "acme" {

@@ -1,0 +1,12 @@
+[Unit]
+Description=Conjob start service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+
+ExecStart=/usr/bin/docker start conjob
+
+[Install]
+WantedBy=default.target

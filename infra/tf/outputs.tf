@@ -1,5 +1,5 @@
 output "instance_public_ip" {
-  value = module.helpers_instance_ssh.public_ip
+  value = aws_eip.eip.public_ip
 }
 
 output "certificate_p12" {
