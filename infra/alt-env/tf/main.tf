@@ -8,7 +8,7 @@ module "helpers_spot_instance_ssh" {
   name = "${var.subdomain_name}.${var.second_level_domain_name}.${var.top_level_domain_name}"
   instance_type = var.instance_type
   spot_type = var.spot_type
-  instance_interruption_behavior="stop"
+  instance_interruption_behavior = var.instance_interruption_behavior
   spot_price = var.spot_price
   volume_size = var.volume_size
   public_key = var.public_key
