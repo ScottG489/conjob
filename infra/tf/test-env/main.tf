@@ -18,7 +18,7 @@ module "conjob" {
   source = "../modules/conjob_core"
   domain_name = "${random_id.second_level_domain_name.hex}.io"
   subdomain_name = var.subdomain_name
-  public_ip = module.helpers_spot_instance_ssh.public_ip
+  public_ip = aws_eip.eip.public_ip
 }
 
 resource "random_id" "second_level_domain_name" {

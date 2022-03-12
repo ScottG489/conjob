@@ -13,7 +13,7 @@ module "conjob" {
   source = "./modules/conjob_core"
   domain_name = "${var.second_level_domain_name}.${var.top_level_domain_name}"
   subdomain_name = var.subdomain_name
-  public_ip = module.helpers_instance_ssh.public_ip
+  public_ip = aws_eip.eip.public_ip
 }
 
 module "helpers_route53_domain_name_servers" {
