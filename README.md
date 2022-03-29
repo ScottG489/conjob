@@ -18,7 +18,7 @@ docker run -it \
 
 ### Build and run from source
 ```shell script
-git clone git@github.com:ScottG489/conjob.git \
+git clone https://github.com/ScottG489/conjob.git \
   && cd conjob \
   && cp default-config.yml local-config.yml \
   && ./gradlew run --args="server local-config.yml"
