@@ -16,8 +16,8 @@
   - name: Resize filesystem if it has grown
     become: yes
     shell: |
-      sudo growpart /dev/xvda 1
-      sudo resize2fs /dev/xvda1
+      sudo growpart /dev/nvme0n1 1
+      sudo resize2fs /dev/nvme0n1p1
 
   - name: Import the Docker signing key (apt-key)
     apt_key:
