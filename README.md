@@ -25,6 +25,8 @@ git clone https://github.com/ScottG489/conjob.git \
 ```
 `local-config.yml` can be edited to configure the server.
 
+*Note: Java 11 or higher is required.*
+
 ### Make a request
 ```shell
 curl 'localhost:8080/job/run?image=library/hello-world:latest'
