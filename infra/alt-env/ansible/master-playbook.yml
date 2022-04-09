@@ -16,8 +16,11 @@
   - name: Resize filesystem if it has grown
     become: yes
     shell: |
-      sudo growpart /dev/nvme0n1 1
-      sudo resize2fs /dev/nvme0n1p1
+      set -x
+      BLOCK_DEVICE=$(lsblk -e 7 --tree=uuid | tail -2 | head -1 | awk '{print $1'})
+      PARTITION_NAME=$(lsblk -e 7 --tree=uuid | tail -1 | awk '{print $1'})
+      sudo growpart /dev/$BLOCK_DEVICE 1
+      sudo resize2fs /dev/$PARTITION_NAME
 
   - name: Import the Docker signing key (apt-key)
     apt_key:
