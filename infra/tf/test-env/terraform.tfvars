@@ -1,7 +1,7 @@
 second_level_domain_name = "conjob-test"
 top_level_domain_name = "io"
 subdomain_name = "api"
-instance_type = "t2.small"
+instance_type = "t3.small"
 spot_type = "persistent"
 instance_interruption_behavior = "stop"
 spot_price = "0.008"

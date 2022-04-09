@@ -4,9 +4,10 @@ provider "aws" {
 
 module "helpers_instance_ssh" {
   source = "ScottG489/helpers/aws//modules/instance_ssh"
-  version = "0.1.12"
+  version = "1.2.0"
   name = "${var.subdomain_name}.${var.second_level_domain_name}.${var.top_level_domain_name}"
   public_key = var.public_key
+  instance_type = var.instance_type
 }
 
 module "conjob" {
