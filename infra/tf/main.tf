@@ -2,12 +2,16 @@ provider "aws" {
   region = "us-west-2"
 }
 
-module "helpers_instance_ssh" {
-  source = "ScottG489/helpers/aws//modules/instance_ssh"
+module "helpers_spot_instance_ssh" {
+  source = "ScottG489/helpers/aws//modules/spot_instance_ssh"
   version = "1.2.0"
   name = "${var.subdomain_name}.${var.second_level_domain_name}.${var.top_level_domain_name}"
-  public_key = var.public_key
   instance_type = var.instance_type
+  spot_type = var.spot_type
+  instance_interruption_behavior = var.instance_interruption_behavior
+  spot_price = var.spot_price
+  volume_size = var.volume_size
+  public_key = var.public_key
 }
 
 module "conjob" {
@@ -30,7 +34,7 @@ resource "aws_eip" "eip" {
 
 # The association is necessary because the aws_eip resource requires the instance be in a running status, which it may not be even if terraform considers the resource created.
 resource "aws_eip_association" "eip_assoc" {
-  instance_id = module.helpers_instance_ssh.instance_id
+  instance_id = module.helpers_spot_instance_ssh.spot_instance_id
   allocation_id = aws_eip.eip.id
 }
 
