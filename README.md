@@ -100,4 +100,4 @@ aws_s3_bucket.backend_bucket. To import to this address you must first remove
 the existing object from the state.
 ```
 
-To remediate this issue you'll have to clean up the tfstate files in the appropriate backend-init directory
+To remediate this issue you'll have to clean up the tfstate files in the appropriate backend-init directory.
