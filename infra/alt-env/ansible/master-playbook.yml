@@ -121,6 +121,7 @@
         -e ADMIN_USERNAME={{ adminUsername }} \
         -e ADMIN_PASSWORD={{ adminPassword }} \
         -e KEYSTORE_PASSWORD={{ keystorePassword }} \
+        -e CONTAINER_RUNTIME={{ containerRuntime }} \
         --name {{ container_name }} {{ image_name }}
       docker cp {{ config_temp_file.path }} {{ container_name }}:/opt/app/config.yml
       docker cp {{ keystore_temp_file.path }} {{ container_name }}:/opt/keystore.p12

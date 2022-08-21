@@ -102,6 +102,7 @@ setup_application_configuration() {
   export _DOCKER_PASSWORD=$DOCKER_PASSWORD
   export _ADMIN_USERNAME=$ADMIN_USERNAME
   export _ADMIN_PASSWORD=$ADMIN_PASSWORD
+  export _CONTAINER_RUNTIME=sysbox_runc
 }
 
 ansible_deploy() {
