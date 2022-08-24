@@ -20,7 +20,7 @@ set -x
 
 # The local fs is mounted into the container and as such any files it writes will have their permissions changed.
 #   This will change the permissions back and clean up other files we don't want hanging around.
-sudo chown -R "$(whoami)":"$(whoami)" -- *
+sudo chown -R "$(whoami)":"$(whoami)" .
 find . -name '*terraform.tfstate*' -exec rm {} \;
 find . -name '.terraform' -type d -prune -exec rm -rf {} \;
 
@@ -32,6 +32,6 @@ docker build infra/alt-env/build -t conjob-build-test && \
 
 # The local fs is mounted into the container and as such any files it writes will have their permissions changed.
 #   This will change the permissions back and clean up other files we don't want hanging around.
-sudo chown -R "$(whoami)":"$(whoami)" -- *
+sudo chown -R "$(whoami)":"$(whoami)" .
 find . -name '*terraform.tfstate*' -exec rm {} \;
 find . -name '.terraform' -type d -prune -exec rm -rf {} \;
