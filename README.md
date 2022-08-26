@@ -11,9 +11,8 @@ It's recommended to run **ConJob** using docker, but it can also be built then r
 ```shell
 docker run -it \
   -p 8080:8080 \
-  -p 8081:8081 \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  --name conjob scottg489/conjob
+  scottg489/conjob
 ```
 
 ### Build and run from source
