@@ -80,7 +80,7 @@ the project you need an initial **ConJob** server running.
 In order to create this alternate/bootstrap server, simply run `./alt-env.sh`. It can also be run
 to update the current alt server to the latest version.
 
-The reason this is needed is that as part of it's deploy the server shuts itself down.
+The reason this is needed is that as part of its deploy the server shuts itself down.
 Although the build container will continue to run, the server will not return the build's
 output, and we'll have no logs. At some point this will be replaced by a
 [blue-green deployment](https://en.wikipedia.org/wiki/Blue-green_deployment).
