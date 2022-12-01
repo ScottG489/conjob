@@ -7,3 +7,4 @@ variable "spot_type" {}
 variable "spot_price" {}
 variable "volume_size" {}
 variable "public_key" {}
+variable "acme_server_url" {}
