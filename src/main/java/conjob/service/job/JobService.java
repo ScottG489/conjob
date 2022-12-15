@@ -24,6 +24,7 @@ public class JobService {
     private final ConfigUtil configUtil;
     private final SecretsStore secretsStore;
     private final OutcomeDeterminer outcomeDeterminer;
+    private final ImageTagEnsurer imageTagEnsurer;
 
     public JobService(
             RunJobLimiter runJobLimiter,
@@ -33,7 +34,8 @@ public class JobService {
             JobRunner jobRunner,
             JobRunConfigCreator jobRunConfigCreator,
             OutcomeDeterminer outcomeDeterminer,
-            ConfigUtil configUtil) {
+            ConfigUtil configUtil,
+            ImageTagEnsurer imageTagEnsurer) {
         this.runJobLimiter = runJobLimiter;
         this.limitConfig = limitConfig;
         this.secretsStore = secretsStore;
@@ -42,9 +44,11 @@ public class JobService {
         this.jobRunConfigCreator = jobRunConfigCreator;
         this.outcomeDeterminer = outcomeDeterminer;
         this.configUtil = configUtil;
+        this.imageTagEnsurer = imageTagEnsurer;
     }
 
     public JobRun runJob(String imageName, String input, String pullStrategyName) throws SecretsStoreException {
+        imageName = imageTagEnsurer.hasTagOrLatest(imageName);
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
         return runJob(imageName, input, pullStrategy);
     }

@@ -36,6 +36,7 @@ class JobServiceTest {
     private ConfigUtil mockConfigUtil;
     private JobConfig.LimitConfig limitConfig;
     private JobService jobService;
+    private ImageTagEnsurer mockImageTagEnsurer;
 
     @BeforeTry
     void beforeEach() {
@@ -47,6 +48,7 @@ class JobServiceTest {
         mockJobRunConfigCreator = mock(JobRunConfigCreator.class);
         mockOutcomeDeterminer = mock(OutcomeDeterminer.class);
         mockConfigUtil = mock(ConfigUtil.class);
+        mockImageTagEnsurer = mock(ImageTagEnsurer.class);
         jobService = new JobService(
                 mockRunJobLimiter,
                 limitConfig,
@@ -55,7 +57,8 @@ class JobServiceTest {
                 mockJobRunner,
                 mockJobRunConfigCreator,
                 mockOutcomeDeterminer,
-                mockConfigUtil
+                mockConfigUtil,
+                mockImageTagEnsurer
         );
     }
 
@@ -143,6 +146,7 @@ class JobServiceTest {
                                      PullStrategy pullStrategy,
                                      JobRunCreationStrategy mockJobRunCreationStrategy) throws SecretsStoreException {
         when(mockRunJobLimiter.isLimitingOrIncrement()).thenReturn(isLimiting);
+        when(mockImageTagEnsurer.hasTagOrLatest(imageName)).thenReturn(imageName);
         when(mockConfigUtil.translateToSecretsVolumeName(imageName)).thenReturn(givenSecretsVolumeName);
         when(mockConfigUtil.translateToDockerCacheVolumeName(imageName)).thenReturn(givenDockerCacheVolumeName);
         when(mockSecretsStore.findSecrets(givenSecretsVolumeName)).thenReturn(Optional.empty());

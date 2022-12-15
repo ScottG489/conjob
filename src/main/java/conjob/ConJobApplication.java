@@ -26,10 +26,7 @@ import conjob.resource.convert.ResponseCreator;
 import conjob.resource.filter.EveryRequestFilter;
 import conjob.resource.filter.EveryResponseFilter;
 import conjob.resource.filter.MDCAdapter;
-import conjob.service.job.ConcurrentJobCountLimiter;
-import conjob.service.job.JobService;
-import conjob.service.job.RunJobLimiter;
-import conjob.service.job.RunJobRateLimit;
+import conjob.service.job.*;
 import conjob.service.secrets.SecretsService;
 import conjob.service.secrets.UniqueContainerNameGenerator;
 import io.dropwizard.Application;
@@ -117,7 +114,8 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
                         new JobRunner(dockerAdapter),
                         new JobRunConfigCreator(),
                         new OutcomeDeterminer(),
-                        new ConfigUtil()),
+                        new ConfigUtil(),
+                        new ImageTagEnsurer()),
                 new ResponseCreator(),
                 new JobResponseConverter());
     }

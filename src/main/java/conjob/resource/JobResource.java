@@ -18,9 +18,6 @@ import javax.ws.rs.core.Response;
 @PermitAll
 @Slf4j
 public class JobResource {
-    // Taken from here: https://stackoverflow.com/a/39672069/14146969   Second to last char (?) removed to require
-    //   user to specify tag. See here for why: https://github.com/ScottG489/conjob/issues/18
-    private static final String DOCKER_IMAGE_NAME_FORMAT = "^(?:(?=[^:\\/]{1,253})(?!-)[a-zA-Z0-9-]{1,63}(?<!-)(?:\\.(?!-)[a-zA-Z0-9-]{1,63}(?<!-))*(?::[0-9]{1,5})?/)?((?![._-])(?:[a-z0-9._-]*)(?<![._-])(?:/(?![._-])[a-z0-9._-]*(?<![._-]))*)(?::(?![.-])[a-zA-Z0-9_.-]{1,128})$";
     private final JobService jobService;
     private final ResponseCreator responseCreator;
     private final JobResponseConverter jobResponseConverter;
@@ -37,7 +34,7 @@ public class JobResource {
     @POST
     @Produces(MediaType.TEXT_PLAIN)
     public Response handleTextPost(
-            @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
+            @NotEmpty @QueryParam("image") String imageName,
             String input,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
             throws SecretsStoreException {
@@ -47,7 +44,7 @@ public class JobResource {
     @POST
     @Produces({MediaType.APPLICATION_JSON, MediaType.WILDCARD + ";q=0"})
     public Response handleJsonPost(
-            @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
+            @NotEmpty @QueryParam("image") String imageName,
             String input,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
             throws SecretsStoreException {
@@ -57,7 +54,7 @@ public class JobResource {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public Response handleTextGet(
-            @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
+            @NotEmpty @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
             throws SecretsStoreException {
         return createResponse(imageName, "", pullStrategy);
@@ -66,7 +63,7 @@ public class JobResource {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.WILDCARD + ";q=0"})
     public Response handleJsonGet(
-            @NotEmpty @Pattern(regexp = DOCKER_IMAGE_NAME_FORMAT) @QueryParam("image") String imageName,
+            @NotEmpty @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy)
             throws SecretsStoreException {
         return createJsonResponse(imageName, "", pullStrategy);
