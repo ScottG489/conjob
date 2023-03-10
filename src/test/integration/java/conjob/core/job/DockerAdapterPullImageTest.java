@@ -12,7 +12,7 @@ import static com.spotify.docker.client.DockerClient.ListImagesParam.byName;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DockerAdapterPullImageTest {
-    private static final String EXISTING_IMAGE_NAME = "tianon/true";
+    private static final String EXISTING_IMAGE_NAME = "tianon/true:latest";
     private static final String NONEXISTENT_IMAGE_NAME = "image-that-does-not-exist-bbd10827";
     private static DockerClient dockerClient;
     private DockerAdapter dockerAdapter;

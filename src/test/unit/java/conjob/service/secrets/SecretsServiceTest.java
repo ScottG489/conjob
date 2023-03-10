@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import static org.mockito.Mockito.*;
 
 class SecretsServiceTest {
-    private static final String INTERMEDIARY_CONTAINER_IMAGE = "tianon/true";
+    private static final String INTERMEDIARY_CONTAINER_IMAGE = "tianon/true:latest";
     String CONTAINER_NAME_PREFIX = "temp-container-";
     String CONTAINER_DESTINATION_PATH = "/temp";
 

@@ -27,7 +27,7 @@ public class DockerAdapterCreateContainerTest {
     @BeforeContainer
     static void beforeContainer() throws DockerCertificateException, DockerException, InterruptedException {
         dockerClient = DefaultDockerClient.fromEnv().build();
-        dockerClient.pull("tianon/true");
+        dockerClient.pull("tianon/true:latest");
     }
 
     @AfterContainer

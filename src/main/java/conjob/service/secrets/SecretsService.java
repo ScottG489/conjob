@@ -11,7 +11,7 @@ import java.nio.file.Path;
 
 public class SecretsService {
     // This image is required to be on the build server to create secrets
-    private static final String INTERMEDIARY_CONTAINER_IMAGE = "tianon/true";
+    private static final String INTERMEDIARY_CONTAINER_IMAGE = "tianon/true:latest";
     String CONTAINER_NAME_PREFIX = "temp-container-";
     private final UniqueContainerNameGenerator uniqueContainerNameGenerator;
     String CONTAINER_DESTINATION_PATH = "/temp";
