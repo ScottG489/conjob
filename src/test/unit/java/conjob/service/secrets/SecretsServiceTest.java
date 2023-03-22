@@ -45,7 +45,7 @@ class SecretsServiceTest {
             "and secrets, " +
             "when the secrets are associated with the image, " +
             "should be successful.")
-    void jobNotFound(
+    void createSecrets(
             @ForAll String imageName,
             @ForAll String secrets,
             @ForAll String givenSecretsVolumeName,
