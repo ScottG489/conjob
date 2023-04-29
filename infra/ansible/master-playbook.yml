@@ -50,28 +50,6 @@
         - git
         - wget
 
-  - name: Check if shiftfs has been installed
-    shell: modinfo shiftfs
-    register: shiftfs_installed
-    ignore_errors: true
-
-  - name: Clone shiftfs-dkms
-    git:
-      repo: https://github.com/toby63/shiftfs-dkms.git
-      dest: /tmp/shiftfs-dkms
-      version: k{{ kernel_major_minor_version.stdout }}
-    when: shiftfs_installed is failed
-
-  - name: Install shiftfs-dkms
-    become: yes
-    shell: |
-      set -x
-      ./update1
-      sudo make -f Makefile.dkms
-    args:
-      chdir: /tmp/shiftfs-dkms
-    when: shiftfs_installed is failed
-
   - name: Download and install sysbox runtime
     apt:
       deb: https://downloads.nestybox.com/sysbox/releases/v0.5.2/sysbox-ce_0.5.2-0.linux_amd64.deb
@@ -112,7 +90,6 @@
       docker pull {{ image_name }}
       docker create \
         -v /var/run/docker.sock:/var/run/docker.sock \
-        --userns=host \
         -p 80:8080 \
         -p 8081:8081 \
         -p 443:8443 \
