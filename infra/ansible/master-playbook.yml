@@ -52,7 +52,7 @@
 
   - name: Download and install sysbox runtime
     apt:
-      deb: https://downloads.nestybox.com/sysbox/releases/v0.5.2/sysbox-ce_0.5.2-0.linux_amd64.deb
+      deb: https://downloads.nestybox.com/sysbox/releases/v0.6.1/sysbox-ce_0.6.1-0.linux_amd64.deb
 
   - name: Create temp file for config
     tempfile:
