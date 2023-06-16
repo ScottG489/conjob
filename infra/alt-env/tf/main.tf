@@ -5,6 +5,7 @@ provider "aws" {
 module "helpers_spot_instance_ssh" {
   source = "ScottG489/helpers/aws//modules/spot_instance_ssh"
   version = "0.1.11"
+  ami = var.ami
   name = "${var.subdomain_name}.${var.second_level_domain_name}.${var.top_level_domain_name}"
   instance_type = var.instance_type
   spot_type = var.spot_type

@@ -3,6 +3,7 @@ variable "top_level_domain_name" {}
 variable "subdomain_name" { }
 variable "instance_type" {}
 variable "instance_interruption_behavior" {}
+variable "ami" {}
 variable "spot_type" {}
 variable "spot_price" {}
 variable "volume_size" {}
