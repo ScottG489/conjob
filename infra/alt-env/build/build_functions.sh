@@ -10,21 +10,17 @@ setup_credentials() {
   local ID_RSA_CONTENTS
   local MAINKEYPAIR_CONTENTS
   local AWS_CREDENTIALS_CONTENTS
-  local DOCKER_CONFIG_CONTENTS
 
   readonly ID_RSA_CONTENTS=$(echo -n "$1" | jq -r .ID_RSA | base64 --decode)
   readonly MAINKEYPAIR_CONTENTS=$(echo -n "$1" | jq -r .MAIN_KEY_PAIR | base64 --decode)
   readonly AWS_CREDENTIALS_CONTENTS=$(echo -n "$1" | jq -r .AWS_CREDENTIALS | base64 --decode)
-  readonly DOCKER_CONFIG_CONTENTS=$(echo -n "$1" | jq -r .DOCKER_CONFIG | base64 --decode)
   [[ -n $ID_RSA_CONTENTS ]]
   [[ -n $MAINKEYPAIR_CONTENTS ]]
   [[ -n $AWS_CREDENTIALS_CONTENTS ]]
-  [[ -n $DOCKER_CONFIG_CONTENTS ]]
 
   printf -- "$ID_RSA_CONTENTS" >/root/.ssh/id_rsa
   printf -- "$MAINKEYPAIR_CONTENTS" >/root/.ssh/mainkeypair.pem
   printf -- "$AWS_CREDENTIALS_CONTENTS" >/root/.aws/credentials
-  printf -- "$DOCKER_CONFIG_CONTENTS" >/root/.docker/config.json
 
   chmod 400 /root/.ssh/id_rsa
   chmod 400 /root/.ssh/mainkeypair.pem
