@@ -41,8 +41,8 @@
   - name: Install packages
     package:
       name:
-        - docker-ce
-        - docker-ce-cli
+        - docker-ce=5:24.0.9-1~ubuntu.20.04~focal
+        - docker-ce-cli=5:24.0.9-1~ubuntu.20.04~focal
         - containerd.io
         - linux-headers-{{ kernel_release_version.stdout }}
         - make
