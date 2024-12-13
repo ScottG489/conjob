@@ -1,7 +1,7 @@
 second_level_domain_name = "conjob"
 top_level_domain_name = "io"
 subdomain_name = "alt"
-instance_type = "t3.medium"
+instance_type = "t3.small"
 spot_type = "persistent"
 instance_interruption_behavior = "stop"
 ami = "ami-0d9fad4f90eb14fc3" # Canonical, Ubuntu, 22.04 LTS, amd64 jammy image build on 2023-04-28
