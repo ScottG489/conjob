@@ -1,5 +1,5 @@
 #FROM ubuntu:latest
-FROM openjdk:11
+FROM eclipse-temurin:11
 
 COPY build/install/conjob /opt/conjob
 COPY default-config.yml /opt/app/config.yml
