@@ -15,7 +15,7 @@ declare -r _PROJECT_NAME='conjob'
 declare -r _GIT_REPO='git@github.com:ScottG489/conjob.git'
 declare -r _TFSTATE_BUCKET_NAME='tfstate-conjob'
 
-git clone $_GIT_REPO
+[ -d "$_PROJECT_NAME" ] || git clone $_GIT_REPO
 cp -r $_PROJECT_NAME "$_PROJECT_NAME"_build
 cd "$_PROJECT_NAME"_build
 
