@@ -30,15 +30,20 @@ setup_credentials() {
   chmod 400 /root/.ssh/mainkeypair.pem
 }
 
-build_push_application() {
+build_test() {
   local ROOT_DIR
   readonly ROOT_DIR=$(get_git_root_dir)
   cd "$ROOT_DIR"
 
   ./gradlew --info build unitTest integrationTest install
 
-  docker build -t scottg489/conjob:latest .
-  docker push scottg489/conjob:latest
+  docker build -t scottg489/conjob .
+}
+
+push_application() {
+  declare -r DOCKER_IMAGE_TAG=$1
+  docker tag scottg489/conjob scottg489/conjob:$DOCKER_IMAGE_TAG
+  docker push scottg489/conjob:$DOCKER_IMAGE_TAG
 }
 
 tf_backend_init() {
@@ -126,6 +131,7 @@ ansible_deploy() {
 
   readonly ROOT_DIR=$(get_git_root_dir)
   readonly RELATIVE_PATH_TO_TF_DIR=$1
+  readonly DOCKER_IMAGE_TAG=$2
 
   cd "$ROOT_DIR/$RELATIVE_PATH_TO_TF_DIR"
 
@@ -150,6 +156,8 @@ ansible_deploy() {
   set +x
   export _KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD
   set -x
+  export _APP_DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG
+
   ansible-playbook -v -u ubuntu -e ansible_ssh_private_key_file=/root/.ssh/mainkeypair.pem --inventory "$PUBLIC_IP", master-playbook.yml
   rm files/keystore.p12
 }

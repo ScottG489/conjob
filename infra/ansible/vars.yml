@@ -1,6 +1,6 @@
 ---
 container_name: conjob
-image_name: scottg489/conjob:latest
+image_name: "scottg489/conjob:{{ lookup('env', '_APP_DOCKER_IMAGE_TAG') }}"
 adminUsername: "{{ lookup('env', '_ADMIN_USERNAME') }}"
 adminPassword: "{{ lookup('env', '_ADMIN_PASSWORD') }}"
 dockerUsername: "{{ lookup('env', '_DOCKER_USERNAME') }}"

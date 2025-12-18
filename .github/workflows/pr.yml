@@ -1,34 +1,28 @@
-name: CI
+name: PR CI
 
 on:
-  push:
-    branches:
-      - master
-  repository_dispatch:
-  workflow_dispatch:
-  schedule:
-    - cron: '40 8 * * 0'
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - name: Build and deploy
+      - name: Build and push image which app build runs on
         run: ./infra/build/build.sh ${{ secrets.ID_RSA_CONTENTS_BASE64 }} ${{ secrets.DOCKER_CONFIG_CONTENTS_BASE64 }}
         env:
           GIT_REPO_URL: 'git@github.com:ScottG489/conjob.git'
           RELATIVE_SUB_DIR: 'infra/build'
 
-  build_application:
+  test_application:
     runs-on: ubuntu-latest
     needs: build
     steps:
     - uses: actions/checkout@v1
-    - name: Build and deploy
+    - name: Build and test
       run: |
         ./build.sh \
-        deploy \
+        test \
         ${{ secrets.ID_RSA_CONTENTS_BASE64 }} \
         ${{ secrets.DOCKER_CONFIG_CONTENTS_BASE64 }} \
         ${{ secrets.AWS_CREDENTIALS_CONTENTS_BASE64 }} \

@@ -14,16 +14,26 @@ sleep 3
 declare -r _PROJECT_NAME='conjob'
 declare -r _GIT_REPO='git@github.com:ScottG489/conjob.git'
 declare -r _TFSTATE_BUCKET_NAME='tfstate-conjob'
+declare -r _RUN_TASK=$(jq -r .RUN_TASK <<< "$1")
+declare -r _GIT_BRANCH=$(jq -r .GIT_BRANCH <<< "$1")
+declare -r _DOCKER_IMAGE_TAG=$(jq -r .DOCKER_IMAGE_TAG <<< "$1")
 
-git clone $_GIT_REPO
+if [ ! -d "$_PROJECT_NAME" ]; then
+  git clone --branch $_GIT_BRANCH $_GIT_REPO
+fi
 cp -r $_PROJECT_NAME "$_PROJECT_NAME"_build
 cd "$_PROJECT_NAME"_build
 
-build_push_application
+build_test
+push_application $_DOCKER_IMAGE_TAG
 
 set +x
-/opt/build/run-test.sh "$1"
+/opt/build/run-test.sh "$1" $_DOCKER_IMAGE_TAG
 set -x
+
+[ "$_RUN_TASK" != "deploy" ] && exit 0
+
+push_application "latest"
 
 tf_backend_init $_TFSTATE_BUCKET_NAME "infra/tf"
 
@@ -33,4 +43,4 @@ set +x
 setup_application_configuration "$1"
 set -x
 
-ansible_deploy "infra/tf"
+ansible_deploy "infra/tf" $_DOCKER_IMAGE_TAG
