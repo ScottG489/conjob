@@ -23,7 +23,7 @@ dependencies {
     integrationTestImplementation 'org.junit.jupiter:junit-jupiter'
     integrationTestImplementation 'org.hamcrest:hamcrest:2.2'
     integrationTestImplementation "net.jqwik:jqwik:${integrationTestJqwikVersion}"
-    integrationTestImplementation 'io.rest-assured:rest-assured:4.3.0'
+    integrationTestImplementation 'io.rest-assured:rest-assured:4.5.1'
 }
 
 task jacocoIntegrationTestReport(type: JacocoReport) {
