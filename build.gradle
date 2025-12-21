@@ -12,9 +12,9 @@ group = 'conjob'
 mainClassName = 'conjob.ConJobApplication'
 
 dependencies {
-    annotationProcessor 'org.projectlombok:lombok:1.18.10'
+    annotationProcessor 'org.projectlombok:lombok:1.18.42'
 
-    compileOnly 'org.projectlombok:lombok:1.18.10'
+    compileOnly 'org.projectlombok:lombok:1.18.42'
 
     implementation 'io.dropwizard:dropwizard-core:2.1.6'
     implementation 'io.dropwizard:dropwizard-auth:2.1.6'
