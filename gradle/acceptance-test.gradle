@@ -21,5 +21,5 @@ dependencies {
     acceptanceTestImplementation platform('org.junit:junit-bom:5.7.1')
     acceptanceTestImplementation 'org.junit.jupiter:junit-jupiter'
 
-    acceptanceTestImplementation 'io.rest-assured:rest-assured:4.3.0'
+    acceptanceTestImplementation 'io.rest-assured:rest-assured:4.5.1'
 }
