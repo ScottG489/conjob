@@ -39,7 +39,7 @@ dependencies {
     unitTestImplementation 'org.hamcrest:hamcrest:2.2'
     unitTestImplementation "net.jqwik:jqwik:${unitTestJqwikVersion}"
     unitTestImplementation 'com.tngtech.archunit:archunit:0.23.1'
-    unitTestImplementation 'com.tngtech.archunit:archunit-junit5:0.17.0'
+    unitTestImplementation 'com.tngtech.archunit:archunit-junit5:0.23.1'
 }
 
 task jacocoUnitTestReport(type: JacocoReport) {
