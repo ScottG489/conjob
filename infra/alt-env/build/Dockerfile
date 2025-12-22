@@ -1,9 +1,8 @@
-FROM ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
+FROM ubuntu:24.04
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
   git \
-  awscli \
   openjdk-11-jdk \
   jq \
   ansible \
@@ -18,7 +17,6 @@ RUN curl https://releases.hashicorp.com/terraform/0.14.0/terraform_0.14.0_linux_
   unzip -d /usr/local/bin /tmp/terraform.zip && \
   rm /tmp/terraform.zip
 
-RUN mkdir /root/.ssh
 COPY known_hosts /root/.ssh/known_hosts
 
 RUN mkdir /root/.aws

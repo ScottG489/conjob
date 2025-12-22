@@ -8,22 +8,17 @@ get_git_root_dir() {
 setup_credentials() {
   set +x
   local ID_RSA_CONTENTS
-  local MAINKEYPAIR_CONTENTS
   local AWS_CREDENTIALS_CONTENTS
 
   readonly ID_RSA_CONTENTS=$(echo -n "$1" | jq -r .ID_RSA | base64 --decode)
-  readonly MAINKEYPAIR_CONTENTS=$(echo -n "$1" | jq -r .MAIN_KEY_PAIR | base64 --decode)
   readonly AWS_CREDENTIALS_CONTENTS=$(echo -n "$1" | jq -r .AWS_CREDENTIALS | base64 --decode)
   [[ -n $ID_RSA_CONTENTS ]]
-  [[ -n $MAINKEYPAIR_CONTENTS ]]
   [[ -n $AWS_CREDENTIALS_CONTENTS ]]
 
   printf -- "$ID_RSA_CONTENTS" >/root/.ssh/id_rsa
-  printf -- "$MAINKEYPAIR_CONTENTS" >/root/.ssh/mainkeypair.pem
   printf -- "$AWS_CREDENTIALS_CONTENTS" >/root/.aws/credentials
 
   chmod 400 /root/.ssh/id_rsa
-  chmod 400 /root/.ssh/mainkeypair.pem
 }
 
 tf_backend_init() {
@@ -105,36 +100,39 @@ ansible_deploy() {
   local ROOT_DIR
   local RELATIVE_PATH_TO_TF_DIR
   local PUBLIC_IP
-  local KEYSTORE_TEMP_FILE
   local KEYSTORE_PASSWORD
   local _KEYSTORE_PASSWORD
 
   readonly ROOT_DIR=$(get_git_root_dir)
-  readonly RELATIVE_PATH_TO_TF_DIR=$1
 
-  cd "$ROOT_DIR/$RELATIVE_PATH_TO_TF_DIR"
-
-  readonly PUBLIC_IP=$(terraform show --json | jq --raw-output '.values.outputs.instance_public_ip.value')
+  readonly PUBLIC_IP='conjob-alt.lan'
   [[ -n $PUBLIC_IP ]]
-  readonly KEYSTORE_TEMP_FILE=$(mktemp)
-  terraform show --json | jq --raw-output '.values.outputs.certificate_p12.value' | base64 --decode > "$KEYSTORE_TEMP_FILE"
   set +x
-  readonly KEYSTORE_PASSWORD=$(terraform show --json | jq --raw-output '.values.outputs.keystore_password.value')
+  readonly KEYSTORE_PASSWORD=$(openssl rand -hex 8)
   [[ -n $KEYSTORE_PASSWORD ]]
   set -x
 
   cd "$ROOT_DIR/infra/alt-env/ansible"
 
-  mkdir -p files
   set +x
-  printf -- "$KEYSTORE_PASSWORD"\\n"$KEYSTORE_PASSWORD"\\n"$KEYSTORE_PASSWORD" |
-    keytool -v -importkeystore -srckeystore "$KEYSTORE_TEMP_FILE" -srcstoretype PKCS12 -destkeystore files/keystore.p12 -deststoretype PKCS12
+  keytool -genkeypair \
+    -keyalg RSA \
+    -alias altenv \
+    -keystore files/keystore.p12 \
+    -storetype PKCS12 \
+    -storepass $KEYSTORE_PASSWORD \
+    -keypass $KEYSTORE_PASSWORD \
+    -validity 365 \
+    -keysize 2048 \
+    -dname "CN=localhost, OU=Dev, O=Dev, L=Dev, ST=Dev, C=US" \
+    -noprompt
   set -x
   [[ -f files/keystore.p12 ]]
 
   set +x
   export _KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD
   set -x
-  ansible-playbook -v -u ubuntu -e ansible_ssh_private_key_file=/root/.ssh/mainkeypair.pem --inventory "$PUBLIC_IP", master-playbook.yml
+
+  ansible-playbook -v -u root -e ansible_ssh_private_key_file=/root/.ssh/id_rsa --inventory "$PUBLIC_IP", master-playbook.yml
   rm files/keystore.p12
 }
