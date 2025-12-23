@@ -18,7 +18,7 @@ task acceptanceTest(type: Test) {
 }
 
 dependencies {
-    acceptanceTestImplementation platform('org.junit:junit-bom:5.7.1')
+    acceptanceTestImplementation platform('org.junit:junit-bom:5.14.1')
     acceptanceTestImplementation 'org.junit.jupiter:junit-jupiter'
 
     acceptanceTestImplementation 'io.rest-assured:rest-assured:4.5.1'

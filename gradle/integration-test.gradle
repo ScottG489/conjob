@@ -19,7 +19,7 @@ task integrationTest(type: Test) {
 }
 
 dependencies {
-    integrationTestImplementation platform('org.junit:junit-bom:5.7.1')
+    integrationTestImplementation platform('org.junit:junit-bom:5.14.1')
     integrationTestImplementation 'org.junit.jupiter:junit-jupiter'
     integrationTestImplementation 'org.hamcrest:hamcrest:2.2'
     integrationTestImplementation "net.jqwik:jqwik:${integrationTestJqwikVersion}"

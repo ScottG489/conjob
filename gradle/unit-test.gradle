@@ -34,7 +34,7 @@ dependencies {
 
     unitTestImplementation "org.mockito:mockito-core:3.8.0"
     unitTestImplementation 'org.mockito:mockito-inline:3.10.0'
-    unitTestImplementation platform('org.junit:junit-bom:5.7.1')
+    unitTestImplementation platform('org.junit:junit-bom:5.14.1')
     unitTestImplementation 'org.junit.jupiter:junit-jupiter'
     unitTestImplementation 'org.hamcrest:hamcrest:2.2'
     unitTestImplementation "net.jqwik:jqwik:${unitTestJqwikVersion}"
