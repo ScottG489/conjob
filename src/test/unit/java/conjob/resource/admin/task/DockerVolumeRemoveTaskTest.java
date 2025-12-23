@@ -40,13 +40,15 @@ class DockerVolumeRemoveTaskTest {
             "and removing them the first time fails, " +
             "then the volumes should be removed, " +
             "and the containers should be removed.")
-    void foobar(@ForAll String postBody,
+    void removeAssociatedContainersAndVolumes(@ForAll String postBody,
                  @ForAll @NotEmpty Map<
                          @From("onlyIdKey") String,
                          @Size(max = 10) List<@NotBlank String>> map,
                  @ForAll("containerId") String associatedContainer1,
                  @ForAll("containerId") String associatedContainer2
     ) {
+        Assume.that(!associatedContainer1.equals(associatedContainer2));
+
         String volumeRemoveErrorMessage = "Request error: DELETE unix://localhost:80/volumes/conjob-docker-cache-scottg489-docker-test-support-job-latest: 409, body: {\"message\":\"remove conjob-docker-cache-scottg489-docker-test-support-job-latest: volume is in use - [" + associatedContainer1 + ", " + associatedContainer2 + "]\"}\n";
         DockerAdapter mockDockerAdapter = mock(DockerAdapter.class);
         RemoveVolumeException mockException = mock(RemoveVolumeException.class, RETURNS_DEEP_STUBS);
