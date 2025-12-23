@@ -36,6 +36,7 @@ dependencies {
     unitTestImplementation 'org.mockito:mockito-inline:3.10.0'
     unitTestImplementation platform('org.junit:junit-bom:5.14.1')
     unitTestImplementation 'org.junit.jupiter:junit-jupiter'
+    unitTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     unitTestImplementation 'org.hamcrest:hamcrest:2.2'
     unitTestImplementation "net.jqwik:jqwik:${unitTestJqwikVersion}"
     unitTestImplementation 'com.tngtech.archunit:archunit:0.23.1'
