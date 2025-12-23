@@ -1,5 +1,5 @@
 #FROM ubuntu:latest
-FROM eclipse-temurin:11@sha256:f16caedceea97fd2591a122c6515481ec2961b908c83e101313aacd96ae3439d
+FROM eclipse-temurin:25@sha256:572fe7b5b3ca8beb3b3aca96a7a88f1f7bc98a3bdffd03784a4568962c1a963a
 
 COPY build/install/conjob /opt/conjob
 COPY default-config.yml /opt/app/config.yml
