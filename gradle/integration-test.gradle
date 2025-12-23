@@ -24,7 +24,7 @@ dependencies {
     integrationTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     integrationTestImplementation 'org.hamcrest:hamcrest:2.2'
     integrationTestImplementation "net.jqwik:jqwik:${integrationTestJqwikVersion}"
-    integrationTestImplementation 'io.rest-assured:rest-assured:4.5.1'
+    integrationTestImplementation 'io.rest-assured:rest-assured:6.0.0'
 }
 
 task jacocoIntegrationTestReport(type: JacocoReport) {
