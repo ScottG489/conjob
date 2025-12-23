@@ -7,7 +7,7 @@ sourceSets {
     }
 }
 
-ext.integrationTestJqwikVersion = '1.5.1'
+ext.integrationTestJqwikVersion = '1.9.3'
 
 task integrationTest(type: Test) {
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
