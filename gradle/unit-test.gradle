@@ -32,8 +32,8 @@ dependencies {
     unitTestAnnotationProcessor 'org.projectlombok:lombok:1.18.42'
     unitTestCompileOnly 'org.projectlombok:lombok:1.18.42'
 
-    unitTestImplementation "org.mockito:mockito-core:3.12.4"
-    unitTestImplementation 'org.mockito:mockito-inline:3.12.4'
+    unitTestImplementation "org.mockito:mockito-core:5.21.0"
+    unitTestImplementation 'org.mockito:mockito-inline:5.2.0'
     unitTestImplementation platform('org.junit:junit-bom:5.14.1')
     unitTestImplementation 'org.junit.jupiter:junit-jupiter'
     unitTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
