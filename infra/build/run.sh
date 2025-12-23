@@ -18,9 +18,7 @@ declare -r _RUN_TASK=$(jq -r .RUN_TASK <<< "$1")
 declare -r _GIT_BRANCH=$(jq -r .GIT_BRANCH <<< "$1")
 declare -r _DOCKER_IMAGE_TAG=$(jq -r .DOCKER_IMAGE_TAG <<< "$1")
 
-if [ ! -d "$_PROJECT_NAME" ]; then
-  git clone --branch $_GIT_BRANCH $_GIT_REPO
-fi
+[ -d "$_PROJECT_NAME" ] || git clone --branch $_GIT_BRANCH $_GIT_REPO
 cp -r $_PROJECT_NAME "$_PROJECT_NAME"_build
 cd "$_PROJECT_NAME"_build
 
