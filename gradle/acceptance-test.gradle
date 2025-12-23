@@ -22,5 +22,5 @@ dependencies {
     acceptanceTestImplementation 'org.junit.jupiter:junit-jupiter'
     acceptanceTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    acceptanceTestImplementation 'io.rest-assured:rest-assured:4.5.1'
+    acceptanceTestImplementation 'io.rest-assured:rest-assured:6.0.0'
 }
