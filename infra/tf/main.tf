@@ -24,7 +24,7 @@ module "conjob" {
 
 module "helpers_route53_domain_name_servers" {
   source  = "ScottG489/helpers/aws//modules/route53_domain_name_servers"
-  version = "0.0.4"
+  version = "0.1.12"
   route53_zone_name = module.conjob.r53_zone_name
   route53_zone_name_servers = module.conjob.r53_zone_name_servers
 }
