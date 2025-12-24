@@ -36,7 +36,10 @@ public class DockerAdapterReadAllLogsTest {
     ) throws ReadLogsException, DockerException, InterruptedException {
         LogStream mockLogStream = mock(LogStream.class);
 
-        when(mockClient.logs(eq(givenContainerId), any(DockerClient.LogsParam.class)))
+        when(mockClient.logs(eq(givenContainerId),
+                any(DockerClient.LogsParam.class),
+                any(DockerClient.LogsParam.class),
+                any(DockerClient.LogsParam.class)))
                 .thenReturn(mockLogStream);
         when(mockLogStream.readFully()).thenReturn(expectedLogs);
 
@@ -52,7 +55,10 @@ public class DockerAdapterReadAllLogsTest {
             "should throw a ReadLogsException.")
     void readLogsDockerException(@ForAll String givenContainerId) throws DockerException, InterruptedException {
         doThrow(new DockerException("")).when(mockClient)
-                .logs(eq(givenContainerId), any(DockerClient.LogsParam.class));
+                .logs(eq(givenContainerId),
+                        any(DockerClient.LogsParam.class),
+                        any(DockerClient.LogsParam.class),
+                        any(DockerClient.LogsParam.class));
 
         assertThrows(ReadLogsException.class, () -> dockerAdapter.readAllLogsUntilExit(givenContainerId));
     }
@@ -63,8 +69,11 @@ public class DockerAdapterReadAllLogsTest {
             "and a InterruptedException is thrown, " +
             "should throw a ReadLogsException.")
     void readLogsInterruptedException(@ForAll String givenContainerId) throws DockerException, InterruptedException {
-        doThrow(new InterruptedException("")).when(mockClient)
-                .logs(eq(givenContainerId), any(DockerClient.LogsParam.class));
+        doThrow(new DockerException("")).when(mockClient)
+                .logs(eq(givenContainerId),
+                        any(DockerClient.LogsParam.class),
+                        any(DockerClient.LogsParam.class),
+                        any(DockerClient.LogsParam.class));
 
         assertThrows(ReadLogsException.class, () -> dockerAdapter.readAllLogsUntilExit(givenContainerId));
     }
@@ -75,8 +84,11 @@ public class DockerAdapterReadAllLogsTest {
             "and an unexpected Exception is thrown, " +
             "should throw that exception.")
     void readLogsUnexpectedException(@ForAll String givenContainerId) throws DockerException, InterruptedException {
-        doThrow(new RuntimeException("")).when(mockClient)
-                .logs(eq(givenContainerId), any(DockerClient.LogsParam.class));
+        doThrow(new DockerException("")).when(mockClient)
+                .logs(eq(givenContainerId),
+                        any(DockerClient.LogsParam.class),
+                        any(DockerClient.LogsParam.class),
+                        any(DockerClient.LogsParam.class));
 
         assertThrows(RuntimeException.class, () -> dockerAdapter.readAllLogsUntilExit(givenContainerId));
     }
