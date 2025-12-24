@@ -19,7 +19,7 @@ task integrationTest(type: Test) {
 }
 
 dependencies {
-    integrationTestImplementation platform('org.junit:junit-bom:5.14.1')
+    integrationTestImplementation platform('org.junit:junit-bom:6.0.1')
     integrationTestImplementation 'org.junit.jupiter:junit-jupiter'
     integrationTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     integrationTestImplementation 'org.hamcrest:hamcrest:3.0'
