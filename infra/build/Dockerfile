@@ -3,7 +3,6 @@ FROM ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2faf
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
   git \
-  awscli \
   openjdk-11-jdk \
   jq \
   ansible \
@@ -28,6 +27,12 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /
 RUN curl https://releases.hashicorp.com/terraform/0.14.0/terraform_0.14.0_linux_amd64.zip -o /tmp/terraform.zip && \
   unzip -d /usr/local/bin /tmp/terraform.zip && \
   rm /tmp/terraform.zip
+
+ARG AWSCLI_VERSION=2.32.22
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-$AWSCLI_VERSION.zip" -o "awscliv2.zip" && \
+  unzip awscliv2.zip && \
+  ./aws/install && \
+  rm -rf aws awscliv2.zip \
 
 RUN mkdir /root/.ssh
 COPY known_hosts /root/.ssh/known_hosts
