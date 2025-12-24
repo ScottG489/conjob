@@ -3,7 +3,7 @@ FROM ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2faf
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
   git \
-  openjdk-11-jdk \
+  openjdk-17-jdk \
   jq \
   ansible \
   curl \
