@@ -4,7 +4,7 @@ provider "aws" {
 
 module "helpers_spot_instance_ssh" {
   source = "ScottG489/helpers/aws//modules/spot_instance_ssh"
-  version = "1.2.0"
+  version = "1.5.0"
   ami = var.ami
   name = "${var.subdomain_name}.${var.second_level_domain_name}.${var.top_level_domain_name}"
   instance_type = var.instance_type
@@ -24,7 +24,7 @@ module "conjob" {
 
 module "helpers_route53_domain_name_servers" {
   source  = "ScottG489/helpers/aws//modules/route53_domain_name_servers"
-  version = "0.1.12"
+  version = "1.5.0"
   route53_zone_name = module.conjob.r53_zone_name
   route53_zone_name_servers = module.conjob.r53_zone_name_servers
 }
