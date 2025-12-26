@@ -1,9 +1,12 @@
 package conjob.resource.auth;
 
 import net.jqwik.api.*;
-import org.eclipse.jetty.security.AbstractLoginService;
 import org.eclipse.jetty.security.LoginService;
+import org.eclipse.jetty.security.RolePrincipal;
+import org.eclipse.jetty.security.UserPrincipal;
 import org.eclipse.jetty.util.security.Password;
+
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -27,11 +30,12 @@ class AdminConstraintSecurityHandlerTest {
             "when loading the role info for the same user principal, " +
             "then it should contain the role 'admin'.")
     void loadRoleInfoMatchingUserPrincipal(
-            @ForAll("userPrincipal") AbstractLoginService.UserPrincipal userPrincipal) {
-        String[] roleInfo = new AdminConstraintSecurityHandler.AdminLoginService(userPrincipal)
+            @ForAll("userPrincipal") UserPrincipal userPrincipal) {
+        List<RolePrincipal> roleInfo = new AdminConstraintSecurityHandler.AdminLoginService(userPrincipal)
                 .loadRoleInfo(userPrincipal);
 
-        assertThat(roleInfo, hasItemInArray("admin"));
+        assertThat(roleInfo.size(), is(1));
+        assertThat(roleInfo.get(0).getName(), is("admin"));
     }
 
     @Property
@@ -39,14 +43,14 @@ class AdminConstraintSecurityHandlerTest {
             "when loading the role info for it, " +
             "then it should contain the role 'admin'.")
     void loadRoleInfoDifferentUserPrincipal(
-            @ForAll("userPrincipal") AbstractLoginService.UserPrincipal userPrincipal,
-            @ForAll("userPrincipal") AbstractLoginService.UserPrincipal differentUserPrincipal) {
+            @ForAll("userPrincipal") UserPrincipal userPrincipal,
+            @ForAll("userPrincipal") UserPrincipal differentUserPrincipal) {
         Assume.that(!userPrincipal.getName().equals(differentUserPrincipal.getName()));
 
-        String[] roleInfo = new AdminConstraintSecurityHandler.AdminLoginService(userPrincipal)
+        List<RolePrincipal> roleInfo = new AdminConstraintSecurityHandler.AdminLoginService(userPrincipal)
                 .loadRoleInfo(differentUserPrincipal);
 
-        assertThat(roleInfo, is(emptyArray()));
+        assertThat(roleInfo, is(empty()));
     }
 
     @Property
@@ -55,8 +59,8 @@ class AdminConstraintSecurityHandlerTest {
             "when loading the user info for the given user principal's name, " +
             "then it should be the same user principal.")
     void loadUserInfoMatchingUsername(
-            @ForAll("userPrincipal") AbstractLoginService.UserPrincipal userPrincipal) {
-        AbstractLoginService.UserPrincipal userInfo =
+            @ForAll("userPrincipal") UserPrincipal userPrincipal) {
+        UserPrincipal userInfo =
                 new AdminConstraintSecurityHandler.AdminLoginService(userPrincipal)
                         .loadUserInfo(userPrincipal.getName());
 
@@ -69,10 +73,10 @@ class AdminConstraintSecurityHandlerTest {
             "when loading the user info for a different user principal's name, " +
             "then it should be the same user principal.")
     void loadUserInfoDifferentUsername(
-            @ForAll("userPrincipal") AbstractLoginService.UserPrincipal userPrincipal,
-            @ForAll("userPrincipal") AbstractLoginService.UserPrincipal differentUserPrincipal) {
+            @ForAll("userPrincipal") UserPrincipal userPrincipal,
+            @ForAll("userPrincipal") UserPrincipal differentUserPrincipal) {
         Assume.that(!userPrincipal.getName().equals(differentUserPrincipal.getName()));
-        AbstractLoginService.UserPrincipal userInfo =
+        UserPrincipal userInfo =
                 new AdminConstraintSecurityHandler.AdminLoginService(userPrincipal)
                         .loadUserInfo(differentUserPrincipal.getName());
 
@@ -80,10 +84,10 @@ class AdminConstraintSecurityHandlerTest {
     }
 
     @Provide
-    Arbitrary<AbstractLoginService.UserPrincipal> userPrincipal() {
+    Arbitrary<UserPrincipal> userPrincipal() {
         return Arbitraries.strings()
                 .flatMap((username) -> Arbitraries.strings()
-                        .map((password) -> new AbstractLoginService.UserPrincipal(
+                        .map((password) -> new UserPrincipal(
                                 username, new Password(password))));
     }
 
@@ -91,7 +95,7 @@ class AdminConstraintSecurityHandlerTest {
     Arbitrary<AdminConstraintSecurityHandler.AdminLoginService> adminLoginService() {
         return Arbitraries.strings()
                 .flatMap((username) -> Arbitraries.strings()
-                        .map((password) -> new AbstractLoginService.UserPrincipal(
+                        .map((password) -> new UserPrincipal(
                                 username, new Password(password))))
                 .map(AdminConstraintSecurityHandler.AdminLoginService::new);
     }

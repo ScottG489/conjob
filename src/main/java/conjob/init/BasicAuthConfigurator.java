@@ -5,7 +5,7 @@ import conjob.resource.auth.BasicAuthenticator;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
-import org.eclipse.jetty.security.AbstractLoginService;
+import org.eclipse.jetty.security.UserPrincipal;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 
 import java.util.Objects;
@@ -29,7 +29,7 @@ public class BasicAuthConfigurator {
                 config.getUsername(),
                 config.getPassword());
         jerseyEnv.register(new AuthDynamicFeature(
-                new BasicCredentialAuthFilter.Builder<AbstractLoginService.UserPrincipal>()
+                new BasicCredentialAuthFilter.Builder<UserPrincipal>()
                         .setAuthenticator(auth).buildAuthFilter()));
         jerseyEnv.register(RolesAllowedDynamicFeature.class);
         return auth;

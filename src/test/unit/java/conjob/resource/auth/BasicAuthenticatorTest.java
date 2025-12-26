@@ -3,7 +3,7 @@ package conjob.resource.auth;
 import io.dropwizard.auth.basic.BasicCredentials;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.UseType;
-import org.eclipse.jetty.security.AbstractLoginService;
+import org.eclipse.jetty.security.UserPrincipal;
 
 import java.util.Optional;
 
@@ -19,7 +19,7 @@ class BasicAuthenticatorTest {
             "when it's authenticated against itself, " +
             "then the authentication should return a user principal.")
     void authenticateMatchingCreds(@ForAll @UseType BasicCredentials basicCreds) {
-        Optional<AbstractLoginService.UserPrincipal> userPrincipal =
+        Optional<UserPrincipal> userPrincipal =
                 new BasicAuthenticator(basicCreds.getUsername(), basicCreds.getPassword())
                         .authenticate(basicCreds);
 
@@ -37,7 +37,7 @@ class BasicAuthenticatorTest {
         BasicCredentials basicCreds = differentCreds.get1();
         BasicCredentials otherCreds = differentCreds.get2();
 
-        Optional<AbstractLoginService.UserPrincipal> userPrincipal =
+        Optional<UserPrincipal> userPrincipal =
                 new BasicAuthenticator(basicCreds.getUsername(), basicCreds.getPassword())
                         .authenticate(otherCreds);
 

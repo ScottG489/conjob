@@ -1,7 +1,7 @@
 package conjob;
 
 import conjob.config.ConJobConfig;
-import io.dropwizard.Configuration;
+import io.dropwizard.core.Configuration;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

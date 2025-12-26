@@ -3,9 +3,13 @@ package conjob.resource.auth;
 import org.eclipse.jetty.security.AbstractLoginService;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.RolePrincipal;
+import org.eclipse.jetty.security.UserPrincipal;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.util.security.Constraint;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class AdminConstraintSecurityHandler extends ConstraintSecurityHandler {
@@ -35,11 +39,11 @@ public class AdminConstraintSecurityHandler extends ConstraintSecurityHandler {
         }
 
         @Override
-        protected String[] loadRoleInfo(final UserPrincipal principal) {
+        protected List<RolePrincipal> loadRoleInfo(final UserPrincipal principal) {
             if (adminUserName.equals(principal.getName())) {
-                return new String[]{ADMIN_ROLE};
+                return Collections.singletonList(new RolePrincipal(ADMIN_ROLE));
             }
-            return new String[0];
+            return Collections.emptyList();
         }
 
         @Override

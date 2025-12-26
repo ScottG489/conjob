@@ -7,6 +7,10 @@ sourceSets {
     }
 }
 
+configurations {
+    unitTestRuntimeClasspath.extendsFrom runtimeClasspath
+}
+
 ext.unitTestJqwikVersion = '1.9.3'
 
 pitest {

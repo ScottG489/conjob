@@ -3,10 +3,10 @@ package conjob.init;
 import conjob.config.AdminConfig;
 import conjob.init.AdminBasicAuthConfigurator;
 import conjob.resource.auth.AdminConstraintSecurityHandler;
-import io.dropwizard.setup.AdminEnvironment;
+import io.dropwizard.core.setup.AdminEnvironment;
 import net.jqwik.api.*;
 import net.jqwik.api.lifecycle.BeforeTry;
-import org.eclipse.jetty.security.AbstractLoginService;
+import org.eclipse.jetty.security.UserPrincipal;
 import org.eclipse.jetty.util.security.Password;
 
 import java.util.Optional;
@@ -33,7 +33,7 @@ class AdminBasicAuthConfiguratorTest {
         AdminConfig adminConfig = new AdminConfig(username, password);
         AdminEnvironment mockAdminEnv = mock(AdminEnvironment.class);
 
-        Optional<AbstractLoginService.UserPrincipal> userPrincipal =
+        Optional<UserPrincipal> userPrincipal =
                 adminBasicAuthConfigurator.configureAdminBasicAuth(adminConfig, mockAdminEnv);
 
         userPrincipal.ifPresent(up ->
@@ -50,7 +50,7 @@ class AdminBasicAuthConfiguratorTest {
     void userOrPassNull(@ForAll("userOrPassNull") AdminConfig givenAdminConfig) {
         AdminEnvironment mockAdminEnv = mock(AdminEnvironment.class);
 
-        Optional<AbstractLoginService.UserPrincipal> userPrincipal =
+        Optional<UserPrincipal> userPrincipal =
                 adminBasicAuthConfigurator.configureAdminBasicAuth(givenAdminConfig, mockAdminEnv);
 
         assertThat(userPrincipal.isEmpty(), is(true));

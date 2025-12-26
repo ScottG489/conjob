@@ -41,4 +41,5 @@ set +x
 setup_application_configuration "$1"
 set -x
 
+export _DISABLE_SNI_HOST_CHECK='false'
 ansible_deploy "infra/tf" $_DOCKER_IMAGE_TAG

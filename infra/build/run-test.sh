@@ -17,6 +17,8 @@ set +x
 setup_application_configuration "$1"
 set -x
 
+export _DISABLE_SNI_HOST_CHECK='true'
 ansible_deploy "infra/tf/test-env" $_DOCKER_IMAGE_TAG
+unset _DISABLE_SNI_HOST_CHECK
 
 run_tests "infra/tf/test-env"

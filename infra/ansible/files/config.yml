@@ -25,6 +25,7 @@ server:
       port: 8443
       keyStorePath: /opt/keystore.p12
       keyStorePassword: ${KEYSTORE_PASSWORD:-}
+      disableSniHostCheck: ${DISABLE_SNI_HOST_CHECK:-false}
 
 logging:
   appenders:
