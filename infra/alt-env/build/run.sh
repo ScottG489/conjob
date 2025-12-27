@@ -17,4 +17,5 @@ set +x
 setup_application_configuration "$1"
 set -x
 
+export _DISABLE_SNI_HOST_CHECK='true'
 ansible_deploy

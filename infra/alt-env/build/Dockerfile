@@ -2,20 +2,16 @@ FROM ubuntu:24.04@sha256:c35e29c9450151419d9448b0fd75374fec4fff364a27f176fb458d4
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
-  git \
-  openjdk-11-jdk \
-  jq \
-  ansible \
-  curl \
-  apt-transport-https \
-  ca-certificates \
-  gnupg \
-  lsb-release \
-  unzip
-
-RUN curl https://releases.hashicorp.com/terraform/0.14.0/terraform_0.14.0_linux_amd64.zip -o /tmp/terraform.zip && \
-  unzip -d /usr/local/bin /tmp/terraform.zip && \
-  rm /tmp/terraform.zip
+  git=1:2.43.0-1ubuntu7.3 \
+  openjdk-11-jdk=11.0.29+7-1ubuntu1~24.04 \
+  jq=1.7.1-3ubuntu0.24.04.1 \
+  ansible=9.2.0+dfsg-0ubuntu5 \
+  curl=8.5.0-2ubuntu10.6 \
+  apt-transport-https=2.7.14build2 \
+  ca-certificates=20240203 \
+  gnupg=2.4.4-2ubuntu17.3 \
+  lsb-release=12.0-2 \
+  unzip=6.0-28ubuntu4.1
 
 COPY known_hosts /root/.ssh/known_hosts
 
