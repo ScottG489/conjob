@@ -10,7 +10,7 @@ import net.jqwik.api.*;
 import net.jqwik.api.constraints.UseType;
 import net.jqwik.api.lifecycle.BeforeTry;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;

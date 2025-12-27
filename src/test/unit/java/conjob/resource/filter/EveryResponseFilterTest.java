@@ -5,8 +5,8 @@ import net.jqwik.api.Label;
 import net.jqwik.api.Property;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerResponseContext;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerResponseContext;
 
 import static org.mockito.Mockito.*;
 

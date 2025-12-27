@@ -7,12 +7,12 @@ import conjob.resource.convert.ResponseCreator;
 import conjob.service.job.JobService;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.security.PermitAll;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Pattern;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.annotation.security.PermitAll;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 @Path("/job/run")
 @PermitAll

@@ -4,7 +4,7 @@ import conjob.service.secrets.SecretsService;
 import net.jqwik.api.*;
 import net.jqwik.api.lifecycle.BeforeTry;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 
 import static org.hamcrest.MatcherAssert.assertThat;

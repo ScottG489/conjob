@@ -3,8 +3,8 @@ package conjob.resource;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 // This error handler catches errors that happen before getting into our resource classes (e.g. param validation).
 //   The initial reason it was introduced was to keep from displaying HTML error pages. It makes no sense for an

@@ -6,7 +6,7 @@ import net.jqwik.api.Property;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerRequestContext;
 import java.io.IOException;
 
 import static org.mockito.ArgumentMatchers.eq;

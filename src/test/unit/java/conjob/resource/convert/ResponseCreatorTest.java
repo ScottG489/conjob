@@ -6,7 +6,7 @@ import net.jqwik.api.*;
 import net.jqwik.api.lifecycle.BeforeTry;
 import org.junit.jupiter.api.BeforeEach;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -39,7 +39,7 @@ class ResponseCreatorTest {
 
         Response response = responseCreator.createResponseFrom(jobRunResponse);
 
-        assertThat(response.getStatusInfo().toEnum(), is(expectedResponseStatus));
+        assertThat(response.getStatusInfo(), is(expectedResponseStatus));
         assertThat(response.getEntity(), is(jobRunResponse.getOutput()));
     }
 
@@ -61,7 +61,7 @@ class ResponseCreatorTest {
 
         Response response = responseCreator.createJsonResponseFrom(jobRunResponse);
 
-        assertThat(response.getStatusInfo().toEnum(), is(expectedResponseStatus));
+        assertThat(response.getStatusInfo(), is(expectedResponseStatus));
         assertThat(response.getEntity(), is(jobRunResponse));
     }
 
@@ -70,21 +70,21 @@ class ResponseCreatorTest {
         return Arbitraries.oneOf(
                 Arbitraries.of(Map.entry(
                         JobRunConclusionResponse.SUCCESS,
-                        Response.ok().build().getStatusInfo().toEnum())),
+                        Response.Status.OK)),
                 Arbitraries.of(Map.entry(
                         JobRunConclusionResponse.FAILURE,
-                        Response.status(Response.Status.BAD_REQUEST).build().getStatusInfo().toEnum())),
+                        Response.Status.BAD_REQUEST)),
                 Arbitraries.of(Map.entry(
                         JobRunConclusionResponse.NOT_FOUND,
-                        Response.status(Response.Status.NOT_FOUND).build().getStatusInfo().toEnum())),
+                        Response.Status.NOT_FOUND)),
                 Arbitraries.of(Map.entry(
                         JobRunConclusionResponse.REJECTED,
-                        Response.status(Response.Status.SERVICE_UNAVAILABLE).build().getStatusInfo().toEnum())),
+                        Response.Status.SERVICE_UNAVAILABLE)),
                 Arbitraries.of(Map.entry(
                         JobRunConclusionResponse.TIMED_OUT,
-                        Response.status(Response.Status.REQUEST_TIMEOUT).build().getStatusInfo().toEnum())),
+                        Response.Status.REQUEST_TIMEOUT)),
                 Arbitraries.of(Map.entry(
                         JobRunConclusionResponse.UNKNOWN,
-                        Response.status(Response.Status.INTERNAL_SERVER_ERROR).build().getStatusInfo().toEnum())));
+                        Response.Status.INTERNAL_SERVER_ERROR)));
     }
 }

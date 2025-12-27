@@ -5,7 +5,7 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MediaType;
 
 import static conjob.util.RestAssuredUtil.configTest;
 import static io.restassured.RestAssured.given;

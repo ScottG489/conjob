@@ -1,7 +1,7 @@
 package conjob.resource.filter;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerRequestFilter;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;

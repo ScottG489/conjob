@@ -3,7 +3,7 @@ package conjob.resource.convert;
 import conjob.api.JobRunConclusionResponse;
 import conjob.api.JobRunResponse;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.util.Map;
 
 public class ResponseCreator {
