@@ -1,4 +1,5 @@
 ---
+sysbox_version: 0.6.6
 container_name: conjob
 image_name: "scottg489/conjob:{{ lookup('env', '_APP_DOCKER_IMAGE_TAG') }}"
 adminUsername: "{{ lookup('env', '_ADMIN_USERNAME') }}"

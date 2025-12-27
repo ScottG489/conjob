@@ -2,9 +2,9 @@ plugins {
     id 'java'
     id 'scala'
     id 'application'
+    id 'jacoco'
     id 'org.ajoberstar.grgit' version '5.3.3'
     id "io.gatling.gradle" version "3.14.9.4"
-    id 'jacoco'
     id 'info.solidsoft.pitest' version '1.19.0-rc.2'
 }
 

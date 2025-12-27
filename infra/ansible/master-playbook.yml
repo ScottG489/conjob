@@ -45,14 +45,11 @@
         - docker-ce-cli=5:24.0.9-1~ubuntu.20.04~focal
         - containerd.io
         - linux-headers-{{ kernel_release_version.stdout }}
-        - make
-        - dkms
-        - git
         - wget
 
   - name: Download and install sysbox runtime
     apt:
-      deb: https://downloads.nestybox.com/sysbox/releases/v0.6.6/sysbox-ce_0.6.6-0.linux_amd64.deb
+      deb: https://downloads.nestybox.com/sysbox/releases/v{{ sysbox_version }}/sysbox-ce_{{ sysbox_version }}-0.linux_amd64.deb
 
   - name: Create temp file for config
     tempfile:
