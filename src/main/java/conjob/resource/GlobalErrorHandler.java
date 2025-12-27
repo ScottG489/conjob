@@ -1,10 +1,9 @@
 package conjob.resource;
 
+import org.eclipse.jetty.ee10.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
 
 // This error handler catches errors that happen before getting into our resource classes (e.g. param validation).
 //   The initial reason it was introduced was to keep from displaying HTML error pages. It makes no sense for an
@@ -12,7 +11,9 @@ import jakarta.servlet.http.HttpServletResponse;
 // NOTE: This is also run after the global exception mapper if it returns a 4xx or 5xx.
 public class GlobalErrorHandler extends ErrorPageErrorHandler {
     @Override
-    public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) {
-        // Do nothing
+    public boolean handle(Request request, Response response, Callback callback) throws Exception {
+        // Do nothing - just succeed the callback to prevent HTML error pages
+        callback.succeeded();
+        return true;
     }
 }

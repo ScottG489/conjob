@@ -1,12 +1,12 @@
 package conjob.resource.auth;
 
+import org.eclipse.jetty.ee10.servlet.security.ConstraintMapping;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.AbstractLoginService;
-import org.eclipse.jetty.security.ConstraintMapping;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.Constraint;
 import org.eclipse.jetty.security.RolePrincipal;
 import org.eclipse.jetty.security.UserPrincipal;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
-import org.eclipse.jetty.util.security.Constraint;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,9 +17,7 @@ public class AdminConstraintSecurityHandler extends ConstraintSecurityHandler {
     private static final String ADMIN_ROLE = "admin";
 
     public AdminConstraintSecurityHandler(AdminLoginService adminLoginService) {
-        final Constraint constraint = new Constraint(Constraint.__BASIC_AUTH, ADMIN_ROLE);
-        constraint.setAuthenticate(true);
-        constraint.setRoles(new String[]{ADMIN_ROLE});
+        final Constraint constraint = Constraint.from(ADMIN_ROLE);
         final ConstraintMapping cm = new ConstraintMapping();
         cm.setConstraint(constraint);
         cm.setPathSpec("/*");
