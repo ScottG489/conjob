@@ -16,5 +16,5 @@ task performanceTest(type: Test) {
 gatlingRun.outputs.upToDateWhen { false }
 
 dependencies {
-    testImplementation 'io.gatling:gatling-app:3.5.1'
+    testImplementation 'io.gatling:gatling-app:3.14.9'
 }
