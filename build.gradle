@@ -5,11 +5,14 @@ plugins {
     id 'org.ajoberstar.grgit' version '5.3.3'
     id "io.gatling.gradle" version "3.14.9.4"
     id 'jacoco'
-    id 'info.solidsoft.pitest' version '1.15.0'
+    id 'info.solidsoft.pitest' version '1.19.0-rc.2'
 }
 
 group = 'conjob'
-mainClassName = 'conjob.ConJobApplication'
+
+application {
+    mainClass = 'conjob.ConJobApplication'
+}
 
 dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.42'
