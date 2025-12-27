@@ -6,15 +6,15 @@ sourceSets {
     }
 }
 
-gatling {
-    logLevel = 'INFO'
-}
-
 task performanceTest(type: Test) {
     finalizedBy gatlingRun
+}
+
+gatlingRun {
+    runAllSimulations = true
 }
 gatlingRun.outputs.upToDateWhen { false }
 
 dependencies {
-    testImplementation 'io.gatling:gatling-app:3.5.1'
+    testImplementation 'io.gatling:gatling-app:3.14.9'
 }

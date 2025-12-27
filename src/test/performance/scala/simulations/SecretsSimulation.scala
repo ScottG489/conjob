@@ -15,7 +15,7 @@ class SecretsSimulation extends Simulation {
     .baseUrl(baseUrl)
   private val request = http("Secrets request")
     .post("/secrets")
-    .queryParam("image", "${image}")
+    .queryParam("image", "#{image}")
     .body(StringBody("some secret"))
   private val secretsScenario: ScenarioBuilder = scenario("Secrets Simulation")
     .exec(_.set("image", "library/hello-world:latest"))
@@ -25,6 +25,7 @@ class SecretsSimulation extends Simulation {
   private val warmUpScenario: ScenarioBuilder = scenario("Warm up Scenario")
     .exec(_.set("image", "library/hello-world:latest"))
     .exec(warmUpRequest)
+    .pause(1)
 
   private val all: ScenarioBuilder = warmUpScenario.exec(secretsScenario)
 

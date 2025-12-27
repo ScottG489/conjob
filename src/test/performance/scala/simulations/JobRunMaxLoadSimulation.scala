@@ -15,7 +15,7 @@ class JobRunMaxLoadSimulation extends Simulation {
     .baseUrl(baseUrl)
   private val request = http("Job run request")
     .get("/job/run")
-    .queryParam("image", "${image}")
+    .queryParam("image", "#{image}")
   private val maxLoadScenario: ScenarioBuilder = scenario("Job Run Simulation")
     .exec(_.set("image", "library/hello-world:latest"))
     .exec(request)
@@ -24,6 +24,7 @@ class JobRunMaxLoadSimulation extends Simulation {
   private val warmUpScenario: ScenarioBuilder = scenario("Warm up Scenario")
     .exec(_.set("image", "library/hello-world:latest"))
     .exec(warmUpRequest)
+    .pause(1)
 
   setUp(
     warmUpScenario.inject(
