@@ -2,16 +2,16 @@ FROM ubuntu:22.04
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
-  git \
-  openjdk-21-jdk \
-  jq \
-  ansible \
-  curl \
-  apt-transport-https \
-  ca-certificates \
-  gnupg \
-  lsb-release \
-  unzip
+  git=1:2.34.1-1ubuntu1.15 \
+  openjdk-21-jdk=21.0.9+10-1~22.04 \
+  jq=1.6-2.1ubuntu3.1 \
+  ansible=2.10.7+merged+base+2.10.8+dfsg-1 \
+  curl=7.81.0-1ubuntu1.21 \
+  apt-transport-https=2.4.5 \
+  ca-certificates=20240203~22.04.1 \
+  gnupg=2.2.27-3ubuntu2.4 \
+  lsb-release=11.1.0ubuntu4 \
+  unzip=6.0-26ubuntu3.1
 
 ARG VERSION_STRING=5:24.0.9-1~ubuntu.22.04~jammy
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
@@ -24,7 +24,8 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /
   docker-ce-cli=$VERSION_STRING \
   containerd.io=1.7.28-1~ubuntu.22.04~jammy
 
-RUN curl https://releases.hashicorp.com/terraform/0.14.0/terraform_0.14.0_linux_amd64.zip -o /tmp/terraform.zip && \
+ARG TERRAFORM_VERSION=1.14.3
+RUN curl https://releases.hashicorp.com/terraform/$TERRAFORM_VERSION/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -o /tmp/terraform.zip && \
   unzip -d /usr/local/bin /tmp/terraform.zip && \
   rm /tmp/terraform.zip
 
