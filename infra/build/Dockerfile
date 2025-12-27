@@ -22,7 +22,7 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
   docker-ce=$VERSION_STRING \
   docker-ce-cli=$VERSION_STRING \
-  containerd.io=1.7.27-1
+  containerd.io=1.7.28-1~ubuntu.22.04~jammy
 
 RUN curl https://releases.hashicorp.com/terraform/0.14.0/terraform_0.14.0_linux_amd64.zip -o /tmp/terraform.zip && \
   unzip -d /usr/local/bin /tmp/terraform.zip && \
