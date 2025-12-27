@@ -1,4 +1,4 @@
-FROM ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
+FROM ubuntu:22.04
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -13,7 +13,7 @@ RUN apt-get update && \
   lsb-release \
   unzip
 
-ARG VERSION_STRING=5:24.0.9-1~ubuntu.20.04~focal
+ARG VERSION_STRING=5:24.0.9-1~ubuntu.22.04~jammy
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
   echo \
     "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
@@ -22,7 +22,7 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
   docker-ce=$VERSION_STRING \
   docker-ce-cli=$VERSION_STRING \
-  containerd.io
+  containerd.io=1.7.27-1
 
 RUN curl https://releases.hashicorp.com/terraform/0.14.0/terraform_0.14.0_linux_amd64.zip -o /tmp/terraform.zip && \
   unzip -d /usr/local/bin /tmp/terraform.zip && \
