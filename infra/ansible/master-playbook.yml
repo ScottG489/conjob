@@ -22,13 +22,21 @@
       sudo growpart /dev/$BLOCK_DEVICE 1
       sudo resize2fs /dev/$PARTITION_NAME
 
+  - name: Register ubuntu code name
+    command: lsb_release -cs
+    register: ubuntu_code_name
+
+  - name: Register ubuntu release number
+    command: lsb_release -rs
+    register: ubuntu_release_number
+
   - name: Import the Docker signing key (apt-key)
     apt_key:
       url: https://download.docker.com/linux/ubuntu/gpg
 
   - name: Install Docker apt repository
     apt_repository:
-      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ubuntu_code_name.stdout }} stable
 
   - name: Register kernel release version variable
     command: uname --kernel-release
@@ -41,9 +49,9 @@
   - name: Install packages
     package:
       name:
-        - docker-ce=5:24.0.9-1~ubuntu.20.04~focal
-        - docker-ce-cli=5:24.0.9-1~ubuntu.20.04~focal
-        - containerd.io
+        - docker-ce=5:24.0.9-1~ubuntu.{{ ubuntu_release_number.stdout }}~{{ ubuntu_code_name.stdout }}
+        - docker-ce-cli=5:24.0.9-1~ubuntu.{{ ubuntu_release_number.stdout }}~{{ ubuntu_code_name.stdout }}
+        - containerd.io=1.7.27-1
         - linux-headers-{{ kernel_release_version.stdout }}
         - wget
 
