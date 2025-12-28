@@ -20,7 +20,7 @@
         "\\s+(?<depName>[a-z0-9][a-z0-9+.-]+)=(?<currentValue>[^\\s\\\\]+)"
       ],
       "datasourceTemplate": "deb",
-      "registryUrlTemplate": "https://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe,restricted,multiverse&binaryArch=amd64"
+      "registryUrlTemplate": "https://archive.ubuntu.com/ubuntu?suite=jammy&components=main,universe,restricted,multiverse&binaryArch=amd64"
     },
     {
       "customType": "regex",
