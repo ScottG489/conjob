@@ -57,12 +57,7 @@ class ConfigStoreTest {
         assertThat(maxTimeoutSeconds, is(newMaxTimeoutSeconds));
     }
 
-    // TODO: This test is causing the following error only when run on the CI server:
-    //         # Internal Error (sharedRuntime.cpp:1261), pid=492, tid=512
-    //         # guarantee((retry_count++ < 100)) failed: Could not resolve to latest version of redefined method
-    //       I'm unable to reproduce this locally even inside docker. See this GitHub issue for more info:
-    //       https://github.com/ScottG489/conjob/issues/38
-//    @Property
+    @Property
     @Label("Given a conjob config, " +
             "when getting all config store entries, " +
             "then they should contain all config field keys.")
