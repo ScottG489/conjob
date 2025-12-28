@@ -8,7 +8,7 @@ RUN apt-get update && \
   ansible=2.10.7+merged+base+2.10.8+dfsg-1 \
   curl=7.81.0-1ubuntu1.21 \
   apt-transport-https=2.4.5 \
-  ca-certificates=20240203~22.04.1 \
+  ca-certificates=20240203 \
   gnupg=2.2.27-3ubuntu2.4 \
   lsb-release=11.1.0ubuntu4 \
   unzip=6.0-26ubuntu3.1
