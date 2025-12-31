@@ -27,7 +27,7 @@ public class DockerVolumeRemoveTask extends PostBodyTask {
             } catch (RemoveVolumeException e) {
                 // TODO: There's no way to force removing a volume with this lib, though it's supported by docker.
                 // TODO:   Until we migrate to another docker lib that does this, we'll have to use this hack.
-                removeContainersFromExceptionMessage(e.getCause().getCause().getMessage());
+                removeContainersFromExceptionMessage(e.getCause().getMessage());
                 map.getOrDefault("id", List.of()).forEach(dockerAdapter::removeVolume);
             }
         }

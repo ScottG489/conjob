@@ -1,8 +1,10 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.ContainerExit;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.StopContainerCmd;
+import com.github.dockerjava.api.command.WaitContainerCmd;
+import com.github.dockerjava.api.command.WaitContainerResultCallback;
+import com.github.dockerjava.api.exception.NotModifiedException;
 import conjob.core.job.exception.StopJobRunException;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Label;
@@ -18,12 +20,28 @@ import static org.mockito.Mockito.*;
 public class DockerAdapterStopContainerTest {
     private DockerAdapter dockerAdapter;
     private DockerClient mockClient;
+    private StopContainerCmd mockStopCmd;
+    private WaitContainerCmd mockWaitCmd;
+    private WaitContainerResultCallback mockCallback;
 
     @BeforeEach
     @BeforeTry
     void setUp() {
         mockClient = mock(DockerClient.class);
+        mockStopCmd = mock(StopContainerCmd.class);
+        mockWaitCmd = mock(WaitContainerCmd.class);
+        mockCallback = mock(WaitContainerResultCallback.class);
         dockerAdapter = new DockerAdapter(mockClient);
+    }
+
+    private void setupStopContainerMock(String containerId, int timeoutSeconds) {
+        when(mockClient.stopContainerCmd(containerId)).thenReturn(mockStopCmd);
+        when(mockStopCmd.withTimeout(timeoutSeconds)).thenReturn(mockStopCmd);
+    }
+
+    private void setupWaitForExitMock(String containerId) {
+        when(mockClient.waitContainerCmd(containerId)).thenReturn(mockWaitCmd);
+        when(mockWaitCmd.exec(any(WaitContainerResultCallback.class))).thenReturn(mockCallback);
     }
 
     @Property
@@ -34,29 +52,50 @@ public class DockerAdapterStopContainerTest {
     void stopContainerSuccessfully(
             @ForAll String givenContainerId,
             @ForAll int givenKillTimeoutSeconds,
-            @ForAll long expectedCode
-    ) throws DockerException, InterruptedException, StopJobRunException {
-        ContainerExit mockContainerExit = mock(ContainerExit.class);
-        when(mockClient.waitContainer(givenContainerId)).thenReturn(mockContainerExit);
-        when(mockContainerExit.statusCode()).thenReturn(expectedCode);
+            @ForAll int expectedCode
+    ) throws StopJobRunException {
+        setupStopContainerMock(givenContainerId, givenKillTimeoutSeconds);
+        setupWaitForExitMock(givenContainerId);
+        when(mockCallback.awaitStatusCode()).thenReturn(expectedCode);
 
         Long exitStatusCode = dockerAdapter.stopContainer(givenContainerId, givenKillTimeoutSeconds);
 
-        assertThat(exitStatusCode, is(expectedCode));
-        verify(mockClient).stopContainer(givenContainerId, givenKillTimeoutSeconds);
-        verify(mockClient).waitContainer(givenContainerId);
+        assertThat(exitStatusCode, is((long) expectedCode));
+        verify(mockStopCmd).exec();
+        verify(mockCallback).awaitStatusCode();
     }
 
     @Property
     @Label("Given a container id, " +
             "when stopping that container, " +
-            "and a DockerException is thrown, " +
+            "and a NotModifiedException is thrown, " +
+            "should return an exit status code.")
+    void startContainerNotModifiedException(
+            @ForAll String givenContainerId,
+            @ForAll int givenKillTimeoutSeconds,
+            @ForAll int expectedCode
+    )  {
+        setupStopContainerMock(givenContainerId, givenKillTimeoutSeconds);
+        doThrow(new NotModifiedException("")).when(mockStopCmd).exec();
+        setupWaitForExitMock(givenContainerId);
+        when(mockCallback.awaitStatusCode()).thenReturn(expectedCode);
+
+        Long exitStatusCode = dockerAdapter.stopContainer(givenContainerId, givenKillTimeoutSeconds);
+
+        assertThat(exitStatusCode, is((long) expectedCode));
+    }
+
+    @Property
+    @Label("Given a container id, " +
+            "when stopping that container, " +
+            "and an Exception is thrown, " +
             "should throw a StopJobRunException.")
     void stopContainerDockerException(
             @ForAll String givenContainerId,
             @ForAll int givenKillTimeoutSeconds
-    ) throws DockerException, InterruptedException {
-        doThrow(new DockerException("")).when(mockClient).waitContainer(givenContainerId);
+    )  {
+        setupStopContainerMock(givenContainerId, givenKillTimeoutSeconds);
+        doThrow(new RuntimeException("")).when(mockStopCmd).exec();
 
         assertThrows(StopJobRunException.class, () -> dockerAdapter.stopContainer(givenContainerId, givenKillTimeoutSeconds));
     }
@@ -64,28 +103,16 @@ public class DockerAdapterStopContainerTest {
     @Property
     @Label("Given a container id, " +
             "when stopping that container, " +
-            "and a InterruptedException is thrown, " +
+            "and an exception is thrown waiting for the status code, " +
             "should throw a StopJobRunException.")
-    void startContainerInterruptedException(
-            @ForAll String givenContainerId,
-            @ForAll int givenKillTimeoutSeconds
-    ) throws DockerException, InterruptedException {
-        doThrow(new DockerException("")).when(mockClient).waitContainer(givenContainerId);
-
-        assertThrows(StopJobRunException.class, () -> dockerAdapter.stopContainer(givenContainerId, givenKillTimeoutSeconds));
-    }
-
-    @Property
-    @Label("Given a container id, " +
-            "when stopping that container, " +
-            "and an unexpected Exception is thrown, " +
-            "should throw that exception.")
     void startContainerUnexpectedException(
             @ForAll String givenContainerId,
             @ForAll int givenKillTimeoutSeconds
-    ) throws DockerException, InterruptedException {
-        doThrow(new RuntimeException("")).when(mockClient).waitContainer(givenContainerId);
+    )  {
+        setupStopContainerMock(givenContainerId, givenKillTimeoutSeconds);
+        setupWaitForExitMock(givenContainerId);
+        when(mockCallback.awaitStatusCode()).thenThrow(new RuntimeException(""));
 
-        assertThrows(RuntimeException.class, () -> dockerAdapter.stopContainer(givenContainerId, givenKillTimeoutSeconds));
+        assertThrows(StopJobRunException.class, () -> dockerAdapter.stopContainer(givenContainerId, givenKillTimeoutSeconds));
     }
 }

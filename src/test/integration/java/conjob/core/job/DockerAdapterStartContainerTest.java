@@ -1,9 +1,6 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.ContainerConfig;
+import com.github.dockerjava.api.DockerClient;
 import conjob.core.job.DockerAdapter;
 import conjob.core.job.exception.RunJobException;
 import net.jqwik.api.*;
@@ -19,19 +16,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DockerAdapterStartContainerTest {
     private static final String TEST_SUPPORT_CONTAINER = "scottg489/test-support-job:latest";
-    private static DefaultDockerClient dockerClient;
+    private static DockerClient dockerClient;
     private DockerAdapter dockerAdapter;
     private String containerId;
 
     @BeforeContainer
-    static void beforeAll() throws DockerCertificateException, DockerException, InterruptedException {
-        dockerClient = DefaultDockerClient.fromEnv().build();
-        dockerClient.pull(TEST_SUPPORT_CONTAINER);
+    static void beforeAll() throws InterruptedException {
+        dockerClient = DockerClientFactory.createDefaultClient();
+        dockerClient.pullImageCmd(TEST_SUPPORT_CONTAINER).start().awaitCompletion();
     }
 
     @AfterContainer
-    static void afterAll() throws DockerException, InterruptedException {
-        dockerClient.removeImage(TEST_SUPPORT_CONTAINER, true, false);
+    static void afterAll() {
+        dockerClient.removeImageCmd(TEST_SUPPORT_CONTAINER).withForce(true).exec();
     }
 
     @BeforeTry
@@ -40,8 +37,8 @@ public class DockerAdapterStartContainerTest {
     }
 
     @AfterTry
-    void afterEach() throws DockerException, InterruptedException {
-        if (containerId != null && !containerId.isBlank()) dockerClient.removeContainer(containerId);
+    void afterEach() {
+        if (containerId != null && !containerId.isBlank()) dockerClient.removeContainerCmd(containerId).exec();
     }
 
     @Property(tries = 10)
@@ -50,10 +47,11 @@ public class DockerAdapterStartContainerTest {
             "and it exits, " +
             "should return the code it exited with.")
     void startContainerThenWaitForExit(@ForAll @LongRange(max = 255) long givenExitCode)
-            throws RunJobException, DockerException, InterruptedException {
-        containerId = dockerClient.createContainer(ContainerConfig.builder()
-                .image(TEST_SUPPORT_CONTAINER).cmd("0|||" + givenExitCode).build())
-                .id();
+            throws RunJobException {
+        containerId = dockerClient.createContainerCmd(TEST_SUPPORT_CONTAINER)
+                .withCmd("0|||" + givenExitCode)
+                .exec()
+                .getId();
         Long exitStatusCode = dockerAdapter.startContainerThenWaitForExit(containerId);
 
         assertThat(exitStatusCode, is(givenExitCode));

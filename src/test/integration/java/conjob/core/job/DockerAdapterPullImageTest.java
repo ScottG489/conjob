@@ -1,14 +1,10 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
-import com.spotify.docker.client.exceptions.DockerException;
+import com.github.dockerjava.api.DockerClient;
 import conjob.core.job.DockerAdapter;
 import conjob.core.job.exception.JobUpdateException;
 import org.junit.jupiter.api.*;
 
-import static com.spotify.docker.client.DockerClient.ListImagesParam.byName;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DockerAdapterPullImageTest {
@@ -19,8 +15,8 @@ public class DockerAdapterPullImageTest {
 
 
     @BeforeAll
-    static void beforeContainer() throws DockerCertificateException {
-        dockerClient = DefaultDockerClient.fromEnv().build();
+    static void beforeContainer()  {
+        dockerClient = DockerClientFactory.createDefaultClient();
     }
 
     @BeforeEach
@@ -29,9 +25,9 @@ public class DockerAdapterPullImageTest {
     }
 
     @AfterEach
-    void tearDown() throws DockerException, InterruptedException {
-        dockerClient.listImages(byName("tianon/true")).stream().findFirst()
-                .ifPresent((image) -> removeImage(image.id()));
+    void tearDown()   {
+        dockerClient.listImagesCmd().withImageNameFilter("tianon/true").exec().stream().findFirst()
+                .ifPresent((image) -> removeImage(image.getId()));
     }
 
     @Test
@@ -52,8 +48,8 @@ public class DockerAdapterPullImageTest {
 
     private void removeImage(String imageId) {
         try {
-            dockerClient.removeImage(imageId, true, false);
-        } catch (DockerException | InterruptedException e) {
+            dockerClient.removeImageCmd(imageId).withForce(true).exec();
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

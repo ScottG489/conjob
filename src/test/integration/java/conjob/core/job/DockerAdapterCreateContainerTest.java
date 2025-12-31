@@ -1,8 +1,6 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
-import com.spotify.docker.client.exceptions.DockerException;
+import com.github.dockerjava.api.DockerClient;
 import conjob.core.job.DockerAdapter;
 import conjob.core.job.exception.CreateJobRunException;
 import conjob.core.job.model.JobRunConfig;
@@ -18,21 +16,21 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DockerAdapterCreateContainerTest {
-    private static DefaultDockerClient dockerClient;
+    private static DockerClient dockerClient;
 
     private DockerAdapter dockerAdapter;
     private String jobRunId;
     private String secretsVolumeName;
 
     @BeforeContainer
-    static void beforeContainer() throws DockerCertificateException, DockerException, InterruptedException {
-        dockerClient = DefaultDockerClient.fromEnv().build();
-        dockerClient.pull("tianon/true:latest");
+    static void beforeContainer() throws InterruptedException {
+        dockerClient = DockerClientFactory.createDefaultClient();
+        dockerClient.pullImageCmd("tianon/true:latest").start().awaitCompletion();
     }
 
     @AfterContainer
-    static void afterContainer() throws DockerException, InterruptedException {
-        dockerClient.removeImage("tianon/true", true, false);
+    static void afterContainer()   {
+        dockerClient.removeImageCmd("tianon/true").withForce(true).exec();
     }
 
     @BeforeTry
@@ -41,9 +39,9 @@ public class DockerAdapterCreateContainerTest {
     }
 
     @AfterTry
-    void tearDown() throws DockerException, InterruptedException {
-        if (jobRunId != null && !jobRunId.isBlank()) dockerClient.removeContainer(jobRunId);
-        if (secretsVolumeName != null && !secretsVolumeName.isBlank()) dockerClient.removeVolume(secretsVolumeName);
+    void tearDown()   {
+        if (jobRunId != null && !jobRunId.isBlank()) dockerClient.removeContainerCmd(jobRunId).exec();
+        if (secretsVolumeName != null && !secretsVolumeName.isBlank()) dockerClient.removeVolumeCmd(secretsVolumeName).exec();
     }
 
     @Property(tries = 100)

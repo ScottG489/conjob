@@ -1,8 +1,10 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.LogStream;
-import com.spotify.docker.client.exceptions.DockerException;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.LogContainerCmd;
+import com.github.dockerjava.api.model.Frame;
+import com.github.dockerjava.api.model.StreamType;
+import com.github.dockerjava.core.command.LogContainerResultCallback;
 import conjob.core.job.exception.ReadLogsException;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Label;
@@ -18,11 +20,13 @@ import static org.mockito.Mockito.*;
 public class DockerAdapterReadAllLogsTest {
     private DockerAdapter dockerAdapter;
     private DockerClient mockClient;
+    private LogContainerCmd mockLogCmd;
 
     @BeforeEach
     @BeforeTry
     void setUp() {
         mockClient = mock(DockerClient.class);
+        mockLogCmd = mock(LogContainerCmd.class);
         dockerAdapter = new DockerAdapter(mockClient);
     }
 
@@ -33,15 +37,23 @@ public class DockerAdapterReadAllLogsTest {
     void readLogsSuccessfully(
             @ForAll String givenContainerId,
             @ForAll String expectedLogs
-    ) throws ReadLogsException, DockerException, InterruptedException {
-        LogStream mockLogStream = mock(LogStream.class);
+    ) throws Exception {
+        when(mockClient.logContainerCmd(givenContainerId)).thenReturn(mockLogCmd);
+        when(mockLogCmd.withStdOut(true)).thenReturn(mockLogCmd);
+        when(mockLogCmd.withStdErr(true)).thenReturn(mockLogCmd);
+        when(mockLogCmd.withFollowStream(true)).thenReturn(mockLogCmd);
+        when(mockLogCmd.exec(any(LogContainerResultCallback.class))).thenAnswer(invocation -> {
+            LogContainerResultCallback callback = invocation.getArgument(0);
 
-        when(mockClient.logs(eq(givenContainerId),
-                any(DockerClient.LogsParam.class),
-                any(DockerClient.LogsParam.class),
-                any(DockerClient.LogsParam.class)))
-                .thenReturn(mockLogStream);
-        when(mockLogStream.readFully()).thenReturn(expectedLogs);
+            // Simulate Docker sending log data by calling onNext with a Frame
+            Frame frame = new Frame(StreamType.STDOUT, expectedLogs.getBytes());
+            callback.onNext(frame);
+
+            // Spy to make awaitCompletion non-blocking
+            LogContainerResultCallback spiedCallback = spy(callback);
+            doReturn(spiedCallback).when(spiedCallback).awaitCompletion();
+            return spiedCallback;
+        });
 
         String actualLogs = dockerAdapter.readAllLogsUntilExit(givenContainerId);
 
@@ -51,29 +63,14 @@ public class DockerAdapterReadAllLogsTest {
     @Property
     @Label("Given a container ID, " +
             "when reading that container's logs, " +
-            "and a DockerException is thrown, " +
+            "and an Exception is thrown, " +
             "should throw a ReadLogsException.")
-    void readLogsDockerException(@ForAll String givenContainerId) throws DockerException, InterruptedException {
-        doThrow(new DockerException("")).when(mockClient)
-                .logs(eq(givenContainerId),
-                        any(DockerClient.LogsParam.class),
-                        any(DockerClient.LogsParam.class),
-                        any(DockerClient.LogsParam.class));
-
-        assertThrows(ReadLogsException.class, () -> dockerAdapter.readAllLogsUntilExit(givenContainerId));
-    }
-
-    @Property
-    @Label("Given a container ID, " +
-            "when reading that container's logs, " +
-            "and a InterruptedException is thrown, " +
-            "should throw a ReadLogsException.")
-    void readLogsInterruptedException(@ForAll String givenContainerId) throws DockerException, InterruptedException {
-        doThrow(new DockerException("")).when(mockClient)
-                .logs(eq(givenContainerId),
-                        any(DockerClient.LogsParam.class),
-                        any(DockerClient.LogsParam.class),
-                        any(DockerClient.LogsParam.class));
+    void readLogsDockerException(@ForAll String givenContainerId) throws Exception {
+        when(mockClient.logContainerCmd(givenContainerId)).thenReturn(mockLogCmd);
+        when(mockLogCmd.withStdOut(true)).thenReturn(mockLogCmd);
+        when(mockLogCmd.withStdErr(true)).thenReturn(mockLogCmd);
+        when(mockLogCmd.withFollowStream(true)).thenReturn(mockLogCmd);
+        when(mockLogCmd.exec(any(LogContainerResultCallback.class))).thenThrow(new RuntimeException(""));
 
         assertThrows(ReadLogsException.class, () -> dockerAdapter.readAllLogsUntilExit(givenContainerId));
     }
@@ -83,12 +80,12 @@ public class DockerAdapterReadAllLogsTest {
             "when reading that container's logs, " +
             "and an unexpected Exception is thrown, " +
             "should throw that exception.")
-    void readLogsUnexpectedException(@ForAll String givenContainerId) throws DockerException, InterruptedException {
-        doThrow(new DockerException("")).when(mockClient)
-                .logs(eq(givenContainerId),
-                        any(DockerClient.LogsParam.class),
-                        any(DockerClient.LogsParam.class),
-                        any(DockerClient.LogsParam.class));
+    void readLogsUnexpectedException(@ForAll String givenContainerId) throws Exception {
+        when(mockClient.logContainerCmd(givenContainerId)).thenReturn(mockLogCmd);
+        when(mockLogCmd.withStdOut(true)).thenReturn(mockLogCmd);
+        when(mockLogCmd.withStdErr(true)).thenReturn(mockLogCmd);
+        when(mockLogCmd.withFollowStream(true)).thenReturn(mockLogCmd);
+        when(mockLogCmd.exec(any(LogContainerResultCallback.class))).thenThrow(new RuntimeException());
 
         assertThrows(RuntimeException.class, () -> dockerAdapter.readAllLogsUntilExit(givenContainerId));
     }

@@ -1,9 +1,7 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.Volume;
-import com.spotify.docker.client.shaded.com.google.common.collect.ImmutableList;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.InspectVolumeResponse;
 import net.jqwik.api.*;
 import net.jqwik.api.arbitraries.ListArbitrary;
 import org.junit.jupiter.api.DisplayName;
@@ -21,25 +19,25 @@ public class DockerAdapterListVolumesTest {
     @Label("Given available volumes," +
             "when listing all volume names," +
             "should list the names of the available volumes")
-    void listVolumesSuccess(@ForAll("mockVolumes") List<Volume> givenMockVolumes)
-            throws DockerException, InterruptedException {
-        ImmutableList<Volume> volumes = ImmutableList.copyOf(givenMockVolumes);
+    void listVolumesSuccess(@ForAll("mockVolumes") List<InspectVolumeResponse> givenMockVolumes)
+             {
+        List<InspectVolumeResponse> volumes = List.copyOf(givenMockVolumes);
         DockerClient client = mock(DockerClient.class, RETURNS_DEEP_STUBS);
         DockerAdapter adapter = new DockerAdapter(client);
 
-        when(client.listVolumes().volumes()).thenReturn(volumes);
+        when(client.listVolumesCmd().exec().getVolumes()).thenReturn(volumes);
 
         List<String> volumeNames = adapter.listAllVolumeNames();
 
         assertThat(volumeNames,
-                containsInAnyOrder(givenMockVolumes.stream().map(Volume::name).toArray()));
+                containsInAnyOrder(givenMockVolumes.stream().map(InspectVolumeResponse::getName).toArray()));
     }
 
     @Provide
-    ListArbitrary<Volume> mockVolumes() {
+    ListArbitrary<InspectVolumeResponse> mockVolumes() {
         return Arbitraries.strings().map(string -> {
-            Volume volume = mock(Volume.class);
-            when(volume.name()).thenReturn(string);
+            InspectVolumeResponse volume = mock(InspectVolumeResponse.class, RETURNS_DEEP_STUBS);
+            when(volume.getName()).thenReturn(string);
             return volume;
         }).list();
     }
@@ -49,10 +47,10 @@ public class DockerAdapterListVolumesTest {
             "when listing all volume names," +
             "and an unexpected Exception is thrown," +
             "should throw that exception")
-    void readLogsUnexpectedException() throws DockerException, InterruptedException {
+    void readLogsUnexpectedException()  {
         DockerClient client = mock(DockerClient.class);
         DockerAdapter adapter = new DockerAdapter(client);
-        doThrow(new RuntimeException("")).when(client).listVolumes();
+        when(client.listVolumesCmd()).thenThrow(new RuntimeException(""));
 
         assertThrows(RuntimeException.class, adapter::listAllVolumeNames);
     }

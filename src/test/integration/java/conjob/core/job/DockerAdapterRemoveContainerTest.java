@@ -1,10 +1,6 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.ContainerConfig;
+import com.github.dockerjava.api.DockerClient;
 import conjob.core.job.exception.RemoveContainerException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,8 +15,9 @@ public class DockerAdapterRemoveContainerTest {
     private DockerAdapter dockerAdapter;
 
     @BeforeAll
-    static void beforeAll() throws DockerCertificateException {
-        dockerClient = DefaultDockerClient.fromEnv().build();
+    static void beforeAll() throws InterruptedException {
+        dockerClient = DockerClientFactory.createDefaultClient();
+        dockerClient.pullImageCmd("tianon/true:latest").start().awaitCompletion();
     }
 
     @BeforeEach
@@ -32,8 +29,8 @@ public class DockerAdapterRemoveContainerTest {
     @DisplayName("Given a container that exists, " +
             "when removing that container, " +
             "should finish successfully.")
-    void removeContainerSuccessfully() throws DockerException, InterruptedException {
-        String containerId = dockerClient.createContainer(ContainerConfig.builder().cmd("").build()).id();
+    void removeContainerSuccessfully()   {
+        String containerId = dockerClient.createContainerCmd("tianon/true").withCmd("").exec().getId();
         dockerAdapter.removeContainer(containerId);
     }
 

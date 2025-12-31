@@ -1,9 +1,6 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.ContainerConfig;
+import com.github.dockerjava.api.DockerClient;
 import conjob.core.job.DockerAdapter;
 import conjob.core.job.exception.ReadLogsException;
 import net.jqwik.api.*;
@@ -19,19 +16,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class DockerAdapterReadAllLogsTest {
     private static final String IMAGE_WITH_LOG_OUTPUT = "scottg489/echo-job";
     private DockerAdapter dockerAdapter;
-    private static DefaultDockerClient dockerClient;
+    private static DockerClient dockerClient;
 
     private String containerId;
 
     @BeforeContainer
-    static void beforeAll() throws DockerCertificateException, DockerException, InterruptedException {
-        dockerClient = DefaultDockerClient.fromEnv().build();
-        dockerClient.pull(IMAGE_WITH_LOG_OUTPUT);
+    static void beforeAll() throws InterruptedException {
+        dockerClient = DockerClientFactory.createDefaultClient();
+        dockerClient.pullImageCmd(IMAGE_WITH_LOG_OUTPUT).start().awaitCompletion();
     }
 
     @AfterContainer
-    static void afterAll() throws DockerException, InterruptedException {
-        dockerClient.removeImage(IMAGE_WITH_LOG_OUTPUT, true, false);
+    static void afterAll()   {
+        dockerClient.removeImageCmd(IMAGE_WITH_LOG_OUTPUT).withForce(true).exec();
     }
 
     @BeforeTry
@@ -40,22 +37,22 @@ public class DockerAdapterReadAllLogsTest {
     }
 
     @AfterTry
-    void tearDown() throws DockerException, InterruptedException {
-        if (containerId != null && !containerId.isBlank()) dockerClient.removeContainer(containerId);
+    void tearDown()   {
+        if (containerId != null && !containerId.isBlank()) dockerClient.removeContainerCmd(containerId).exec();
     }
 
     // TODO: See TODO in DockerAdapter.readAllLogsUntilExit for why this is ignored
-//    @Property(tries = 10)
+    @Property(tries = 10)
     @Label("Given a container that outputs logs, " +
             "and that container is run, " +
             "when reading that containers logs, " +
             "should return all of the log contents.")
     void readLogsSuccessfully(@ForAll("validInputToEchoJob") String givenLogs)
-            throws ReadLogsException, DockerException, InterruptedException {
-        containerId = dockerClient.createContainer(ContainerConfig.builder()
-                .image(IMAGE_WITH_LOG_OUTPUT)
-                .cmd(givenLogs).build()).id();
-        dockerClient.startContainer(containerId);
+            throws ReadLogsException {
+        containerId = dockerClient.createContainerCmd(IMAGE_WITH_LOG_OUTPUT)
+                .withCmd(givenLogs)
+                .exec().getId();
+        dockerClient.startContainerCmd(containerId).exec();
 
         String actualLogs = dockerAdapter.readAllLogsUntilExit(containerId);
 

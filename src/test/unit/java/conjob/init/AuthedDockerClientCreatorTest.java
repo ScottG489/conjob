@@ -1,28 +1,36 @@
 package conjob.init;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.auth.FixedRegistryAuthSupplier;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.RegistryAuth;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.AuthCmd;
+import com.github.dockerjava.api.model.AuthConfig;
+import com.github.dockerjava.api.model.AuthResponse;
+import com.github.dockerjava.core.DockerClientConfig;
+import com.github.dockerjava.core.DockerClientImpl;
 import net.jqwik.api.*;
 import net.jqwik.api.lifecycle.BeforeTry;
-import org.apache.http.HttpStatus;
+import org.mockito.MockedStatic;
+
+import java.net.URI;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class AuthedDockerClientCreatorTest {
     private AuthedDockerClientCreator dockerClientCreator;
-    private DefaultDockerClient.Builder mockDockerClientBuilder;
-    private RegistryAuth.Builder mockRegAuthBuilder;
+    private DockerClientConfig mockBaseConfig;
+    private AuthConfig mockAuthConfig;
 
     @BeforeTry
     public void beforeEach() {
-        mockDockerClientBuilder = mock(DefaultDockerClient.Builder.class, RETURNS_DEEP_STUBS);
-        mockRegAuthBuilder = mock(RegistryAuth.Builder.class, RETURNS_DEEP_STUBS);
-        dockerClientCreator = new AuthedDockerClientCreator(mockDockerClientBuilder, mockRegAuthBuilder);
+        mockBaseConfig = mock(DockerClientConfig.class);
+        mockAuthConfig = mock(AuthConfig.class);
+        when(mockBaseConfig.getDockerHost()).thenReturn(URI.create("unix:///var/run/docker.sock"));
+        when(mockAuthConfig.withUsername(any())).thenReturn(mockAuthConfig);
+        when(mockAuthConfig.withPassword(any())).thenReturn(mockAuthConfig);
+        dockerClientCreator = new AuthedDockerClientCreator(mockBaseConfig, mockAuthConfig);
     }
 
     @Property
@@ -30,20 +38,23 @@ class AuthedDockerClientCreatorTest {
             "and a docker client that successfully auths, " +
             "when a docker client is created, " +
             "should validate credentials, " +
-            "and should return the docker client that the builder returns.")
-    void successfulAuth(@ForAll String username, @ForAll String password) throws DockerException, InterruptedException {
-        RegistryAuth mockRegistryAuth = mock(RegistryAuth.class);
-        DefaultDockerClient mockDockerClient = mock(DefaultDockerClient.class);
-        when(mockDockerClient.auth(mockRegistryAuth)).thenReturn(HttpStatus.SC_OK);
-        when(mockRegAuthBuilder.username(username).password(password).build()).thenReturn(mockRegistryAuth);
-        when(mockDockerClientBuilder.registryAuthSupplier(
-                any(FixedRegistryAuthSupplier.class))
-                .build())
-                .thenReturn(mockDockerClient);
+            "and should return the docker client.")
+    void successfulAuth(@ForAll String username, @ForAll String password) {
+        DockerClient mockDockerClient = mock(DockerClient.class);
+        AuthCmd mockAuthCmd = mock(AuthCmd.class);
+        AuthResponse mockAuthResponse = mock(AuthResponse.class);
+        when(mockDockerClient.authCmd()).thenReturn(mockAuthCmd);
+        when(mockAuthCmd.withAuthConfig(any())).thenReturn(mockAuthCmd);
+        when(mockAuthCmd.exec()).thenReturn(mockAuthResponse);
 
-        DefaultDockerClient dockerClient = dockerClientCreator.createDockerClient(username, password);
+        try (MockedStatic<DockerClientImpl> mockedStatic = mockStatic(DockerClientImpl.class)) {
+            mockedStatic.when(() -> DockerClientImpl.getInstance(any(), any())).thenReturn(mockDockerClient);
 
-        assertThat(dockerClient, is(mockDockerClient));
+            DockerClient dockerClient = dockerClientCreator.createDockerClient(username, password);
+
+            assertThat(dockerClient, is(mockDockerClient));
+            verify(mockAuthCmd).exec();
+        }
     }
 
     @Property
@@ -51,26 +62,17 @@ class AuthedDockerClientCreatorTest {
             "and a docker client that unsuccessfully auths, " +
             "when a docker client is created, " +
             "should throw an exception.")
-    void unsuccessfulAuth(
-            @ForAll String username,
-            @ForAll String password,
-            @ForAll("nonHttpOKStatusCodes") int httpStatus) throws DockerException, InterruptedException {
-        Assume.that(httpStatus != 200);
+    void unsuccessfulAuth(@ForAll String username, @ForAll String password) {
+        DockerClient mockDockerClient = mock(DockerClient.class);
+        AuthCmd mockAuthCmd = mock(AuthCmd.class);
+        when(mockDockerClient.authCmd()).thenReturn(mockAuthCmd);
+        when(mockAuthCmd.withAuthConfig(any())).thenReturn(mockAuthCmd);
+        when(mockAuthCmd.exec()).thenThrow(new RuntimeException("Auth failed"));
 
-        RegistryAuth mockRegistryAuth = mock(RegistryAuth.class);
-        DefaultDockerClient mockDockerClient = mock(DefaultDockerClient.class);
-        when(mockDockerClient.auth(mockRegistryAuth)).thenReturn(httpStatus);
-        when(mockRegAuthBuilder.username(username).password(password).build()).thenReturn(mockRegistryAuth);
-        when(mockDockerClientBuilder.registryAuthSupplier(
-                any(FixedRegistryAuthSupplier.class))
-                .build())
-                .thenReturn(mockDockerClient);
+        try (MockedStatic<DockerClientImpl> mockedStatic = mockStatic(DockerClientImpl.class)) {
+            mockedStatic.when(() -> DockerClientImpl.getInstance(any(), any())).thenReturn(mockDockerClient);
 
-        assertThrows(RuntimeException.class, () -> dockerClientCreator.createDockerClient(username, password));
-    }
-
-    @Provide
-    Arbitrary<Integer> nonHttpOKStatusCodes() {
-        return Arbitraries.integers().between(100, 507).filter(i -> i != HttpStatus.SC_OK);
+            assertThrows(RuntimeException.class, () -> dockerClientCreator.createDockerClient(username, password));
+        }
     }
 }
