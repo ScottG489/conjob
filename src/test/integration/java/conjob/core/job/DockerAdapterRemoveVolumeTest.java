@@ -1,10 +1,6 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.Volume;
+import com.github.dockerjava.api.DockerClient;
 import conjob.core.job.exception.RemoveVolumeException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,9 +17,9 @@ public class DockerAdapterRemoveVolumeTest {
 
 
     @BeforeAll
-    static void beforeAll() throws DockerCertificateException, DockerException, InterruptedException {
-        dockerClient = DefaultDockerClient.fromEnv().build();
-        dockerClient.createVolume(Volume.builder().name(EXISTING_VOLUME_NAME).build());
+    static void beforeAll() {
+        dockerClient = DockerClientFactory.createDefaultClient();
+        dockerClient.createVolumeCmd().withName(EXISTING_VOLUME_NAME).exec();
     }
 
     @BeforeEach

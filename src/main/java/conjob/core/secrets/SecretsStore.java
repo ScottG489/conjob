@@ -1,6 +1,5 @@
 package conjob.core.secrets;
 
-import com.spotify.docker.client.exceptions.DockerException;
 import conjob.core.job.DockerAdapter;
 
 import java.util.Optional;
@@ -17,7 +16,7 @@ public class SecretsStore {
             return dockerAdapter.listAllVolumeNames().stream()
                     .filter(volName -> volName.equals(secretsVolumeName))
                     .findFirst();
-        } catch (DockerException | InterruptedException e) {
+        } catch (Exception e) {
             throw new SecretsStoreException(e);
         }
     }

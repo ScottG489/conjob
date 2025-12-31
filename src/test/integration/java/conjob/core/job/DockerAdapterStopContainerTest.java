@@ -1,9 +1,6 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.ContainerConfig;
+import com.github.dockerjava.api.DockerClient;
 import conjob.core.job.DockerAdapter;
 import conjob.core.job.exception.StopJobRunException;
 import net.jqwik.api.*;
@@ -19,19 +16,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DockerAdapterStopContainerTest {
     private static final String TEST_SUPPORT_CONTAINER = "scottg489/test-support-job:latest";
-    private static DefaultDockerClient dockerClient;
+    private static DockerClient dockerClient;
     private DockerAdapter dockerAdapter;
     private String containerId;
 
     @BeforeContainer
-    static void beforeAll() throws DockerCertificateException, DockerException, InterruptedException {
-        dockerClient = DefaultDockerClient.fromEnv().build();
-        dockerClient.pull(TEST_SUPPORT_CONTAINER);
+    static void beforeAll() throws InterruptedException {
+        dockerClient = DockerClientFactory.createDefaultClient();
+        dockerClient.pullImageCmd(TEST_SUPPORT_CONTAINER).start().awaitCompletion();
     }
 
     @AfterContainer
-    static void afterAll() throws DockerException, InterruptedException {
-        dockerClient.removeImage(TEST_SUPPORT_CONTAINER, true, false);
+    static void afterAll()   {
+        dockerClient.removeImageCmd(TEST_SUPPORT_CONTAINER).withForce(true).exec();
     }
 
     @BeforeTry
@@ -40,8 +37,8 @@ public class DockerAdapterStopContainerTest {
     }
 
     @AfterTry
-    void afterEach() throws DockerException, InterruptedException {
-        if (containerId != null && !containerId.isBlank()) dockerClient.removeContainer(containerId);
+    void afterEach()   {
+        if (containerId != null && !containerId.isBlank()) dockerClient.removeContainerCmd(containerId).exec();
     }
 
     @Property(tries = 10)
@@ -51,13 +48,11 @@ public class DockerAdapterStopContainerTest {
             "should return the exit code it finished with.")
     void stopFinishedContainer(
             @ForAll @LongRange(max = 255) long givenExitCode
-    ) throws StopJobRunException, DockerException, InterruptedException {
+    ) throws StopJobRunException {
         int killTimeout = 999;
-        containerId = dockerClient.createContainer(ContainerConfig.builder()
-                .image(TEST_SUPPORT_CONTAINER).cmd("0|||" + givenExitCode).build())
-                .id();
-        dockerClient.startContainer(containerId);
-        dockerClient.waitContainer(containerId);
+        containerId = dockerClient.createContainerCmd(TEST_SUPPORT_CONTAINER).withCmd("0|||" + givenExitCode).exec().getId();
+        dockerClient.startContainerCmd(containerId).exec();
+        dockerClient.waitContainerCmd(containerId).exec(new com.github.dockerjava.api.command.WaitContainerResultCallback()).awaitStatusCode();
 
         Long exitStatusCode = dockerAdapter.stopContainer(containerId, killTimeout);
 
@@ -71,13 +66,11 @@ public class DockerAdapterStopContainerTest {
             "should return the exit code it finished with.")
     void killFinishedContainer(
             @ForAll @LongRange(max = 255) long givenExitCode
-    ) throws StopJobRunException, DockerException, InterruptedException {
+    ) throws StopJobRunException {
         int killTimeout = 0;
-        containerId = dockerClient.createContainer(ContainerConfig.builder()
-                .image(TEST_SUPPORT_CONTAINER).cmd("0|||" + givenExitCode).build())
-                .id();
-        dockerClient.startContainer(containerId);
-        dockerClient.waitContainer(containerId);
+        containerId = dockerClient.createContainerCmd(TEST_SUPPORT_CONTAINER).withCmd("0|||" + givenExitCode).exec().getId();
+        dockerClient.startContainerCmd(containerId).exec();
+        int foo = dockerClient.waitContainerCmd(containerId).exec(new com.github.dockerjava.api.command.WaitContainerResultCallback()).awaitStatusCode();
 
         Long exitStatusCode = dockerAdapter.stopContainer(containerId, killTimeout);
 
@@ -91,13 +84,11 @@ public class DockerAdapterStopContainerTest {
             "should return the exit code it finished with.")
     void stoppedButFinishedBeforeKill(
             @ForAll @LongRange(max = 255) long givenExitCode
-    ) throws StopJobRunException, DockerException, InterruptedException {
+    ) throws StopJobRunException {
         double containerRunDuration = .5;
         int killTimeout = (int) (containerRunDuration + 1);
-        containerId = dockerClient.createContainer(ContainerConfig.builder()
-                .image(TEST_SUPPORT_CONTAINER).cmd(containerRunDuration + "|||" + givenExitCode).build())
-                .id();
-        dockerClient.startContainer(containerId);
+        containerId = dockerClient.createContainerCmd(TEST_SUPPORT_CONTAINER).withCmd(containerRunDuration + "|||" + givenExitCode).exec().getId();
+        dockerClient.startContainerCmd(containerId).exec();
 
         Long exitStatusCode = dockerAdapter.stopContainer(containerId, killTimeout);
 
@@ -111,13 +102,11 @@ public class DockerAdapterStopContainerTest {
             "should return the SIGTERM exit code.")
     void startedButKilledBeforeFinish(
             @ForAll @LongRange(max = 255) long givenExitCode
-    ) throws StopJobRunException, DockerException, InterruptedException {
+    ) throws StopJobRunException {
         int killTimeout = 0;
         double containerRunDuration = killTimeout + 1;
-        containerId = dockerClient.createContainer(ContainerConfig.builder()
-                .image(TEST_SUPPORT_CONTAINER).cmd(containerRunDuration + "|||" + givenExitCode).build())
-                .id();
-        dockerClient.startContainer(containerId);
+        containerId = dockerClient.createContainerCmd(TEST_SUPPORT_CONTAINER).withCmd(containerRunDuration + "|||" + givenExitCode).exec().getId();
+        dockerClient.startContainerCmd(containerId).exec();
 
         Long exitStatusCode = dockerAdapter.stopContainer(containerId, killTimeout);
 

@@ -1,7 +1,7 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerException;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.RemoveVolumeCmd;
 import conjob.core.job.exception.RemoveVolumeException;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Label;
@@ -23,33 +23,32 @@ public class DockerAdapterRemoveVolumeTest {
         dockerAdapter = new DockerAdapter(mockClient);
     }
 
+    private RemoveVolumeCmd setupRemoveVolumeMock(String volumeName) {
+        RemoveVolumeCmd mockCmd = mock(RemoveVolumeCmd.class);
+        when(mockClient.removeVolumeCmd(volumeName)).thenReturn(mockCmd);
+        return mockCmd;
+    }
+
     @Property
     @Label("Given a volume name, " +
             "when removing that volume, " +
             "should finish successfully.")
-    void removeVolumeSuccessfully(@ForAll String volumeName) throws DockerException, InterruptedException {
+    void removeVolumeSuccessfully(@ForAll String volumeName)  {
+        RemoveVolumeCmd mockCmd = setupRemoveVolumeMock(volumeName);
+
         dockerAdapter.removeVolume(volumeName);
-        verify(mockClient).removeVolume(volumeName);
+
+        verify(mockCmd).exec();
     }
 
     @Property
     @Label("Given a volume name, " +
             "when removing that volume, " +
-            "and a DockerException is thrown, " +
+            "and an Exception is thrown, " +
             "should throw a RemoveVolumeException.")
-    void removeVolumeDockerException(@ForAll String volumeName) throws DockerException, InterruptedException {
-        doThrow(new DockerException("")).when(mockClient).removeVolume(volumeName);
-
-        assertThrows(RemoveVolumeException.class, () -> dockerAdapter.removeVolume(volumeName));
-    }
-
-    @Property
-    @Label("Given a volume name, " +
-            "when removing that volume, " +
-            "and an InterruptedException is thrown, " +
-            "should throw a RemoveVolumeException.")
-    void removeVolumeInterruptedException(@ForAll String volumeName) throws DockerException, InterruptedException {
-        doThrow(new InterruptedException("")).when(mockClient).removeVolume(volumeName);
+    void removeVolumeException(@ForAll String volumeName)  {
+        RemoveVolumeCmd mockCmd = setupRemoveVolumeMock(volumeName);
+        doThrow(new RuntimeException("")).when(mockCmd).exec();
 
         assertThrows(RemoveVolumeException.class, () -> dockerAdapter.removeVolume(volumeName));
     }
@@ -59,8 +58,9 @@ public class DockerAdapterRemoveVolumeTest {
             "when removing that volume, " +
             "and an unexpected Exception is thrown, " +
             "should throw that exception.")
-    void removeVolumeUnexpectedException(@ForAll String volumeName) throws DockerException, InterruptedException {
-        doThrow(new RuntimeException("")).when(mockClient).removeVolume(volumeName);
+    void removeVolumeUnexpectedException(@ForAll String volumeName)  {
+        RemoveVolumeCmd mockCmd = setupRemoveVolumeMock(volumeName);
+        doThrow(new RuntimeException("")).when(mockCmd).exec();
 
         assertThrows(RuntimeException.class, () -> dockerAdapter.removeVolume(volumeName));
     }

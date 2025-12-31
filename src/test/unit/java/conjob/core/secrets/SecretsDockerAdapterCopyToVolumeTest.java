@@ -1,12 +1,11 @@
 package conjob.core.secrets;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerException;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.CopyArchiveToContainerCmd;
 import conjob.core.secrets.exception.CopySecretsToContainerException;
 import net.jqwik.api.*;
 import net.jqwik.api.lifecycle.BeforeTry;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -19,8 +18,16 @@ class SecretsDockerAdapterCopyToVolumeTest {
 
     @BeforeTry
     void setUp() {
-        mockClient = mock(DockerClient.class, RETURNS_DEEP_STUBS);
+        mockClient = mock(DockerClient.class);
         secretsAdapter = new SecretsDockerAdapter(mockClient);
+    }
+
+    private CopyArchiveToContainerCmd setupCopyToVolumeMock(Path secretsFile, String containerId, String destinationPath) {
+        CopyArchiveToContainerCmd mockCmd = mock(CopyArchiveToContainerCmd.class);
+        when(mockClient.copyArchiveToContainerCmd(containerId)).thenReturn(mockCmd);
+        when(mockCmd.withHostResource(secretsFile.toString())).thenReturn(mockCmd);
+        when(mockCmd.withRemotePath(destinationPath)).thenReturn(mockCmd);
+        return mockCmd;
     }
 
     @Property
@@ -32,11 +39,12 @@ class SecretsDockerAdapterCopyToVolumeTest {
     void copySecretsToVolume(
             @ForAll("secretsFile") Path givenSecretsFile,
             @ForAll String givenContainerId,
-            @ForAll String destinationPath) throws DockerException, IOException, InterruptedException {
+            @ForAll String destinationPath) {
+        CopyArchiveToContainerCmd mockCmd = setupCopyToVolumeMock(givenSecretsFile, givenContainerId, destinationPath);
+
         secretsAdapter.copySecretsToVolume(givenSecretsFile, givenContainerId, destinationPath);
 
-        verify(mockClient, times(1))
-                .copyToContainer(givenSecretsFile, givenContainerId, destinationPath);
+        verify(mockCmd).exec();
     }
 
     @Property
@@ -44,50 +52,14 @@ class SecretsDockerAdapterCopyToVolumeTest {
             "and a container id, " +
             "and destination path, " +
             "when copying the secrets file, " +
-            "and a DockerException is thrown, " +
-            "should throw a UpdateSecretsImageException.")
+            "and an Exception is thrown, " +
+            "should throw a CopySecretsToContainerException.")
     void catchDockerException(
             @ForAll("secretsFile") Path secretsFile,
             @ForAll String containerId,
-            @ForAll String destinationPath) throws DockerException, InterruptedException, IOException {
-        doThrow(DockerException.class)
-                .when(mockClient).copyToContainer(secretsFile, containerId, destinationPath);
-
-        assertThrows(CopySecretsToContainerException.class, () ->
-                secretsAdapter.copySecretsToVolume(secretsFile, containerId, destinationPath));
-    }
-
-    @Property
-    @Label("Given a secrets file, " +
-            "and a container id, " +
-            "and destination path, " +
-            "when copying the secrets file, " +
-            "and a InterruptedException is thrown, " +
-            "should throw a UpdateSecretsImageException.")
-    void catchInterruptedException(
-            @ForAll("secretsFile") Path secretsFile,
-            @ForAll String containerId,
-            @ForAll String destinationPath) throws DockerException, InterruptedException, IOException {
-        doThrow(InterruptedException.class)
-                .when(mockClient).copyToContainer(secretsFile, containerId, destinationPath);
-
-        assertThrows(CopySecretsToContainerException.class, () ->
-                secretsAdapter.copySecretsToVolume(secretsFile, containerId, destinationPath));
-    }
-
-    @Property
-    @Label("Given a secrets file, " +
-            "and a container id, " +
-            "and destination path, " +
-            "when copying the secrets file, " +
-            "and a IOException is thrown, " +
-            "should throw a UpdateSecretsImageException.")
-    void catchIOException(
-            @ForAll("secretsFile") Path secretsFile,
-            @ForAll String containerId,
-            @ForAll String destinationPath) throws DockerException, InterruptedException, IOException {
-        doThrow(InterruptedException.class)
-                .when(mockClient).copyToContainer(secretsFile, containerId, destinationPath);
+            @ForAll String destinationPath) {
+        CopyArchiveToContainerCmd mockCmd = setupCopyToVolumeMock(secretsFile, containerId, destinationPath);
+        doThrow(new RuntimeException("")).when(mockCmd).exec();
 
         assertThrows(CopySecretsToContainerException.class, () ->
                 secretsAdapter.copySecretsToVolume(secretsFile, containerId, destinationPath));
@@ -103,9 +75,9 @@ class SecretsDockerAdapterCopyToVolumeTest {
     void catchUnexpectedException(
             @ForAll("secretsFile") Path secretsFile,
             @ForAll String containerId,
-            @ForAll String destinationPath) throws DockerException, InterruptedException, IOException {
-        doThrow(InterruptedException.class)
-                .when(mockClient).copyToContainer(secretsFile, containerId, destinationPath);
+            @ForAll String destinationPath) {
+        CopyArchiveToContainerCmd mockCmd = setupCopyToVolumeMock(secretsFile, containerId, destinationPath);
+        doThrow(new RuntimeException("")).when(mockCmd).exec();
 
         assertThrows(CopySecretsToContainerException.class, () ->
                 secretsAdapter.copySecretsToVolume(secretsFile, containerId, destinationPath));

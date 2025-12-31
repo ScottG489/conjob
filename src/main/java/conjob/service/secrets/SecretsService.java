@@ -49,8 +49,7 @@ public class SecretsService {
                         intermediaryContainerName);
         String containerId = secretsContainerCreator.createIntermediaryContainer(secretsConfig);
 
-        Path tempSecretsDir = tempSecretsFileUtil.createSecretsFile(secrets)
-                .getParentFile().toPath();
+        Path tempSecretsDir = tempSecretsFileUtil.createSecretsFile(secrets).toPath();
 
         // TODO: It's not ideal to write the secret file to disk, if only momentarily. Refactor this to
         // TODO:   use the overloaded copyToContainer() which takes a tar stream instead.
