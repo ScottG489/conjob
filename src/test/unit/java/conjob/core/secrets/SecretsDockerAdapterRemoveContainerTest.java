@@ -1,10 +1,9 @@
 package conjob.core.secrets;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerException;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.RemoveContainerCmd;
 import conjob.core.job.exception.JobUpdateException;
 import conjob.core.secrets.exception.RemoveSecretsContainerException;
-import conjob.core.secrets.exception.UpdateSecretsImageException;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Label;
 import net.jqwik.api.Property;
@@ -25,45 +24,45 @@ public class SecretsDockerAdapterRemoveContainerTest {
         secretsAdapter = new SecretsDockerAdapter(mockClient);
     }
 
+    private RemoveContainerCmd setupRemoveContainerMock(String containerId) {
+        RemoveContainerCmd mockCmd = mock(RemoveContainerCmd.class);
+        when(mockClient.removeContainerCmd(containerId)).thenReturn(mockCmd);
+        return mockCmd;
+    }
+
     @Property
-    @Label("Given an image name, " +
-            "when pulling that image, " +
+    @Label("Given a container id, " +
+            "when removing that container, " +
             "should finish successfully.")
-    void pullImageSuccessfully(@ForAll String containerId) throws JobUpdateException, DockerException, InterruptedException {
+    void removeContainerSuccessfully(@ForAll String containerId) throws JobUpdateException {
+        RemoveContainerCmd mockCmd = setupRemoveContainerMock(containerId);
+
         secretsAdapter.removeContainer(containerId);
-        verify(mockClient).removeContainer(containerId);
+
+        verify(mockCmd).exec();
     }
 
     @Property
-    @Label("Given an image name, " +
-            "when pulling that image, " +
-            "and a DockerException is thrown, " +
+    @Label("Given a container id, " +
+            "when removing that container, " +
+            "and an Exception is thrown, " +
             "should throw a RemoveSecretsContainerException.")
-    void pullImageDockerException(@ForAll String imageName) throws DockerException, InterruptedException {
-        doThrow(DockerException.class).when(mockClient).removeContainer(imageName);
+    void removeContainerException(@ForAll String containerId)  {
+        RemoveContainerCmd mockCmd = setupRemoveContainerMock(containerId);
+        doThrow(new RuntimeException("")).when(mockCmd).exec();
 
-        assertThrows(RemoveSecretsContainerException.class, () -> secretsAdapter.removeContainer(imageName));
+        assertThrows(RemoveSecretsContainerException.class, () -> secretsAdapter.removeContainer(containerId));
     }
 
     @Property
-    @Label("Given an image name, " +
-            "when pulling that image, " +
-            "and an InterruptedException is thrown, " +
-            "should throw a RemoveSecretsContainerException.")
-    void pullImageInterruptedException(@ForAll String imageName) throws DockerException, InterruptedException {
-        doThrow(InterruptedException.class).when(mockClient).removeContainer(imageName);
-
-        assertThrows(RemoveSecretsContainerException.class, () -> secretsAdapter.removeContainer(imageName));
-    }
-
-    @Property
-    @Label("Given an image name, " +
-            "when pulling that image, " +
+    @Label("Given a container id, " +
+            "when removing that container, " +
             "and an unexpected Exception is thrown, " +
             "should throw that exception.")
-    void pullImageUnexpectedException(@ForAll String imageName) throws DockerException, InterruptedException {
-        doThrow(RuntimeException.class).when(mockClient).removeContainer(imageName);
+    void removeContainerUnexpectedException(@ForAll String containerId)  {
+        RemoveContainerCmd mockCmd = setupRemoveContainerMock(containerId);
+        doThrow(new RuntimeException("")).when(mockCmd).exec();
 
-        assertThrows(RuntimeException.class, () -> secretsAdapter.removeContainer(imageName));
+        assertThrows(RuntimeException.class, () -> secretsAdapter.removeContainer(containerId));
     }
 }

@@ -1,10 +1,11 @@
 package conjob;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.RegistryAuth;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.model.AuthConfig;
+import com.github.dockerjava.core.DefaultDockerClientConfig;
+import com.github.dockerjava.core.DockerClientConfig;
+import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
+import com.github.dockerjava.transport.DockerHttpClient;
 import conjob.config.JobConfig;
 import conjob.core.job.*;
 import conjob.core.job.config.ConfigUtil;
@@ -59,7 +60,7 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
     }
 
     @Override
-    public void run(ConJobConfiguration configuration, Environment environment) throws DockerCertificateException, DockerException, InterruptedException {
+    public void run(ConJobConfiguration configuration, Environment environment) {
         this.environment = environment;
         // TODO: We probably want to make this something higher than 0, though not too high
         environment.jersey().property(ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, 0);
@@ -92,12 +93,15 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
                 .configureBasicAuth(configuration.getConjob().getAuth(), environment.jersey());
     }
 
-    private DockerClient createDockerClient(ConJobConfiguration configuration) throws DockerCertificateException, DockerException, InterruptedException {
-        DefaultDockerClient.Builder dockerBuilder = DefaultDockerClient.fromEnv();
-        RegistryAuth.Builder authBuilder = RegistryAuth.builder();
+    private DockerClient createDockerClient(ConJobConfiguration configuration) {
+        DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
+        DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
+                .dockerHost(dockerClientConfig.getDockerHost())
+                .build();
+        AuthConfig authConfig = new AuthConfig();
         return new DockerClientCreator(
-                dockerBuilder,
-                new AuthedDockerClientCreator(dockerBuilder, authBuilder))
+                config,
+                new AuthedDockerClientCreator(config, authConfig))
                 .createDockerClient(
                         configuration.getConjob().getDocker().getUsername(),
                         configuration.getConjob().getDocker().getPassword());
@@ -126,7 +130,7 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
                 new RunJobRateLimit(limitConfig));
     }
 
-    private SecretsResource createSecretsResource(DockerClient docker) throws DockerException, InterruptedException {
+    private SecretsResource createSecretsResource(DockerClient docker) {
         SecretsDockerAdapter secretsAdapter = new SecretsDockerAdapter(docker);
         return new SecretsResource(
                 new SecretsService(

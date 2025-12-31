@@ -63,7 +63,7 @@ class SecretsServiceTest {
         when(mockNameGenerator.generate(CONTAINER_NAME_PREFIX)).thenReturn(givenContainerName);
         when(mockSecretsContainerCreator.createIntermediaryContainer(secretsConfig))
                 .thenReturn(givenContainerId);
-        when(mockSecretsFileUtil.createSecretsFile(secrets).getParentFile().toPath())
+        when(mockSecretsFileUtil.createSecretsFile(secrets).toPath())
                 .thenReturn(givenSecretsDir);
 
         secretsService.createsSecret(imageName, secrets);

@@ -1,8 +1,7 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.ContainerCreation;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.CreateContainerResponse;
 import conjob.core.job.exception.CreateJobRunException;
 import conjob.core.job.model.JobRunConfig;
 import net.jqwik.api.ForAll;
@@ -15,8 +14,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class DockerAdapterCreateContainerTest {
     private DockerAdapter dockerAdapter;
@@ -24,7 +22,7 @@ public class DockerAdapterCreateContainerTest {
 
     @BeforeTry
     void setUp() {
-        mockClient = mock(DockerClient.class);
+        mockClient = mock(DockerClient.class, RETURNS_DEEP_STUBS);
         dockerAdapter = new DockerAdapter(mockClient);
     }
 
@@ -38,11 +36,11 @@ public class DockerAdapterCreateContainerTest {
             @ForAll @WithNull String dockerCacheVolumeName,
             @ForAll @WithNull String secretsVolumeName,
             @ForAll String givenJobRunId
-    ) throws CreateJobRunException, DockerException, InterruptedException {
-        ContainerCreation mockContainerCreation = mock(ContainerCreation.class);
+    ) throws CreateJobRunException {
+        CreateContainerResponse mockResponse = mock(CreateContainerResponse.class);
 
-        when(mockClient.createContainer(any())).thenReturn(mockContainerCreation);
-        when(mockContainerCreation.id()).thenReturn(givenJobRunId);
+        when(mockClient.createContainerCmd(jobName).withHostConfig(any()).exec()).thenReturn(mockResponse);
+        when(mockResponse.getId()).thenReturn(givenJobRunId);
 
         JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName);
         String jobRunId = dockerAdapter.createJobRun(jobRunConfig);
@@ -52,32 +50,15 @@ public class DockerAdapterCreateContainerTest {
 
     @Property
     @Label("Given a job config, " +
-            "when a DockerException is thrown, " +
-            "should throw a CreateJobException.")
-    void createJobRunDockerException(
+            "when an Exception is thrown, " +
+            "should throw a CreateJobRunException.")
+    void createJobRunException(
             @ForAll String jobName,
             @ForAll @WithNull String input,
             @ForAll @WithNull String dockerCacheVolumeName,
             @ForAll @WithNull String secretsVolumeName
-    ) throws DockerException, InterruptedException {
-        when(mockClient.createContainer(any())).thenThrow(new DockerException(""));
-
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName);
-
-        assertThrows(CreateJobRunException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
-    }
-
-    @Property
-    @Label("Given a job config, " +
-            "when an InterruptedException is thrown, " +
-            "should throw a CreateJobException.")
-    void createJobRunInterruptedException(
-            @ForAll String jobName,
-            @ForAll @WithNull String input,
-            @ForAll @WithNull String dockerCacheVolumeName,
-            @ForAll @WithNull String secretsVolumeName
-    ) throws DockerException, InterruptedException {
-        when(mockClient.createContainer(any())).thenThrow(new InterruptedException());
+    )  {
+        when(mockClient.createContainerCmd(jobName).withHostConfig(any()).exec()).thenThrow(new RuntimeException(""));
 
         JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName);
 
@@ -93,8 +74,8 @@ public class DockerAdapterCreateContainerTest {
             @ForAll @WithNull String input,
             @ForAll @WithNull String dockerCacheVolumeName,
             @ForAll @WithNull String secretsVolumeName
-    ) throws DockerException, InterruptedException {
-        when(mockClient.createContainer(any())).thenThrow(new RuntimeException());
+    )  {
+        when(mockClient.createContainerCmd(jobName).withHostConfig(any()).exec()).thenThrow(new RuntimeException());
 
         JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName);
 

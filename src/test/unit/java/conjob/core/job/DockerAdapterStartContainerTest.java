@@ -1,8 +1,9 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.ContainerExit;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.StartContainerCmd;
+import com.github.dockerjava.api.command.WaitContainerCmd;
+import com.github.dockerjava.api.command.WaitContainerResultCallback;
 import conjob.core.job.exception.RunJobException;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Label;
@@ -18,12 +19,24 @@ import static org.mockito.Mockito.*;
 public class DockerAdapterStartContainerTest {
     private DockerAdapter dockerAdapter;
     private DockerClient mockClient;
+    private StartContainerCmd mockStartCmd;
+    private WaitContainerCmd mockWaitCmd;
+    private WaitContainerResultCallback mockCallback;
 
     @BeforeEach
     @BeforeTry
     void setUp() {
         mockClient = mock(DockerClient.class);
+        mockStartCmd = mock(StartContainerCmd.class);
+        mockWaitCmd = mock(WaitContainerCmd.class);
+        mockCallback = mock(WaitContainerResultCallback.class);
         dockerAdapter = new DockerAdapter(mockClient);
+    }
+
+    private void setupStartContainerMock(String containerId) {
+        when(mockClient.startContainerCmd(containerId)).thenReturn(mockStartCmd);
+        when(mockClient.waitContainerCmd(containerId)).thenReturn(mockWaitCmd);
+        when(mockWaitCmd.exec(any(WaitContainerResultCallback.class))).thenReturn(mockCallback);
     }
 
     @Property
@@ -32,37 +45,26 @@ public class DockerAdapterStartContainerTest {
             "should return an exit status code.")
     void startContainerSuccessfully(
             @ForAll String givenContainerId,
-            @ForAll long expectedCode
-    ) throws DockerException, InterruptedException, RunJobException {
-        ContainerExit mockContainerExit = mock(ContainerExit.class);
-        when(mockClient.waitContainer(givenContainerId)).thenReturn(mockContainerExit);
-        when(mockContainerExit.statusCode()).thenReturn(expectedCode);
+            @ForAll int expectedCode
+    ) throws RunJobException {
+        setupStartContainerMock(givenContainerId);
+        when(mockCallback.awaitStatusCode()).thenReturn(expectedCode);
 
         Long exitStatusCode = dockerAdapter.startContainerThenWaitForExit(givenContainerId);
 
-        assertThat(exitStatusCode, is(expectedCode));
-        verify(mockClient).startContainer(givenContainerId);
-        verify(mockClient).waitContainer(givenContainerId);
+        assertThat(exitStatusCode, is((long) expectedCode));
+        verify(mockStartCmd).exec();
+        verify(mockCallback).awaitStatusCode();
     }
 
     @Property
     @Label("Given a container id, " +
             "when starting that container, " +
-            "and a DockerException is thrown, " +
+            "and an Exception is thrown, " +
             "should throw a RunJobException.")
-    void startContainerDockerException(@ForAll String givenContainerId) throws DockerException, InterruptedException {
-        doThrow(new DockerException("")).when(mockClient).waitContainer(givenContainerId);
-
-        assertThrows(RunJobException.class, () -> dockerAdapter.startContainerThenWaitForExit(givenContainerId));
-    }
-
-    @Property
-    @Label("Given a container id, " +
-            "when starting that container, " +
-            "and a InterruptedException is thrown, " +
-            "should throw a RunJobException.")
-    void startContainerInterruptedExceptionException(@ForAll String givenContainerId) throws DockerException, InterruptedException {
-        doThrow(new InterruptedException()).when(mockClient).waitContainer(givenContainerId);
+    void startContainerDockerException(@ForAll String givenContainerId)  {
+        setupStartContainerMock(givenContainerId);
+        when(mockCallback.awaitStatusCode()).thenThrow(new RuntimeException(""));
 
         assertThrows(RunJobException.class, () -> dockerAdapter.startContainerThenWaitForExit(givenContainerId));
     }
@@ -72,8 +74,9 @@ public class DockerAdapterStartContainerTest {
             "when starting that container, " +
             "and a unexpected Exception is thrown, " +
             "should throw that exception.")
-    void startContainerUnexpectedExceptionException(@ForAll String givenContainerId) throws DockerException, InterruptedException {
-        doThrow(new RuntimeException()).when(mockClient).waitContainer(givenContainerId);
+    void startContainerUnexpectedExceptionException(@ForAll String givenContainerId)  {
+        setupStartContainerMock(givenContainerId);
+        when(mockCallback.awaitStatusCode()).thenThrow(new RuntimeException());
 
         assertThrows(RuntimeException.class, () -> dockerAdapter.startContainerThenWaitForExit(givenContainerId));
     }

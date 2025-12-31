@@ -1,7 +1,7 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerException;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.RemoveContainerCmd;
 import conjob.core.job.exception.RemoveContainerException;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Label;
@@ -23,42 +23,34 @@ public class DockerAdapterRemoveContainerTest {
         dockerAdapter = new DockerAdapter(mockClient);
     }
 
+    private RemoveContainerCmd setupRemoveContainerMock(String containerName) {
+        RemoveContainerCmd mockCmd = mock(RemoveContainerCmd.class);
+        when(mockClient.removeContainerCmd(containerName)).thenReturn(mockCmd);
+        when(mockCmd.withForce(true)).thenReturn(mockCmd);
+        when(mockCmd.withRemoveVolumes(true)).thenReturn(mockCmd);
+        return mockCmd;
+    }
+
     @Property
     @Label("Given a container name, " +
             "when removing that container, " +
             "should finish successfully.")
-    void removeContainerSuccessfully(@ForAll String containerName) throws DockerException, InterruptedException {
+    void removeContainerSuccessfully(@ForAll String containerName)  {
+        RemoveContainerCmd mockCmd = setupRemoveContainerMock(containerName);
+
         dockerAdapter.removeContainer(containerName);
-        verify(mockClient).removeContainer(
-                containerName,
-                DockerClient.RemoveContainerParam.forceKill(),
-                DockerClient.RemoveContainerParam.removeVolumes());
+
+        verify(mockCmd).exec();
     }
 
     @Property
     @Label("Given a container name, " +
             "when removing that container, " +
-            "and a DockerException is thrown, " +
+            "and an Exception is thrown, " +
             "should throw a RemoveContainerException.")
-    void removeContainerDockerException(@ForAll String containerName) throws DockerException, InterruptedException {
-        doThrow(new DockerException("")).when(mockClient).removeContainer(
-                containerName,
-                DockerClient.RemoveContainerParam.forceKill(),
-                DockerClient.RemoveContainerParam.removeVolumes());
-
-        assertThrows(RemoveContainerException.class, () -> dockerAdapter.removeContainer(containerName));
-    }
-
-    @Property
-    @Label("Given a container name, " +
-            "when removing that container, " +
-            "and an InterruptedException is thrown, " +
-            "should throw a RemoveContainerException.")
-    void removeContainerInterruptedException(@ForAll String containerName) throws DockerException, InterruptedException {
-        doThrow(new InterruptedException("")).when(mockClient).removeContainer(
-                containerName,
-                DockerClient.RemoveContainerParam.forceKill(),
-                DockerClient.RemoveContainerParam.removeVolumes());
+    void removeContainerException(@ForAll String containerName)  {
+        RemoveContainerCmd mockCmd = setupRemoveContainerMock(containerName);
+        doThrow(new RuntimeException("")).when(mockCmd).exec();
 
         assertThrows(RemoveContainerException.class, () -> dockerAdapter.removeContainer(containerName));
     }
@@ -68,11 +60,9 @@ public class DockerAdapterRemoveContainerTest {
             "when removing that container, " +
             "and an unexpected Exception is thrown, " +
             "should throw that exception.")
-    void removeContainerUnexpectedException(@ForAll String containerName) throws DockerException, InterruptedException {
-        doThrow(new RuntimeException("")).when(mockClient).removeContainer(
-                containerName,
-                DockerClient.RemoveContainerParam.forceKill(),
-                DockerClient.RemoveContainerParam.removeVolumes());
+    void removeContainerUnexpectedException(@ForAll String containerName)  {
+        RemoveContainerCmd mockCmd = setupRemoveContainerMock(containerName);
+        doThrow(new RuntimeException("")).when(mockCmd).exec();
 
         assertThrows(RuntimeException.class, () -> dockerAdapter.removeContainer(containerName));
     }
