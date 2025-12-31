@@ -1,55 +1,72 @@
 package conjob.init;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
-import com.spotify.docker.client.exceptions.DockerException;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.core.DockerClientConfig;
 import net.jqwik.api.*;
 import net.jqwik.api.lifecycle.BeforeTry;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.Mockito.*;
 
 class DockerClientCreatorTest {
     private DockerClientCreator dockerClientCreator;
-    private DefaultDockerClient.Builder mockDockerClientBuilder;
+    private DockerClientConfig mockDockerClientConfig;
     private AuthedDockerClientCreator mockAuthedDockerCreator;
 
     @BeforeTry
     public void beforeEach() {
-        mockDockerClientBuilder = mock(DefaultDockerClient.Builder.class);
+        mockDockerClientConfig = mock(DockerClientConfig.class);
         mockAuthedDockerCreator = mock(AuthedDockerClientCreator.class);
-        dockerClientCreator = new DockerClientCreator(mockDockerClientBuilder, mockAuthedDockerCreator);
+        when(mockDockerClientConfig.getDockerHost()).thenReturn(java.net.URI.create("unix:///var/run/docker.sock"));
+        dockerClientCreator = new DockerClientCreator(mockDockerClientConfig, mockAuthedDockerCreator);
     }
 
     @Property
     @Label("Given a null username or password, " +
-            "and a docker client builder that returns a docker client, " +
             "when creating a docker client, " +
-            "should should return the docker client that the builder returns.")
-    void userOrPassNull(@ForAll("userOrPassNull") Tuple.Tuple2<String, String> userAndPass) throws DockerException, DockerCertificateException, InterruptedException {
-        DefaultDockerClient mockDockerClient = mock(DefaultDockerClient.class);
-        when(mockDockerClientBuilder.build()).thenReturn(mockDockerClient);
+            "should not use the authed docker client creator.")
+    void userOrPassNull(@ForAll("userOrPassNull") Tuple.Tuple2<String, String> userAndPass) {
+        dockerClientCreator.createDockerClient(userAndPass.get1(), userAndPass.get2());
 
-        DockerClient dockerClient = dockerClientCreator.createDockerClient(userAndPass.get1(), userAndPass.get2());
+        verify(mockAuthedDockerCreator, never()).createDockerClient(any(), any());
+    }
+
+    @Property
+    @Label("Given a null username or password, " +
+            "when creating a docker client, " +
+            "should use the docker client config to get the docker host.")
+    void userOrPassNullUsesConfig(@ForAll("userOrPassNull") Tuple.Tuple2<String, String> userAndPass) {
+        dockerClientCreator.createDockerClient(userAndPass.get1(), userAndPass.get2());
+
+        verify(mockDockerClientConfig).getDockerHost();
+    }
+
+    @Property
+    @Label("Given a username and password, " +
+            "when creating a docker client, " +
+            "should delegate to the authed docker client creator.")
+    void userAndPassSupplied(@ForAll String username, @ForAll String password) {
+        DockerClient mockDockerClient = mock(DockerClient.class);
+        when(mockAuthedDockerCreator.createDockerClient(username, password)).thenReturn(mockDockerClient);
+
+        DockerClient dockerClient = dockerClientCreator.createDockerClient(username, password);
 
         assertThat(dockerClient, is(mockDockerClient));
     }
 
     @Property
     @Label("Given a username and password, " +
-            "and an authed docker client builder that returns a docker client, " +
             "when creating a docker client, " +
-            "should should return the docker client that the builder returns.")
-    void userAndPassSupplied(@ForAll String username, @ForAll String password) throws DockerException, InterruptedException {
-        DefaultDockerClient mockDockerClient = mock(DefaultDockerClient.class);
+            "should not use the docker client config.")
+    void userAndPassSuppliedDoesNotUseConfig(@ForAll String username, @ForAll String password) {
+        DockerClient mockDockerClient = mock(DockerClient.class);
         when(mockAuthedDockerCreator.createDockerClient(username, password)).thenReturn(mockDockerClient);
 
-        DockerClient dockerClient = dockerClientCreator.createDockerClient(username, password);
+        dockerClientCreator.createDockerClient(username, password);
 
-        assertThat(dockerClient, is(mockDockerClient));
+        verify(mockDockerClientConfig, never()).getDockerHost();
     }
 
     @Provide

@@ -22,12 +22,8 @@ dependencies {
     implementation 'io.dropwizard:dropwizard-core:5.0.1'
     implementation 'io.dropwizard:dropwizard-auth:5.0.1'
 
-    implementation('com.spotify:docker-client:8.16.0:shaded') {
-        exclude group: 'org.glassfish.jersey.core', module: 'jersey-client'
-        exclude group: 'org.glassfish.jersey.connectors', module: 'jersey-apache-connector'
-        exclude group: 'org.glassfish.jersey.media', module: 'jersey-media-json-jackson'
-        exclude group: 'javax.ws.rs', module: 'javax.ws.rs-api'
-    }
+    implementation 'com.github.docker-java:docker-java-core:3.4.1'
+    implementation 'com.github.docker-java:docker-java-transport-httpclient5:3.4.1'
 }
 
 apply from: 'gradle/version.gradle'

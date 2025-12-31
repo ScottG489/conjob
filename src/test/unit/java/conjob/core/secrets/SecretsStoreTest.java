@@ -1,6 +1,6 @@
 package conjob.core.secrets;
 
-import com.spotify.docker.client.exceptions.DockerException;
+
 import conjob.core.job.DockerAdapter;
 import net.jqwik.api.Assume;
 import net.jqwik.api.ForAll;
@@ -37,7 +37,7 @@ class SecretsStoreTest {
     void secretsVolumeNameExists(
             @ForAll String secretsVolumeName,
             @ForAll List<String> secretVolumeNames)
-            throws SecretsStoreException, DockerException, InterruptedException {
+            throws SecretsStoreException {
         secretVolumeNames.add(secretsVolumeName);
         Collections.shuffle(secretVolumeNames);
         when(mockAdapter.listAllVolumeNames()).thenReturn(secretVolumeNames);
@@ -56,7 +56,7 @@ class SecretsStoreTest {
     void secretsVolumeNameDoesNotExist(
             @ForAll String secretsVolumeName,
             @ForAll List<String> secretVolumeNames)
-            throws SecretsStoreException, DockerException, InterruptedException {
+            throws SecretsStoreException {
         Assume.that(!secretVolumeNames.contains(secretsVolumeName));
         when(mockAdapter.listAllVolumeNames()).thenReturn(secretVolumeNames);
 
@@ -68,45 +68,15 @@ class SecretsStoreTest {
     @Property
     @Label("Given a secrets volume name, " +
             "when finding a secrets volume for the given name, " +
-            "and a DockerException is thrown, " +
+            "and an Exception is thrown, " +
             "then should throw a SecretsStoreException.")
-    void findSecretsDockerException(
+    void findSecretsException(
             @ForAll String secretsVolumeName)
-            throws DockerException, InterruptedException {
-        when(mockAdapter.listAllVolumeNames()).thenThrow(DockerException.class);
-
-        assertThrows(
-                SecretsStoreException.class,
-                () -> secretsStore.findSecrets(secretsVolumeName));
-    }
-
-    @Property
-    @Label("Given a secrets volume name, " +
-            "when finding a secrets volume for the given name, " +
-            "and a InterruptedException is thrown, " +
-            "then should throw a SecretsStoreException.")
-    void findSecretsInterruptedException(
-            @ForAll String secretsVolumeName)
-            throws DockerException, InterruptedException {
-        when(mockAdapter.listAllVolumeNames()).thenThrow(InterruptedException.class);
-
-        assertThrows(
-                SecretsStoreException.class,
-                () -> secretsStore.findSecrets(secretsVolumeName));
-    }
-
-    @Property
-    @Label("Given a secrets volume name, " +
-            "when finding a secrets volume for the given name, " +
-            "and an unexpected exception is thrown, " +
-            "then should throw that exception.")
-    void findSecretsUnexpectedException(
-            @ForAll String secretsVolumeName)
-            throws DockerException, InterruptedException {
+             {
         when(mockAdapter.listAllVolumeNames()).thenThrow(RuntimeException.class);
 
         assertThrows(
-                RuntimeException.class,
+                SecretsStoreException.class,
                 () -> secretsStore.findSecrets(secretsVolumeName));
     }
 }

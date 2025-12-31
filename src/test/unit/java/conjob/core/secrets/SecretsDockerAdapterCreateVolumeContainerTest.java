@@ -1,8 +1,7 @@
 package conjob.core.secrets;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.ContainerConfig;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.CreateContainerResponse;
 import conjob.core.secrets.exception.CreateSecretsContainerException;
 import conjob.core.secrets.model.SecretsConfig;
 import net.jqwik.api.ForAll;
@@ -34,12 +33,14 @@ class SecretsDockerAdapterCreateVolumeContainerTest {
             "should return id of container.")
     void createVolumeCreatorContainer(
             @ForAll @UseType SecretsConfig secretsConfig,
-            @ForAll String givenContainerId) throws DockerException, InterruptedException {
-        when(mockClient.createContainer(
-                any(ContainerConfig.class),
-                eq(secretsConfig.getIntermediaryContainerName()))
-                .id())
-                .thenReturn(givenContainerId);
+            @ForAll String givenContainerId)  {
+        CreateContainerResponse mockResponse = mock(CreateContainerResponse.class);
+        when(mockClient.createContainerCmd(secretsConfig.getIntermediaryContainerImage())
+                .withName(secretsConfig.getIntermediaryContainerName())
+                .withHostConfig(any())
+                .exec())
+                .thenReturn(mockResponse);
+        when(mockResponse.getId()).thenReturn(givenContainerId);
 
         String containerId = secretsAdapter.createVolumeCreatorContainer(secretsConfig);
 
@@ -49,29 +50,15 @@ class SecretsDockerAdapterCreateVolumeContainerTest {
     @Property
     @Label("Given a SecretsConfig, " +
             "when creating a volume creator container, " +
-            "and a DockerException is thrown, " +
+            "and an Exception is thrown, " +
             "should throw a CreateSecretsContainerException.")
-    void catchDockerException(
-            @ForAll @UseType SecretsConfig secretsConfig) throws DockerException, InterruptedException {
-        when(mockClient.createContainer(
-                any(ContainerConfig.class),
-                eq(secretsConfig.getIntermediaryContainerName())))
-                .thenThrow(DockerException.class);
-
-        assertThrows(CreateSecretsContainerException.class, () -> secretsAdapter.createVolumeCreatorContainer(secretsConfig));
-    }
-
-    @Property
-    @Label("Given a SecretsConfig, " +
-            "when creating a volume creator container, " +
-            "and a InterruptedException is thrown, " +
-            "should throw a CreateSecretsContainerException.")
-    void catchInterruptedException(
-            @ForAll @UseType SecretsConfig secretsConfig) throws DockerException, InterruptedException {
-        when(mockClient.createContainer(
-                any(ContainerConfig.class),
-                eq(secretsConfig.getIntermediaryContainerName())))
-                .thenThrow(InterruptedException.class);
+    void catchException(
+            @ForAll @UseType SecretsConfig secretsConfig)  {
+        when(mockClient.createContainerCmd(secretsConfig.getIntermediaryContainerImage())
+                .withName(secretsConfig.getIntermediaryContainerName())
+                .withHostConfig(any())
+                .exec())
+                .thenThrow(RuntimeException.class);
 
         assertThrows(CreateSecretsContainerException.class, () -> secretsAdapter.createVolumeCreatorContainer(secretsConfig));
     }
@@ -82,10 +69,11 @@ class SecretsDockerAdapterCreateVolumeContainerTest {
             "and an unexpected Exception is thrown, " +
             "should throw that exception.")
     void catchUnexpectedException(
-            @ForAll @UseType SecretsConfig secretsConfig) throws DockerException, InterruptedException {
-        when(mockClient.createContainer(
-                any(ContainerConfig.class),
-                eq(secretsConfig.getIntermediaryContainerName())))
+            @ForAll @UseType SecretsConfig secretsConfig)  {
+        when(mockClient.createContainerCmd(secretsConfig.getIntermediaryContainerImage())
+                .withName(secretsConfig.getIntermediaryContainerName())
+                .withHostConfig(any())
+                .exec())
                 .thenThrow(RuntimeException.class);
 
         assertThrows(RuntimeException.class, () -> secretsAdapter.createVolumeCreatorContainer(secretsConfig));

@@ -51,10 +51,12 @@ class DockerVolumeRemoveTaskTest {
 
         String volumeRemoveErrorMessage = "Request error: DELETE unix://localhost:80/volumes/conjob-docker-cache-scottg489-docker-test-support-job-latest: 409, body: {\"message\":\"remove conjob-docker-cache-scottg489-docker-test-support-job-latest: volume is in use - [" + associatedContainer1 + ", " + associatedContainer2 + "]\"}\n";
         DockerAdapter mockDockerAdapter = mock(DockerAdapter.class);
-        RemoveVolumeException mockException = mock(RemoveVolumeException.class, RETURNS_DEEP_STUBS);
         PrintWriter writerMock = mock(PrintWriter.class);
 
-        when(mockException.getCause().getCause().getMessage()).thenReturn(volumeRemoveErrorMessage);
+        RuntimeException innerCause = new RuntimeException(volumeRemoveErrorMessage);
+        RuntimeException cause = new RuntimeException(innerCause);
+        RemoveVolumeException mockException = new RemoveVolumeException(cause);
+
         doThrow(mockException).doAnswer((Answer<Void>) invocationOnMock -> null).when(mockDockerAdapter).removeVolume(any());
 
         new DockerVolumeRemoveTask(mockDockerAdapter).execute(map, postBody, writerMock);

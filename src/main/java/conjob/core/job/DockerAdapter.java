@@ -1,11 +1,11 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.LogStream;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.ContainerConfig;
-import com.spotify.docker.client.messages.HostConfig;
-import com.spotify.docker.client.messages.Volume;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.InspectVolumeResponse;
+import com.github.dockerjava.api.command.WaitContainerResultCallback;
+import com.github.dockerjava.api.model.*;
+import com.github.dockerjava.core.command.LogContainerResultCallback;
 import conjob.core.job.exception.*;
 import conjob.core.job.model.JobRunConfig;
 
@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 public class DockerAdapter {
     private static final String RUNTIME = "sysbox-runc";
     private static final String SECRETS_VOLUME_MOUNT_PATH = "/run/build/secrets";
-    private static final String SECRETS_VOLUME_MOUNT_OPTIONS = "ro";
 
     private final DockerClient dockerClient;
     private final Runtime containerRuntime;
@@ -31,48 +30,62 @@ public class DockerAdapter {
         this.containerRuntime = containerRuntime;
     }
 
-    public List<String> listAllVolumeNames() throws DockerException, InterruptedException {
-        return dockerClient.listVolumes().volumes().stream()
-                .map(Volume::name).collect(Collectors.toList());
+    public List<String> listAllVolumeNames() {
+        return dockerClient.listVolumesCmd().exec().getVolumes().stream()
+                .map(InspectVolumeResponse::getName).collect(Collectors.toList());
     }
 
     public String createJobRun(JobRunConfig jobRunConfig) throws CreateJobRunException {
         HostConfig hostConfig = getHostConfig(jobRunConfig.getDockerCacheVolumeName(), jobRunConfig.getSecretsVolumeName());
 
-        ContainerConfig containerConfig = getContainerConfig(
-                jobRunConfig.getJobName(),
-                jobRunConfig.getInput(),
-                hostConfig);
-
         try {
-            return dockerClient.createContainer(containerConfig).id();
-        } catch (DockerException | InterruptedException e) {
+            var createCmd = dockerClient.createContainerCmd(jobRunConfig.getJobName())
+                    .withHostConfig(hostConfig);
+
+            if (jobRunConfig.getInput() != null) {
+                createCmd.withCmd(jobRunConfig.getInput());
+            }
+
+            CreateContainerResponse response = createCmd.exec();
+            return response.getId();
+        } catch (Exception e) {
             throw new CreateJobRunException(e);
         }
     }
 
     public void pullImage(String imageName) throws JobUpdateException {
         try {
-            dockerClient.pull(imageName);
-        } catch (DockerException | InterruptedException e) {
+            dockerClient.pullImageCmd(imageName).start().awaitCompletion();
+        } catch (Exception e) {
             throw new JobUpdateException(e);
         }
     }
 
     public Long startContainerThenWaitForExit(String containerId) throws RunJobException {
         try {
-            dockerClient.startContainer(containerId);
-            return dockerClient.waitContainer(containerId).statusCode();
-        } catch (DockerException | InterruptedException e) {
+            dockerClient.startContainerCmd(containerId).exec();
+            return (long) dockerClient.waitContainerCmd(containerId)
+                    .exec(new WaitContainerResultCallback())
+                    .awaitStatusCode();
+        } catch (Exception e) {
             throw new RunJobException(e);
         }
     }
 
     public Long stopContainer(String containerId, int killTimeoutSeconds) throws StopJobRunException {
         try {
-            dockerClient.stopContainer(containerId, killTimeoutSeconds);
-            return dockerClient.waitContainer(containerId).statusCode();
-        } catch (DockerException | InterruptedException e) {
+            dockerClient.stopContainerCmd(containerId).withTimeout(killTimeoutSeconds).exec();
+        } catch (com.github.dockerjava.api.exception.NotModifiedException e) {
+            // Container already stopped, this is fine
+        } catch (Exception e) {
+            throw new StopJobRunException(e);
+        }
+
+        try {
+            return (long) dockerClient.waitContainerCmd(containerId)
+                    .exec(new WaitContainerResultCallback())
+                    .awaitStatusCode();
+        } catch (Exception e) {
             throw new StopJobRunException(e);
         }
     }
@@ -81,68 +94,61 @@ public class DockerAdapter {
     // TODO:   before any output has been produced, then the read will finish and return an empty
     // TODO:   string when really it should have waited for the job to finish. Not sure why this is.
     public String readAllLogsUntilExit(String containerId) throws ReadLogsException {
-        LogStream logs;
         try {
-            logs = dockerClient.logs(
-                    containerId,
-                    DockerClient.LogsParam.stdout(),
-                    DockerClient.LogsParam.stderr(),
-                    DockerClient.LogsParam.follow());
-            return logs.readFully();
-        } catch (DockerException | InterruptedException e) {
+            StringBuilder logs = new StringBuilder();
+            dockerClient.logContainerCmd(containerId)
+                    .withStdOut(true)
+                    .withStdErr(true)
+                    .withFollowStream(true)
+                    .exec(new LogContainerResultCallback() {
+                        @Override
+                        public void onNext(Frame frame) {
+                            logs.append(new String(frame.getPayload()));
+                        }
+                    }).awaitCompletion();
+            return logs.toString();
+        } catch (Exception e) {
             throw new ReadLogsException(e);
         }
     }
 
     public void removeVolume(String volumeId) {
         try {
-            dockerClient.removeVolume(volumeId);
-        } catch (DockerException | InterruptedException e) {
+            dockerClient.removeVolumeCmd(volumeId).exec();
+        } catch (Exception e) {
             throw new RemoveVolumeException(e);
         }
     }
 
     public void removeContainer(String containerId) {
         try {
-            dockerClient.removeContainer(
-                    containerId,
-                    DockerClient.RemoveContainerParam.forceKill(),
-                    DockerClient.RemoveContainerParam.removeVolumes());
-        } catch (DockerException | InterruptedException e) {
+            dockerClient.removeContainerCmd(containerId)
+                    .withForce(true)
+                    .withRemoveVolumes(true)
+                    .exec();
+        } catch (Exception e) {
             throw new RemoveContainerException(e);
         }
     }
 
-    private ContainerConfig getContainerConfig(String jobName, String input, HostConfig hostConfig) {
-        ContainerConfig.Builder containerConfigBuilder = ContainerConfig.builder()
-                .image(jobName)
-                .hostConfig(hostConfig);
+    private HostConfig getHostConfig(String dockerCacheVolumeName, String secretsVolumeName) {
+        HostConfig hostConfig = new HostConfig();
 
-        if (input != null) {
-            containerConfigBuilder.cmd(input);
+        if (containerRuntime == Runtime.SYSBOX_RUNC) {
+            hostConfig.withRuntime(RUNTIME);
         }
 
-        return containerConfigBuilder.build();
-    }
-
-    private HostConfig getHostConfig(String dockerCacheVolumeName, String secretsVolumeName) {
-        HostConfig.Builder hostConfigBuilder = getHostConfigBuilderFor(containerRuntime);
-
-        hostConfigBuilder.appendBinds(dockerCacheVolumeName + ":" + "/var/lib/docker");
+        Bind dockerBind = new Bind(dockerCacheVolumeName, new Volume("/var/lib/docker"));
+        hostConfig.withBinds(dockerBind);
 
         if (secretsVolumeName != null) {
-            hostConfigBuilder.appendBinds(
-                    secretsVolumeName
-                            + ":" + SECRETS_VOLUME_MOUNT_PATH
-                            + ":" + SECRETS_VOLUME_MOUNT_OPTIONS);
+            Bind secretsBind = new Bind(secretsVolumeName,
+                    new Volume(SECRETS_VOLUME_MOUNT_PATH),
+                    AccessMode.ro);
+            hostConfig.withBinds(dockerBind, secretsBind);
         }
-        return hostConfigBuilder.build();
-    }
 
-    private HostConfig.Builder getHostConfigBuilderFor(Runtime runtime) {
-        return Map.of(Runtime.DEFAULT, HostConfig.builder(),
-                Runtime.SYSBOX_RUNC, HostConfig.builder().runtime(RUNTIME)
-        ).get(runtime);
+        return hostConfig;
     }
 
     public enum Runtime {

@@ -1,28 +1,33 @@
 package conjob.init;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerException;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.core.DockerClientConfig;
+import com.github.dockerjava.core.DockerClientImpl;
+import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
+import com.github.dockerjava.transport.DockerHttpClient;
 
 import java.util.Objects;
 
 public class DockerClientCreator {
     private final AuthedDockerClientCreator authedDockerClientCreator;
-    private final DefaultDockerClient.Builder dockerClientBuilder;
+    private final DockerClientConfig dockerClientConfig;
 
     public DockerClientCreator(
-            DefaultDockerClient.Builder dockerClientBuilder,
+            DockerClientConfig dockerClientConfig,
             AuthedDockerClientCreator authedDockerClientCreator) {
-        this.dockerClientBuilder = dockerClientBuilder;
+        this.dockerClientConfig = dockerClientConfig;
         this.authedDockerClientCreator = authedDockerClientCreator;
     }
 
-    public DockerClient createDockerClient(String username, String password) throws DockerException, InterruptedException {
-        DefaultDockerClient docker;
+    public DockerClient createDockerClient(String username, String password) {
+        DockerClient docker;
         if (Objects.nonNull(username) && Objects.nonNull(password)) {
             docker = authedDockerClientCreator.createDockerClient(username, password);
         } else {
-            docker = dockerClientBuilder.build();
+            DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
+                    .dockerHost(dockerClientConfig.getDockerHost())
+                    .build();
+            docker = DockerClientImpl.getInstance(dockerClientConfig, httpClient);
         }
 
         return docker;

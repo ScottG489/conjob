@@ -1,9 +1,6 @@
 package conjob.core.job;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.Volume;
+import com.github.dockerjava.api.DockerClient;
 import conjob.core.job.DockerAdapter;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,25 +15,24 @@ import static org.hamcrest.Matchers.not;
 
 public class DockerAdapterListVolumesTest {
     private static final String EXISTING_VOLUME_NAME = "conjob-test-volume-870dbba3";
-    private static DefaultDockerClient dockerClient;
+    private static DockerClient dockerClient;
 
     @BeforeAll
-    static void beforeAll() throws DockerCertificateException, DockerException, InterruptedException {
-        dockerClient = DefaultDockerClient.fromEnv().build();
-        dockerClient.createVolume(Volume.builder().name(EXISTING_VOLUME_NAME).build());
+    static void beforeAll() {
+        dockerClient = DockerClientFactory.createDefaultClient();
+        dockerClient.createVolumeCmd().withName(EXISTING_VOLUME_NAME).exec();
     }
 
     @AfterAll
-    static void afterAll() throws DockerException, InterruptedException {
-        dockerClient.removeVolume(Volume.builder().name(EXISTING_VOLUME_NAME).build());
+    static void afterAll()   {
+        dockerClient.removeVolumeCmd(EXISTING_VOLUME_NAME).exec();
     }
 
     @Test
     @DisplayName("Given available volumes, " +
             "when listing all volume names, " +
             "should contain the name of an existing volume.")
-    void listVolumesSuccess()
-            throws DockerException, InterruptedException {
+    void listVolumesSuccess() {
         DockerAdapter adapter = new DockerAdapter(dockerClient);
 
         List<String> volumeNames = adapter.listAllVolumeNames();
@@ -48,7 +44,7 @@ public class DockerAdapterListVolumesTest {
     @DisplayName("Given available volumes, " +
             "when listing all volume names, " +
             "should not contain the name of a non-existent volume.")
-    void readLogsUnexpectedException() throws DockerException, InterruptedException {
+    void readLogsUnexpectedException() {
         DockerAdapter adapter = new DockerAdapter(dockerClient);
 
         List<String> volumeNames = adapter.listAllVolumeNames();
