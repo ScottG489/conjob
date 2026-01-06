@@ -18,7 +18,7 @@ task acceptanceTest(type: Test) {
 }
 
 dependencies {
-    acceptanceTestImplementation platform('org.junit:junit-bom:6.0.1')
+    acceptanceTestImplementation platform('org.junit:junit-bom:6.0.2')
     acceptanceTestImplementation 'org.junit.jupiter:junit-jupiter'
     acceptanceTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
