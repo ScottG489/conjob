@@ -5,7 +5,7 @@ plugins {
     id 'jacoco'
     id 'org.ajoberstar.grgit' version '5.3.3'
     id "io.gatling.gradle" version "3.14.9.5"
-    id 'info.solidsoft.pitest' version '1.19.0-rc.2'
+    id 'info.solidsoft.pitest' version '1.19.0-rc.3'
 }
 
 group = 'conjob'
