@@ -19,8 +19,8 @@ dependencies {
 
     compileOnly 'org.projectlombok:lombok:1.18.42'
 
-    implementation 'io.dropwizard:dropwizard-core:5.0.0'
-    implementation 'io.dropwizard:dropwizard-auth:5.0.0'
+    implementation 'io.dropwizard:dropwizard-core:5.0.1'
+    implementation 'io.dropwizard:dropwizard-auth:5.0.1'
 
     implementation('com.spotify:docker-client:8.16.0:shaded') {
         exclude group: 'org.glassfish.jersey.core', module: 'jersey-client'
