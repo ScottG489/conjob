@@ -28,6 +28,39 @@
         "/(^|/)Dockerfile($|\\.)/"
       ],
       "matchStrings": [
+        "\\s+(?<depName>[a-z0-9][a-z0-9+.-]+)=(?<currentValue>[^\\s\\\\]+)"
+      ],
+      "datasourceTemplate": "deb",
+      "registryUrlTemplate": "https://archive.ubuntu.com/ubuntu?suite=jammy-security&components=main,universe,restricted,multiverse&binaryArch=amd64"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/(^|/)Dockerfile($|\\.)/"
+      ],
+      "matchStrings": [
+        "\\s+(?<depName>[a-z0-9][a-z0-9+.-]+)=(?<currentValue>[^\\s\\\\]+)"
+      ],
+      "datasourceTemplate": "deb",
+      "registryUrlTemplate": "https://archive.ubuntu.com/ubuntu?suite=jammy-updates&components=main,universe,restricted,multiverse&binaryArch=amd64"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/(^|/)Dockerfile($|\\.)/"
+      ],
+      "matchStrings": [
+        "\\s+(?<depName>[a-z0-9][a-z0-9+.-]+)=(?<currentValue>[^\\s\\\\]+)"
+      ],
+      "datasourceTemplate": "deb",
+      "registryUrlTemplate": "https://archive.ubuntu.com/ubuntu?suite=jammy-backports&components=main,universe,restricted,multiverse&binaryArch=amd64"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/(^|/)Dockerfile($|\\.)/"
+      ],
+      "matchStrings": [
         "ARG TERRAFORM_VERSION=(?<currentValue>\\S+)"
       ],
       "depNameTemplate": "hashicorp/terraform",
