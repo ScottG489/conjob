@@ -22,6 +22,17 @@
       sudo growpart /dev/$BLOCK_DEVICE 1
       sudo resize2fs /dev/$PARTITION_NAME
 
+  - name: Create swap file
+    become: yes
+    shell: |
+      set -x
+      dd if=/dev/zero of=/var/swap.1 bs=1M count=8192
+      chmod 600 /var/swap.1
+      mkswap /var/swap.1
+      swapon /var/swap.1
+    args:
+      creates: /var/swap.1
+
   - name: Register ubuntu code name
     command: lsb_release -cs
     register: ubuntu_code_name
