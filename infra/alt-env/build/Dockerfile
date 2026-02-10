@@ -3,7 +3,7 @@ FROM ubuntu:24.04@sha256:cd1dba651b3080c3686ecf4e3c4220f026b521fb76978881737d24f
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
   git=1:2.43.0-1ubuntu7.3 \
-  openjdk-11-jdk=11.0.29+7-1ubuntu1~24.04 \
+  openjdk-11-jdk=11.0.30+7-1ubuntu1~22.04 \
   jq=1.7.1-3ubuntu0.24.04.1 \
   ansible=9.2.0+dfsg-0ubuntu5 \
   curl=8.5.0-2ubuntu10.6 \
