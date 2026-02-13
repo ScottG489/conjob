@@ -11,7 +11,7 @@ RUN apt-get update && \
   ca-certificates=20240203~22.04.1 \
   gnupg=2.2.27-3ubuntu2.5 \
   lsb-release=11.1.0ubuntu4 \
-  unzip=6.0-26ubuntu3.1
+  unzip=6.0-26ubuntu3.2
 
 ARG VERSION_STRING=5:24.0.9-1~ubuntu.22.04~jammy
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
