@@ -4,6 +4,7 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.AuthConfig;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientConfig;
+import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import conjob.config.JobConfig;
@@ -94,17 +95,11 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
     }
 
     private DockerClient createDockerClient(ConJobConfiguration configuration) {
-        DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
-        DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
-                .dockerHost(dockerClientConfig.getDockerHost())
-                .build();
-        AuthConfig authConfig = new AuthConfig();
-        return new DockerClientCreator(
-                config,
-                new AuthedDockerClientCreator(config, authConfig))
-                .createDockerClient(
-                        configuration.getConjob().getDocker().getUsername(),
-                        configuration.getConjob().getDocker().getPassword());
+        String username = configuration.getConjob().getDocker().getUsername();
+        String password = configuration.getConjob().getDocker().getPassword();
+        return new DockerClientCreatorFactory(DefaultDockerClientConfig.createDefaultConfigBuilder())
+                .create(username, password)
+                .createDockerClient();
     }
 
     private JobResource createJobResource(DockerAdapter dockerAdapter,

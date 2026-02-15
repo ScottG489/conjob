@@ -19,27 +19,23 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class AuthedDockerClientCreatorTest {
-    private AuthedDockerClientCreator dockerClientCreator;
-    private DockerClientConfig mockBaseConfig;
+    private DockerClientConfig mockConfig;
     private AuthConfig mockAuthConfig;
 
     @BeforeTry
     public void beforeEach() {
-        mockBaseConfig = mock(DockerClientConfig.class);
+        mockConfig = mock(DockerClientConfig.class);
         mockAuthConfig = mock(AuthConfig.class);
-        when(mockBaseConfig.getDockerHost()).thenReturn(URI.create("unix:///var/run/docker.sock"));
-        when(mockAuthConfig.withUsername(any())).thenReturn(mockAuthConfig);
-        when(mockAuthConfig.withPassword(any())).thenReturn(mockAuthConfig);
-        dockerClientCreator = new AuthedDockerClientCreator(mockBaseConfig, mockAuthConfig);
+        when(mockConfig.getDockerHost()).thenReturn(URI.create("unix:///var/run/docker.sock"));
     }
 
     @Property
-    @Label("Given a username and password, " +
-            "and a docker client that successfully auths, " +
+    @Label("Given a docker client that successfully auths, " +
             "when a docker client is created, " +
             "should validate credentials, " +
             "and should return the docker client.")
-    void successfulAuth(@ForAll String username, @ForAll String password) {
+    void successfulAuth() {
+        AuthedDockerClientCreator creator = new AuthedDockerClientCreator(mockConfig, mockAuthConfig);
         DockerClient mockDockerClient = mock(DockerClient.class);
         AuthCmd mockAuthCmd = mock(AuthCmd.class);
         AuthResponse mockAuthResponse = mock(AuthResponse.class);
@@ -50,7 +46,7 @@ class AuthedDockerClientCreatorTest {
         try (MockedStatic<DockerClientImpl> mockedStatic = mockStatic(DockerClientImpl.class)) {
             mockedStatic.when(() -> DockerClientImpl.getInstance(any(), any())).thenReturn(mockDockerClient);
 
-            DockerClient dockerClient = dockerClientCreator.createDockerClient(username, password);
+            DockerClient dockerClient = creator.createDockerClient();
 
             assertThat(dockerClient, is(mockDockerClient));
             verify(mockAuthCmd).exec();
@@ -58,11 +54,11 @@ class AuthedDockerClientCreatorTest {
     }
 
     @Property
-    @Label("Given a username and password, " +
-            "and a docker client that unsuccessfully auths, " +
+    @Label("Given a docker client that unsuccessfully auths, " +
             "when a docker client is created, " +
             "should throw an exception.")
-    void unsuccessfulAuth(@ForAll String username, @ForAll String password) {
+    void unsuccessfulAuth() {
+        AuthedDockerClientCreator creator = new AuthedDockerClientCreator(mockConfig, mockAuthConfig);
         DockerClient mockDockerClient = mock(DockerClient.class);
         AuthCmd mockAuthCmd = mock(AuthCmd.class);
         when(mockDockerClient.authCmd()).thenReturn(mockAuthCmd);
@@ -72,7 +68,7 @@ class AuthedDockerClientCreatorTest {
         try (MockedStatic<DockerClientImpl> mockedStatic = mockStatic(DockerClientImpl.class)) {
             mockedStatic.when(() -> DockerClientImpl.getInstance(any(), any())).thenReturn(mockDockerClient);
 
-            assertThrows(RuntimeException.class, () -> dockerClientCreator.createDockerClient(username, password));
+            assertThrows(RuntimeException.class, () -> creator.createDockerClient());
         }
     }
 }
