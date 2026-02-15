@@ -3,13 +3,13 @@ FROM ubuntu:24.04@sha256:cd1dba651b3080c3686ecf4e3c4220f026b521fb76978881737d24f
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
   git=1:2.43.0-1ubuntu7.3 \
-  openjdk-11-jdk=11.0.30+7-1ubuntu1~22.04 \
+  openjdk-21-jdk=21.0.10+7-1~24.04 \
   jq=1.7.1-3ubuntu0.24.04.1 \
   ansible=9.2.0+dfsg-0ubuntu5 \
   curl=8.5.0-2ubuntu10.6 \
   apt-transport-https=2.7.14build2 \
   ca-certificates=20240203 \
-  gnupg=2.4.4-2ubuntu17.3 \
+  gnupg=2.4.4-2ubuntu17.4 \
   lsb-release=12.0-2 \
   unzip=6.0-28ubuntu4.1
 
