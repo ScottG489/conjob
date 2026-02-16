@@ -38,7 +38,7 @@ dependencies {
 
     unitTestImplementation "org.mockito:mockito-core:5.21.0"
     unitTestImplementation 'org.mockito:mockito-inline:5.2.0'
-    unitTestImplementation platform('org.junit:junit-bom:6.0.2')
+    unitTestImplementation platform('org.junit:junit-bom:6.0.3')
     unitTestImplementation 'org.junit.jupiter:junit-jupiter'
     unitTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     unitTestImplementation 'org.hamcrest:hamcrest:3.0'
