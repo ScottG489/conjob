@@ -90,7 +90,7 @@ class JobServiceTest {
                 .thenReturn(givenJobRunOutcome);
         when(mockOutcomeDeterminer.determineOutcome(givenJobRunOutcome)).thenReturn(givenJobRunConclusion);
 
-        JobRun jobRun = jobService.runJob(imageName, input, givenPullStrategyName);
+        JobRun jobRun = jobService.runJob(imageName, input, givenPullStrategyName, true);
 
         assertThat(jobRun, is(expectedJobRun));
         verify(mockRunJobLimiter, times(1)).markJobRunComplete();
@@ -116,7 +116,7 @@ class JobServiceTest {
         mockCommonCallChain(imageName, input, givenDockerCacheVolumeName, givenSecretsVolumeName, givenJobRunConfig, isLimiting, pullStrategy, mockJobRunCreationStrategy);
         when(mockJobRunCreationStrategy.createJobRun(givenJobRunConfig)).thenThrow(givenJobRunException);
 
-        JobRun jobRun = jobService.runJob(imageName, input, givenPullStrategyName);
+        JobRun jobRun = jobService.runJob(imageName, input, givenPullStrategyName, true);
 
         assertThat(jobRun, is(new JobRun(JobRunConclusion.NOT_FOUND, "", -1)));
         verify(mockRunJobLimiter, times(1)).markJobRunComplete();
@@ -132,7 +132,7 @@ class JobServiceTest {
             @ForAll("pullStrategyNames") String pullStrategyNames) throws SecretsStoreException {
         when(mockRunJobLimiter.isLimitingOrIncrement()).thenReturn(true);
 
-        JobRun jobRun = jobService.runJob(imageName, input, pullStrategyNames);
+        JobRun jobRun = jobService.runJob(imageName, input, pullStrategyNames, true);
 
         assertThat(jobRun, is(new JobRun(JobRunConclusion.REJECTED, "", -1)));
     }
@@ -152,7 +152,7 @@ class JobServiceTest {
         when(mockSecretsStore.findSecrets(givenSecretsVolumeName)).thenReturn(Optional.empty());
         when(mockCreationStrategyDeterminer.determineStrategy(pullStrategy))
                 .thenReturn(mockJobRunCreationStrategy);
-        when(mockJobRunConfigCreator.getContainerConfig(imageName, input, givenDockerCacheVolumeName, null))
+        when(mockJobRunConfigCreator.getContainerConfig(imageName, input, givenDockerCacheVolumeName, null, true))
                 .thenReturn(givenJobRunConfig);
     }
 

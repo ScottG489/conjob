@@ -36,7 +36,7 @@ public class DockerAdapter {
     }
 
     public String createJobRun(JobRunConfig jobRunConfig) throws CreateJobRunException {
-        HostConfig hostConfig = getHostConfig(jobRunConfig.getDockerCacheVolumeName(), jobRunConfig.getSecretsVolumeName());
+        HostConfig hostConfig = getHostConfig(jobRunConfig.getDockerCacheVolumeName(), jobRunConfig.getSecretsVolumeName(), jobRunConfig.isUseDockerCache());
 
         try {
             var createCmd = dockerClient.createContainerCmd(jobRunConfig.getJobName())
@@ -131,21 +131,28 @@ public class DockerAdapter {
         }
     }
 
-    private HostConfig getHostConfig(String dockerCacheVolumeName, String secretsVolumeName) {
+    private HostConfig getHostConfig(String dockerCacheVolumeName, String secretsVolumeName, boolean useDockerCache) {
         HostConfig hostConfig = new HostConfig();
 
         if (containerRuntime == Runtime.SYSBOX_RUNC) {
             hostConfig.withRuntime(RUNTIME);
         }
 
-        Bind dockerBind = new Bind(dockerCacheVolumeName, new Volume("/var/lib/docker"));
-        hostConfig.withBinds(dockerBind);
+        if (useDockerCache) {
+            Bind dockerBind = new Bind(dockerCacheVolumeName, new Volume("/var/lib/docker"));
+            hostConfig.withBinds(dockerBind);
 
-        if (secretsVolumeName != null) {
+            if (secretsVolumeName != null) {
+                Bind secretsBind = new Bind(secretsVolumeName,
+                        new Volume(SECRETS_VOLUME_MOUNT_PATH),
+                        AccessMode.ro);
+                hostConfig.withBinds(dockerBind, secretsBind);
+            }
+        } else if (secretsVolumeName != null) {
             Bind secretsBind = new Bind(secretsVolumeName,
                     new Volume(SECRETS_VOLUME_MOUNT_PATH),
                     AccessMode.ro);
-            hostConfig.withBinds(dockerBind, secretsBind);
+            hostConfig.withBinds(secretsBind);
         }
 
         return hostConfig;

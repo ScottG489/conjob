@@ -42,7 +42,7 @@ public class DockerAdapterCreateContainerTest {
         when(mockClient.createContainerCmd(jobName).withHostConfig(any()).exec()).thenReturn(mockResponse);
         when(mockResponse.getId()).thenReturn(givenJobRunId);
 
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true);
         String jobRunId = dockerAdapter.createJobRun(jobRunConfig);
 
         assertThat(jobRunId, is(givenJobRunId));
@@ -60,7 +60,7 @@ public class DockerAdapterCreateContainerTest {
     )  {
         when(mockClient.createContainerCmd(jobName).withHostConfig(any()).exec()).thenThrow(new RuntimeException(""));
 
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true);
 
         assertThrows(CreateJobRunException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
     }
@@ -77,7 +77,7 @@ public class DockerAdapterCreateContainerTest {
     )  {
         when(mockClient.createContainerCmd(jobName).withHostConfig(any()).exec()).thenThrow(new RuntimeException());
 
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true);
 
         assertThrows(RuntimeException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
     }

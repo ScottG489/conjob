@@ -36,9 +36,10 @@ public class JobResource {
     public Response handleTextPost(
             @NotEmpty @QueryParam("image") String imageName,
             String input,
-            @QueryParam("pull") @DefaultValue("always") String pullStrategy)
+            @QueryParam("pull") @DefaultValue("always") String pullStrategy,
+            @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache)
             throws SecretsStoreException {
-        return createResponse(imageName, input, pullStrategy);
+        return createResponse(imageName, input, pullStrategy, useDockerCache);
     }
 
     @POST
@@ -46,41 +47,44 @@ public class JobResource {
     public Response handleJsonPost(
             @NotEmpty @QueryParam("image") String imageName,
             String input,
-            @QueryParam("pull") @DefaultValue("always") String pullStrategy)
+            @QueryParam("pull") @DefaultValue("always") String pullStrategy,
+            @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache)
             throws SecretsStoreException {
-        return createJsonResponse(imageName, input, pullStrategy);
+        return createJsonResponse(imageName, input, pullStrategy, useDockerCache);
     }
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public Response handleTextGet(
             @NotEmpty @QueryParam("image") String imageName,
-            @QueryParam("pull") @DefaultValue("always") String pullStrategy)
+            @QueryParam("pull") @DefaultValue("always") String pullStrategy,
+            @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache)
             throws SecretsStoreException {
-        return createResponse(imageName, "", pullStrategy);
+        return createResponse(imageName, "", pullStrategy, useDockerCache);
     }
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.WILDCARD + ";q=0"})
     public Response handleJsonGet(
             @NotEmpty @QueryParam("image") String imageName,
-            @QueryParam("pull") @DefaultValue("always") String pullStrategy)
+            @QueryParam("pull") @DefaultValue("always") String pullStrategy,
+            @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache)
             throws SecretsStoreException {
-        return createJsonResponse(imageName, "", pullStrategy);
+        return createJsonResponse(imageName, "", pullStrategy, useDockerCache);
     }
 
-    private Response createResponse(String imageName, String input, String pullStrategy)
+    private Response createResponse(String imageName, String input, String pullStrategy, boolean useDockerCache)
             throws SecretsStoreException {
         log.info("Running image: '{}'", imageName);
-        JobRun jobRun = jobService.runJob(imageName, input, pullStrategy);
+        JobRun jobRun = jobService.runJob(imageName, input, pullStrategy, useDockerCache);
         log.info("Job run finished: '{}'", jobRun);
         return responseCreator.createResponseFrom(jobResponseConverter.from(jobRun));
     }
 
-    private Response createJsonResponse(String imageName, String input, String pullStrategy)
+    private Response createJsonResponse(String imageName, String input, String pullStrategy, boolean useDockerCache)
             throws SecretsStoreException {
         log.info("Running image: '{}'", imageName);
-        JobRun jobRun = jobService.runJob(imageName, input, pullStrategy);
+        JobRun jobRun = jobService.runJob(imageName, input, pullStrategy, useDockerCache);
         return responseCreator.createJsonResponseFrom(jobResponseConverter.from(jobRun));
     }
 }

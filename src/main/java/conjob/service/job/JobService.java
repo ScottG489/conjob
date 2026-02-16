@@ -47,13 +47,13 @@ public class JobService {
         this.imageTagEnsurer = imageTagEnsurer;
     }
 
-    public JobRun runJob(String imageName, String input, String pullStrategyName) throws SecretsStoreException {
+    public JobRun runJob(String imageName, String input, String pullStrategyName, boolean useDockerCache) throws SecretsStoreException {
         imageName = imageTagEnsurer.hasTagOrLatest(imageName);
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
-        return runJob(imageName, input, pullStrategy);
+        return runJob(imageName, input, pullStrategy, useDockerCache);
     }
 
-    private JobRun runJob(String imageName, String input, PullStrategy pullStrategy)
+    private JobRun runJob(String imageName, String input, PullStrategy pullStrategy, boolean useDockerCache)
             throws SecretsStoreException {
         if (runJobLimiter.isLimitingOrIncrement()) {
             return new JobRun(JobRunConclusion.REJECTED, "", -1);
@@ -62,7 +62,7 @@ public class JobService {
         long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
         int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
 
-        JobRunConfig jobRunConfig = getJobRunConfig(imageName, input);
+        JobRunConfig jobRunConfig = getJobRunConfig(imageName, input, useDockerCache);
         JobRunCreationStrategy jobRunCreationStrategy =
                 jobRunCreationStrategyDeterminer.determineStrategy(pullStrategy);
 
@@ -83,13 +83,13 @@ public class JobService {
         return new JobRun(jobRunConclusion, outcome.getOutput(), outcome.getExitStatusCode());
     }
 
-    private JobRunConfig getJobRunConfig(String imageName, String input) throws SecretsStoreException {
+    private JobRunConfig getJobRunConfig(String imageName, String input, boolean useDockerCache) throws SecretsStoreException {
         String correspondingSecretsVolumeName = configUtil.translateToSecretsVolumeName(imageName);
         String dockerCacheVolumeName = configUtil.translateToDockerCacheVolumeName(imageName);
         String secretsVolumeName = secretsStore
                 .findSecrets(correspondingSecretsVolumeName)
                 .orElse(null);
 
-        return jobRunConfigCreator.getContainerConfig(imageName, input, dockerCacheVolumeName, secretsVolumeName);
+        return jobRunConfigCreator.getContainerConfig(imageName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache);
     }
 }

@@ -16,6 +16,7 @@ import static conjob.util.RestAssuredUtil.configTest;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 public class JobRunDockerInDockerTest {
     private static final String JOB_RUN_PATH = "/job/run";
@@ -59,6 +60,40 @@ public class JobRunDockerInDockerTest {
 
         assertThat(existingImageId, is(originalImageId));
         assertThat(existingContainerId, is(originalContainerId));
+    }
+
+    @Test
+    @DisplayName("Given an image that builds and runs a container, " +
+            "and we specify to not use the docker cache, " +
+            "when it's run twice, " +
+            "then the docker cache from the first run should not be available to the second run."
+    )
+    public void buildAndRunNestedDockerContainerNoCache() {
+        Response response = given()
+                .basePath(JOB_RUN_PATH)
+                .queryParam("image", "scottg489/docker-test-support-job:latest")
+                .queryParam("use_docker_cache", "false")
+                .get();
+        response.then()
+                .statusCode(HttpStatus.SC_OK)
+                .contentType(MediaType.TEXT_PLAIN);
+
+        List<String> responseLines = response.asString().lines().collect(Collectors.toList());
+        String originalImageId = responseLines.get(0);
+        String originalContainerId = responseLines.get(1);
+
+        Response response2 = given()
+                .get(JOB_RUN_PATH + "?image=scottg489/docker-test-support-job:latest");
+        response2.then()
+                .statusCode(HttpStatus.SC_OK)
+                .contentType(MediaType.TEXT_PLAIN);
+
+        List<String> response2Lines = response2.asString().lines().collect(Collectors.toList());
+        String existingImageId = response2Lines.get(0);
+        String existingContainerId = response2Lines.get(1);
+
+        assertThat(existingImageId, is(originalImageId));
+        assertThat(existingContainerId, is(not(originalContainerId)));
     }
 
 

@@ -9,4 +9,5 @@ public class JobRunConfig {
     String input;
     String dockerCacheVolumeName;
     String secretsVolumeName;
+    boolean useDockerCache;
 }
