@@ -23,7 +23,7 @@ dependencies {
     implementation 'io.dropwizard:dropwizard-auth:5.0.1'
 
     implementation 'com.github.docker-java:docker-java-core:3.7.0'
-    implementation 'com.github.docker-java:docker-java-transport-httpclient5:3.4.1'
+    implementation 'com.github.docker-java:docker-java-transport-httpclient5:3.7.0'
 }
 
 apply from: 'gradle/version.gradle'
