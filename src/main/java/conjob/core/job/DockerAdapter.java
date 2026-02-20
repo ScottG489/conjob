@@ -9,6 +9,7 @@ import com.github.dockerjava.core.command.LogContainerResultCallback;
 import conjob.core.job.exception.*;
 import conjob.core.job.model.JobRunConfig;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -138,22 +139,14 @@ public class DockerAdapter {
             hostConfig.withRuntime(RUNTIME);
         }
 
+        List<Bind> binds = new ArrayList<>();
         if (useDockerCache) {
-            Bind dockerBind = new Bind(dockerCacheVolumeName, new Volume("/var/lib/docker"));
-            hostConfig.withBinds(dockerBind);
-
-            if (secretsVolumeName != null) {
-                Bind secretsBind = new Bind(secretsVolumeName,
-                        new Volume(SECRETS_VOLUME_MOUNT_PATH),
-                        AccessMode.ro);
-                hostConfig.withBinds(dockerBind, secretsBind);
-            }
-        } else if (secretsVolumeName != null) {
-            Bind secretsBind = new Bind(secretsVolumeName,
-                    new Volume(SECRETS_VOLUME_MOUNT_PATH),
-                    AccessMode.ro);
-            hostConfig.withBinds(secretsBind);
+            binds.add(new Bind(dockerCacheVolumeName, new Volume("/var/lib/docker")));
         }
+        if (secretsVolumeName != null) {
+            binds.add(new Bind(secretsVolumeName, new Volume(SECRETS_VOLUME_MOUNT_PATH), AccessMode.ro));
+        }
+        hostConfig.withBinds(binds);
 
         return hostConfig;
     }
