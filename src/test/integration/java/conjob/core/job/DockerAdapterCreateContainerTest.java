@@ -52,10 +52,11 @@ public class DockerAdapterCreateContainerTest {
             @ForAll("existingJob") String jobName,
             @ForAll @WithNull String input,
             @ForAll("dockerCacheVolumeName") String dockerCacheVolumeName,
-            @ForAll("secretsVolumeName") String secretsVolumeName
+            @ForAll("secretsVolumeName") String secretsVolumeName,
+            @ForAll boolean remove
     ) throws CreateJobRunException {
         this.secretsVolumeName = secretsVolumeName;
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true, remove);
         jobRunId = dockerAdapter.createJobRun(jobRunConfig);
 
         assertThat(jobRunId, matchesPattern("[a-f0-9]{64}"));
@@ -69,8 +70,9 @@ public class DockerAdapterCreateContainerTest {
             @ForAll("nonexistantJob") String jobName,
             @ForAll @WithNull String input,
             @ForAll("dockerCacheVolumeName") String dockerCacheVolumeName,
-            @ForAll("secretsVolumeName") @WithNull String secretsVolumeName) {
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName,  secretsVolumeName, true);
+            @ForAll("secretsVolumeName") @WithNull String secretsVolumeName,
+            @ForAll boolean remove) {
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName,  secretsVolumeName, true, remove);
 
         assertThrows(CreateJobRunException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
     }
