@@ -35,14 +35,16 @@ public class DockerAdapterCreateContainerTest {
             @ForAll @WithNull String input,
             @ForAll @WithNull String dockerCacheVolumeName,
             @ForAll @WithNull String secretsVolumeName,
-            @ForAll String givenJobRunId
+            @ForAll String givenJobRunId,
+            @ForAll boolean remove
     ) throws CreateJobRunException {
         CreateContainerResponse mockResponse = mock(CreateContainerResponse.class);
 
         when(mockClient.createContainerCmd(jobName).withHostConfig(any()).exec()).thenReturn(mockResponse);
         when(mockResponse.getId()).thenReturn(givenJobRunId);
 
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true);
+        JobRunConfig jobRunConfig =
+                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true, remove);
         String jobRunId = dockerAdapter.createJobRun(jobRunConfig);
 
         assertThat(jobRunId, is(givenJobRunId));
@@ -56,11 +58,12 @@ public class DockerAdapterCreateContainerTest {
             @ForAll String jobName,
             @ForAll @WithNull String input,
             @ForAll @WithNull String dockerCacheVolumeName,
-            @ForAll @WithNull String secretsVolumeName
+            @ForAll @WithNull String secretsVolumeName,
+            @ForAll boolean remove
     )  {
         when(mockClient.createContainerCmd(jobName).withHostConfig(any()).exec()).thenThrow(new RuntimeException(""));
 
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true, remove);
 
         assertThrows(CreateJobRunException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
     }
@@ -73,11 +76,12 @@ public class DockerAdapterCreateContainerTest {
             @ForAll String jobName,
             @ForAll @WithNull String input,
             @ForAll @WithNull String dockerCacheVolumeName,
-            @ForAll @WithNull String secretsVolumeName
+            @ForAll @WithNull String secretsVolumeName,
+            @ForAll boolean remove
     )  {
         when(mockClient.createContainerCmd(jobName).withHostConfig(any()).exec()).thenThrow(new RuntimeException());
 
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true, remove);
 
         assertThrows(RuntimeException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
     }

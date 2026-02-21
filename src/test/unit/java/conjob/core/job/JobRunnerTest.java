@@ -10,8 +10,8 @@ import org.mockito.AdditionalAnswers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
 
 class JobRunnerTest {
     @Property
@@ -29,7 +29,7 @@ class JobRunnerTest {
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = Long.MAX_VALUE;
         int givenKillTimeout = Integer.MAX_VALUE;
-        when(adapterMock.startContainerThenWaitForExit(givenContainerId))
+        when(adapterMock.waitForExit(givenContainerId))
                 .thenReturn(givenContainerExitCode);
         when(adapterMock.readAllLogsUntilExit(givenContainerId))
                 .thenReturn(givenContainerOutput);
@@ -45,7 +45,7 @@ class JobRunnerTest {
     @Label("Given a container id, " +
             "and an infinite timeout, " +
             "when running the container, " +
-            "and there is a problem running or waiting for it to finish, " +
+            "and there is a problem waiting for it to finish, " +
             "and it returns an non-terminated exit code, " +
             "and it returns output, " +
             "should return an outcome with the same data.")
@@ -57,7 +57,7 @@ class JobRunnerTest {
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = Long.MAX_VALUE;
         int givenKillTimeout = Integer.MAX_VALUE;
-        when(adapterMock.startContainerThenWaitForExit(givenContainerId))
+        when(adapterMock.waitForExit(givenContainerId))
                 .thenThrow(new RunJobException(new Exception()));
         when(adapterMock.stopContainer(givenContainerId, givenKillTimeout))
                 .thenReturn(givenContainerExitCode);
@@ -88,7 +88,7 @@ class JobRunnerTest {
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = 0;
         int givenKillTimeout = Integer.MAX_VALUE;
-        when(adapterMock.startContainerThenWaitForExit(givenContainerId))
+        when(adapterMock.waitForExit(givenContainerId))
                 .thenAnswer(AdditionalAnswers.answersWithDelay(1000, (foo) -> null));
         when(adapterMock.stopContainer(givenContainerId, givenKillTimeout))
                 .thenReturn(givenContainerExitCode);
@@ -119,7 +119,7 @@ class JobRunnerTest {
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = 0;
         int givenKillTimeout = Integer.MAX_VALUE;
-        when(adapterMock.startContainerThenWaitForExit(givenContainerId))
+        when(adapterMock.waitForExit(givenContainerId))
                 .thenAnswer(AdditionalAnswers.answersWithDelay(1000, (foo) -> null));
         when(adapterMock.stopContainer(givenContainerId, givenKillTimeout))
                 .thenReturn(givenContainerExitCode);
@@ -149,7 +149,7 @@ class JobRunnerTest {
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = 0;
         int givenKillTimeout = Integer.MAX_VALUE;
-        when(adapterMock.startContainerThenWaitForExit(givenContainerId))
+        when(adapterMock.waitForExit(givenContainerId))
                 .thenAnswer(AdditionalAnswers.answersWithDelay(1000, (foo) -> null));
         when(adapterMock.stopContainer(givenContainerId, givenKillTimeout))
                 .thenThrow(new StopJobRunException(new Exception()));
@@ -178,7 +178,7 @@ class JobRunnerTest {
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = Long.MAX_VALUE;
         int givenKillTimeout = Integer.MAX_VALUE;
-        when(adapterMock.startContainerThenWaitForExit(givenContainerId))
+        when(adapterMock.waitForExit(givenContainerId))
                 .thenReturn(givenContainerExitCode);
         when(adapterMock.readAllLogsUntilExit(givenContainerId))
                 .thenThrow(new ReadLogsException(new Exception()));
@@ -187,6 +187,27 @@ class JobRunnerTest {
                 jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout);
 
         assertThat(jobRunOutcome.getExitStatusCode(), is(givenContainerExitCode));
+        assertThat(jobRunOutcome.getOutput(), is(""));
+    }
+
+    @Property
+    @Label("Given a container id, " +
+            "when running the container, " +
+            "and there is a problem starting, " +
+            "should return an outcome with exit code -1 and empty output.")
+    void runContainerStartException(
+            @ForAll String givenContainerId) throws RunJobException {
+        DockerAdapter adapterMock = mock(DockerAdapter.class);
+        JobRunner jobRunner = new JobRunner(adapterMock);
+        long givenTimeoutSeconds = Long.MAX_VALUE;
+        int givenKillTimeout = Integer.MAX_VALUE;
+        doThrow(new RunJobException(new Exception()))
+                .when(adapterMock).startContainer(givenContainerId);
+
+        JobRunOutcome jobRunOutcome =
+                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout);
+
+        assertThat(jobRunOutcome.getExitStatusCode(), is(-1L));
         assertThat(jobRunOutcome.getOutput(), is(""));
     }
 

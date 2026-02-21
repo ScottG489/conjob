@@ -37,13 +37,13 @@ public class DockerAdapter {
     }
 
     public String createJobRun(JobRunConfig jobRunConfig) throws CreateJobRunException {
-        HostConfig hostConfig = getHostConfig(jobRunConfig.getDockerCacheVolumeName(), jobRunConfig.getSecretsVolumeName(), jobRunConfig.isUseDockerCache());
+        HostConfig hostConfig = getHostConfig(jobRunConfig.getDockerCacheVolumeName(), jobRunConfig.getSecretsVolumeName(), jobRunConfig.isUseDockerCache(), jobRunConfig.isRemove());
 
         try {
             var createCmd = dockerClient.createContainerCmd(jobRunConfig.getJobName())
                     .withHostConfig(hostConfig);
 
-            if (jobRunConfig.getInput() != null) {
+            if (jobRunConfig.getInput() != null && !jobRunConfig.getInput().isEmpty()) {
                 createCmd.withCmd(jobRunConfig.getInput());
             }
 
@@ -73,6 +73,24 @@ public class DockerAdapter {
         }
     }
 
+    public void startContainer(String containerId) throws RunJobException {
+        try {
+            dockerClient.startContainerCmd(containerId).exec();
+        } catch (Exception e) {
+            throw new RunJobException(e);
+        }
+    }
+
+    public Long waitForExit(String containerId) throws RunJobException {
+        try {
+            return (long) dockerClient.waitContainerCmd(containerId)
+                    .exec(new WaitContainerResultCallback())
+                    .awaitStatusCode();
+        } catch (Exception e) {
+            throw new RunJobException(e);
+        }
+    }
+
     public Long stopContainer(String containerId, int killTimeoutSeconds) throws StopJobRunException {
         try {
             dockerClient.stopContainerCmd(containerId).withTimeout(killTimeoutSeconds).exec();
@@ -91,9 +109,6 @@ public class DockerAdapter {
         }
     }
 
-    // TODO: There seems to be an issue with reading logs where if you read them too quickly,
-    // TODO:   before any output has been produced, then the read will finish and return an empty
-    // TODO:   string when really it should have waited for the job to finish. Not sure why this is.
     public String readAllLogsUntilExit(String containerId) throws ReadLogsException {
         try {
             StringBuilder logs = new StringBuilder();
@@ -132,11 +147,15 @@ public class DockerAdapter {
         }
     }
 
-    private HostConfig getHostConfig(String dockerCacheVolumeName, String secretsVolumeName, boolean useDockerCache) {
+    private HostConfig getHostConfig(String dockerCacheVolumeName, String secretsVolumeName, boolean useDockerCache, boolean remove) {
         HostConfig hostConfig = new HostConfig();
 
         if (containerRuntime == Runtime.SYSBOX_RUNC) {
             hostConfig.withRuntime(RUNTIME);
+        }
+
+        if (remove) {
+            hostConfig.withAutoRemove(true);
         }
 
         List<Bind> binds = new ArrayList<>();

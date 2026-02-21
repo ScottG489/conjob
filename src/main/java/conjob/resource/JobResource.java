@@ -37,9 +37,10 @@ public class JobResource {
             @NotEmpty @QueryParam("image") String imageName,
             String input,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy,
-            @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache)
+            @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache,
+            @QueryParam("remove") @DefaultValue("false") boolean remove)
             throws SecretsStoreException {
-        return createResponse(imageName, input, pullStrategy, useDockerCache);
+        return createResponse(imageName, input, pullStrategy, useDockerCache, remove);
     }
 
     @POST
@@ -48,9 +49,10 @@ public class JobResource {
             @NotEmpty @QueryParam("image") String imageName,
             String input,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy,
-            @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache)
+            @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache,
+            @QueryParam("remove") @DefaultValue("false") boolean remove)
             throws SecretsStoreException {
-        return createJsonResponse(imageName, input, pullStrategy, useDockerCache);
+        return createJsonResponse(imageName, input, pullStrategy, useDockerCache, remove);
     }
 
     @GET
@@ -58,9 +60,10 @@ public class JobResource {
     public Response handleTextGet(
             @NotEmpty @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy,
-            @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache)
+            @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache,
+            @QueryParam("remove") @DefaultValue("false") boolean remove)
             throws SecretsStoreException {
-        return createResponse(imageName, "", pullStrategy, useDockerCache);
+        return createResponse(imageName, "", pullStrategy, useDockerCache, remove);
     }
 
     @GET
@@ -68,23 +71,24 @@ public class JobResource {
     public Response handleJsonGet(
             @NotEmpty @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy,
-            @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache)
+            @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache,
+            @QueryParam("remove") @DefaultValue("false") boolean remove)
             throws SecretsStoreException {
-        return createJsonResponse(imageName, "", pullStrategy, useDockerCache);
+        return createJsonResponse(imageName, "", pullStrategy, useDockerCache, remove);
     }
 
-    private Response createResponse(String imageName, String input, String pullStrategy, boolean useDockerCache)
+    private Response createResponse(String imageName, String input, String pullStrategy, boolean useDockerCache, boolean remove)
             throws SecretsStoreException {
         log.info("Running image: '{}'", imageName);
-        JobRun jobRun = jobService.runJob(imageName, input, pullStrategy, useDockerCache);
+        JobRun jobRun = jobService.runJob(imageName, input, pullStrategy, useDockerCache, remove);
         log.info("Job run finished: '{}'", jobRun);
         return responseCreator.createResponseFrom(jobResponseConverter.from(jobRun));
     }
 
-    private Response createJsonResponse(String imageName, String input, String pullStrategy, boolean useDockerCache)
+    private Response createJsonResponse(String imageName, String input, String pullStrategy, boolean useDockerCache, boolean remove)
             throws SecretsStoreException {
         log.info("Running image: '{}'", imageName);
-        JobRun jobRun = jobService.runJob(imageName, input, pullStrategy, useDockerCache);
+        JobRun jobRun = jobService.runJob(imageName, input, pullStrategy, useDockerCache, remove);
         return responseCreator.createJsonResponseFrom(jobResponseConverter.from(jobRun));
     }
 }
