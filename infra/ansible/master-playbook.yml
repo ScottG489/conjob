@@ -33,6 +33,14 @@
     args:
       creates: /var/swap.1
 
+  - name: Add swap to fstab
+    ansible.posix.mount:
+      path: swap
+      src: /var/swap.1
+      fstype: swap
+      opts: sw
+      state: present
+
   - name: Register ubuntu code name
     command: lsb_release -cs
     register: ubuntu_code_name
