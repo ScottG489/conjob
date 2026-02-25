@@ -6,7 +6,7 @@ RUN apt-get update && \
   openjdk-21-jdk=21.0.10+7-1~22.04 \
   jq=1.6-2.1ubuntu3.1 \
   ansible=2.10.7+merged+base+2.10.8+dfsg-1 \
-  curl=7.81.0-1ubuntu1.21 \
+  curl=7.81.0-1ubuntu1.22 \
   apt-transport-https=2.4.14 \
   ca-certificates=20240203~22.04.1 \
   gnupg=2.2.27-3ubuntu2.5 \
