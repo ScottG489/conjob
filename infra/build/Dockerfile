@@ -2,7 +2,7 @@ FROM ubuntu:22.04@sha256:3ba65aa20f86a0fad9df2b2c259c613df006b2e6d0bfcc8a146afb8
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
-  git=1:2.34.1-1ubuntu1.15 \
+  git=1:2.34.1-1ubuntu1.16 \
   openjdk-21-jdk=21.0.10+7-1~22.04 \
   jq=1.6-2.1ubuntu3.1 \
   ansible=2.10.7+merged+base+2.10.8+dfsg-1 \
