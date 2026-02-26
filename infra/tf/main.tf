@@ -29,9 +29,7 @@ module "helpers_route53_domain_name_servers" {
   route53_zone_name_servers = module.conjob.r53_zone_name_servers
 }
 
-resource "aws_eip" "eip" {
-  vpc      = true
-}
+resource "aws_eip" "eip" {}
 
 # The association is necessary because the aws_eip resource requires the instance be in a running status, which it may not be even if terraform considers the resource created.
 resource "aws_eip_association" "eip_assoc" {

@@ -27,9 +27,7 @@ resource "random_id" "second_level_domain_name" {
   prefix = "${var.second_level_domain_name}-"
 }
 
-resource "aws_eip" "eip" {
-  vpc      = true
-}
+resource "aws_eip" "eip" {}
 
 # The association is necessary because the aws_eip resource requires the instance be available, which it may not be since it's a spot instance.
 resource "aws_eip_association" "eip_assoc" {
