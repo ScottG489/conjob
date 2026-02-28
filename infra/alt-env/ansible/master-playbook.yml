@@ -13,6 +13,25 @@
   - name: Gathering facts
     setup:
 
+  - name: Create swap file
+    become: yes
+    shell: |
+      set -x
+      dd if=/dev/zero of=/var/swap.1 bs=1M count=8192
+      chmod 600 /var/swap.1
+      mkswap /var/swap.1
+      swapon /var/swap.1
+    args:
+      creates: /var/swap.1
+
+  - name: Add swap to fstab
+    ansible.posix.mount:
+      path: swap
+      src: /var/swap.1
+      fstype: swap
+      opts: sw
+      state: present
+
   - name: Import the Docker signing key (apt-key)
     apt_key:
       url: https://download.docker.com/linux/ubuntu/gpg
