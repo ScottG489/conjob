@@ -2,18 +2,18 @@ FROM ubuntu:24.04@sha256:d1e2e92c075e5ca139d51a140fff46f84315c0fdce203eab2807c7e
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
-  git=1:2.34.1-1ubuntu1.17 \
-  openjdk-21-jdk=21.0.10+7-1~22.04 \
-  jq=1.6-2.1ubuntu3.1 \
-  ansible=2.10.7+merged+base+2.10.8+dfsg-1 \
-  curl=7.81.0-1ubuntu1.22 \
-  apt-transport-https=2.4.14 \
-  ca-certificates=20240203~22.04.1 \
-  gnupg=2.2.27-3ubuntu2.5 \
-  lsb-release=11.1.0ubuntu4 \
-  unzip=6.0-26ubuntu3.2
+  git=1:2.43.0-1ubuntu7.3 \
+  openjdk-21-jdk=21.0.10+7-1~24.04 \
+  jq=1.7.1-3ubuntu0.24.04.1 \
+  ansible=9.2.0+dfsg-0ubuntu5 \
+  curl=8.5.0-2ubuntu10.7 \
+  apt-transport-https=2.7.14build2 \
+  ca-certificates=20240203 \
+  gnupg=2.4.4-2ubuntu17.4 \
+  lsb-release=12.0-2 \
+  unzip=6.0-28ubuntu4.1
 
-ARG VERSION_STRING=5:24.0.9-1~ubuntu.22.04~jammy
+ARG VERSION_STRING=5:29.0.2-1~ubuntu.24.04~noble
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
   echo \
     "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
@@ -22,8 +22,7 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
   docker-ce=$VERSION_STRING \
   docker-ce-cli=$VERSION_STRING \
-  containerd.io=1.7.28-1~ubuntu.22.04~jammy
-ENV DOCKER_API_VERSION=1.43
+  containerd.io=1.7.28-1~ubuntu.24.04~noble
 
 ARG TERRAFORM_VERSION=1.14.6
 RUN curl https://releases.hashicorp.com/terraform/$TERRAFORM_VERSION/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -o /tmp/terraform.zip && \
