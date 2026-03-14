@@ -36,7 +36,7 @@ dependencies {
     unitTestAnnotationProcessor 'org.projectlombok:lombok:1.18.42'
     unitTestCompileOnly 'org.projectlombok:lombok:1.18.42'
 
-    unitTestImplementation "org.mockito:mockito-core:5.22.0"
+    unitTestImplementation "org.mockito:mockito-core:5.23.0"
     unitTestImplementation 'org.mockito:mockito-inline:5.2.0'
     unitTestImplementation platform('org.junit:junit-bom:6.0.3')
     unitTestImplementation 'org.junit.jupiter:junit-jupiter'
