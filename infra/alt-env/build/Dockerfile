@@ -7,7 +7,7 @@ RUN apt-get update && \
   jq=1.7.1-3ubuntu0.24.04.1 \
   ansible=9.2.0+dfsg-0ubuntu5 \
   curl=8.5.0-2ubuntu10.8 \
-  apt-transport-https=2.7.14build2 \
+  apt-transport-https=2.8.3 \
   ca-certificates=20240203 \
   gnupg=2.4.4-2ubuntu17.4 \
   lsb-release=12.0-2 \
