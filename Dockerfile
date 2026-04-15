@@ -1,4 +1,4 @@
-FROM eclipse-temurin:25@sha256:b4a48ff72ab09c8ecfc3ae35b3f9b96750437eb436bb1d9dc5cd6e1a885f7511
+FROM eclipse-temurin:25@sha256:656533f346d29cee151e2a7b697c84c878ea40cc9d04ba8bab59784d8c1e6299
 
 COPY build/install/conjob /opt/conjob
 COPY default-config.yml /opt/app/config.yml
