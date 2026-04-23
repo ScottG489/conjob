@@ -4,7 +4,7 @@ RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
   git=1:2.43.0-1ubuntu7.3 \
   openjdk-21-jdk=21.0.10+7-1~24.04 \
-  jq=1.7.1-3ubuntu0.24.04.1 \
+  jq=1.7.1-3ubuntu0.24.04.2 \
   ansible=9.2.0+dfsg-0ubuntu5 \
   curl=8.5.0-2ubuntu10.8 \
   apt-transport-https=2.8.3 \
