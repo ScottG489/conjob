@@ -136,6 +136,14 @@ public class DockerAdapter {
         }
     }
 
+    public void removeImage(String imageName) {
+        try {
+            dockerClient.removeImageCmd(imageName).withForce(true).exec();
+        } catch (Exception e) {
+            throw new RemoveImageException(e);
+        }
+    }
+
     public void removeContainer(String containerId) {
         try {
             dockerClient.removeContainerCmd(containerId)

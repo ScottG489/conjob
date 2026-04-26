@@ -1,5 +1,6 @@
 package conjob.core.job;
 
+import conjob.core.job.exception.RemoveImageException;
 import conjob.core.job.exception.RunJobException;
 import conjob.core.job.exception.StopJobRunException;
 import conjob.core.job.model.JobRunOutcome;
@@ -17,7 +18,7 @@ public class JobRunner {
         this.dockerAdapter = dockerAdapter;
     }
 
-    public JobRunOutcome runContainer(String containerId, long timeoutSeconds, int killTimeoutSeconds) {
+    public JobRunOutcome runContainer(String containerId, long timeoutSeconds, int killTimeoutSeconds, String imageName, boolean removeImage) {
         try {
             dockerAdapter.startContainer(containerId);
         } catch (RunJobException e) {
@@ -55,6 +56,13 @@ public class JobRunner {
             return new JobRunOutcome(exitStatusCode, output);
         } finally {
             executor.shutdownNow();
+            if (removeImage) {
+                try {
+                    dockerAdapter.removeImage(imageName);
+                } catch (RemoveImageException e) {
+                    log.warn("Problem removing image: {}", e.getMessage(), e);
+                }
+            }
         }
     }
 

@@ -38,9 +38,10 @@ public class JobResource {
             String input,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy,
             @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache,
-            @QueryParam("remove") @DefaultValue("false") boolean remove)
+            @QueryParam("remove") @DefaultValue("false") boolean remove,
+            @QueryParam("remove_image") @DefaultValue("false") boolean removeImage)
             throws SecretsStoreException {
-        return createResponse(imageName, input, pullStrategy, useDockerCache, remove);
+        return createResponse(imageName, input, pullStrategy, useDockerCache, remove, removeImage);
     }
 
     @POST
@@ -50,9 +51,10 @@ public class JobResource {
             String input,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy,
             @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache,
-            @QueryParam("remove") @DefaultValue("false") boolean remove)
+            @QueryParam("remove") @DefaultValue("false") boolean remove,
+            @QueryParam("remove_image") @DefaultValue("false") boolean removeImage)
             throws SecretsStoreException {
-        return createJsonResponse(imageName, input, pullStrategy, useDockerCache, remove);
+        return createJsonResponse(imageName, input, pullStrategy, useDockerCache, remove, removeImage);
     }
 
     @GET
@@ -61,9 +63,10 @@ public class JobResource {
             @NotEmpty @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy,
             @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache,
-            @QueryParam("remove") @DefaultValue("false") boolean remove)
+            @QueryParam("remove") @DefaultValue("false") boolean remove,
+            @QueryParam("remove_image") @DefaultValue("false") boolean removeImage)
             throws SecretsStoreException {
-        return createResponse(imageName, "", pullStrategy, useDockerCache, remove);
+        return createResponse(imageName, "", pullStrategy, useDockerCache, remove, removeImage);
     }
 
     @GET
@@ -72,23 +75,24 @@ public class JobResource {
             @NotEmpty @QueryParam("image") String imageName,
             @QueryParam("pull") @DefaultValue("always") String pullStrategy,
             @QueryParam("use_docker_cache") @DefaultValue("true") boolean useDockerCache,
-            @QueryParam("remove") @DefaultValue("false") boolean remove)
+            @QueryParam("remove") @DefaultValue("false") boolean remove,
+            @QueryParam("remove_image") @DefaultValue("false") boolean removeImage)
             throws SecretsStoreException {
-        return createJsonResponse(imageName, "", pullStrategy, useDockerCache, remove);
+        return createJsonResponse(imageName, "", pullStrategy, useDockerCache, remove, removeImage);
     }
 
-    private Response createResponse(String imageName, String input, String pullStrategy, boolean useDockerCache, boolean remove)
+    private Response createResponse(String imageName, String input, String pullStrategy, boolean useDockerCache, boolean remove, boolean removeImage)
             throws SecretsStoreException {
         log.info("Running image: '{}'", imageName);
-        JobRun jobRun = jobService.runJob(imageName, input, pullStrategy, useDockerCache, remove);
+        JobRun jobRun = jobService.runJob(imageName, input, pullStrategy, useDockerCache, remove, removeImage);
         log.info("Job run finished: '{}'", jobRun);
         return responseCreator.createResponseFrom(jobResponseConverter.from(jobRun));
     }
 
-    private Response createJsonResponse(String imageName, String input, String pullStrategy, boolean useDockerCache, boolean remove)
+    private Response createJsonResponse(String imageName, String input, String pullStrategy, boolean useDockerCache, boolean remove, boolean removeImage)
             throws SecretsStoreException {
         log.info("Running image: '{}'", imageName);
-        JobRun jobRun = jobService.runJob(imageName, input, pullStrategy, useDockerCache, remove);
+        JobRun jobRun = jobService.runJob(imageName, input, pullStrategy, useDockerCache, remove, removeImage);
         return responseCreator.createJsonResponseFrom(jobResponseConverter.from(jobRun));
     }
 }

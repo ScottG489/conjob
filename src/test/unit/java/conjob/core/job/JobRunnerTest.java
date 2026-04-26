@@ -1,6 +1,7 @@
 package conjob.core.job;
 
 import conjob.core.job.exception.ReadLogsException;
+import conjob.core.job.exception.RemoveImageException;
 import conjob.core.job.exception.RunJobException;
 import conjob.core.job.exception.StopJobRunException;
 import conjob.core.job.model.JobRunOutcome;
@@ -24,7 +25,9 @@ class JobRunnerTest {
     void runContainer(
             @ForAll String givenContainerId,
             @ForAll @LongRange(max = 255) long givenContainerExitCode,
-            @ForAll String givenContainerOutput) throws RunJobException, ReadLogsException {
+            @ForAll String givenContainerOutput,
+            @ForAll String givenImageName,
+            @ForAll boolean givenRemoveImage) throws RunJobException, ReadLogsException {
         DockerAdapter adapterMock = mock(DockerAdapter.class);
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = Long.MAX_VALUE;
@@ -35,7 +38,7 @@ class JobRunnerTest {
                 .thenReturn(givenContainerOutput);
 
         JobRunOutcome jobRunOutcome =
-                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout);
+                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout, givenImageName, givenRemoveImage);
 
         assertThat(jobRunOutcome.getExitStatusCode(), is(givenContainerExitCode));
         assertThat(jobRunOutcome.getOutput(), is(givenContainerOutput));
@@ -52,7 +55,9 @@ class JobRunnerTest {
     void runContainerException(
             @ForAll String givenContainerId,
             @ForAll("nonTerminatedExitCodes") long givenContainerExitCode,
-            @ForAll String givenContainerOutput) throws RunJobException, ReadLogsException, StopJobRunException {
+            @ForAll String givenContainerOutput,
+            @ForAll String givenImageName,
+            @ForAll boolean givenRemoveImage) throws RunJobException, ReadLogsException, StopJobRunException {
         DockerAdapter adapterMock = mock(DockerAdapter.class);
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = Long.MAX_VALUE;
@@ -65,7 +70,7 @@ class JobRunnerTest {
                 .thenReturn(givenContainerOutput);
 
         JobRunOutcome jobRunOutcome =
-                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout);
+                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout, givenImageName, givenRemoveImage);
 
         assertThat(jobRunOutcome.getExitStatusCode(), is(givenContainerExitCode));
         assertThat(jobRunOutcome.getOutput(), is(givenContainerOutput));
@@ -83,7 +88,9 @@ class JobRunnerTest {
     void runContainerTimeout(
             @ForAll String givenContainerId,
             @ForAll("nonTerminatedExitCodes") long givenContainerExitCode,
-            @ForAll String givenContainerOutput) throws ReadLogsException, StopJobRunException {
+            @ForAll String givenContainerOutput,
+            @ForAll String givenImageName,
+            @ForAll boolean givenRemoveImage) throws ReadLogsException, StopJobRunException {
         DockerAdapter adapterMock = mock(DockerAdapter.class);
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = 0;
@@ -96,7 +103,7 @@ class JobRunnerTest {
                 .thenReturn(givenContainerOutput);
 
         JobRunOutcome jobRunOutcome =
-                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout);
+                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout, givenImageName, givenRemoveImage);
 
         assertThat(jobRunOutcome.getExitStatusCode(), is(givenContainerExitCode));
         assertThat(jobRunOutcome.getOutput(), is(givenContainerOutput));
@@ -114,7 +121,9 @@ class JobRunnerTest {
     void runContainerTimeoutTerminated(
             @ForAll String givenContainerId,
             @ForAll("terminatedExitCodes") long givenContainerExitCode,
-            @ForAll String givenContainerOutput) throws ReadLogsException, StopJobRunException {
+            @ForAll String givenContainerOutput,
+            @ForAll String givenImageName,
+            @ForAll boolean givenRemoveImage) throws ReadLogsException, StopJobRunException {
         DockerAdapter adapterMock = mock(DockerAdapter.class);
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = 0;
@@ -127,7 +136,7 @@ class JobRunnerTest {
                 .thenReturn(givenContainerOutput);
 
         JobRunOutcome jobRunOutcome =
-                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout);
+                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout, givenImageName, givenRemoveImage);
 
         assertThat(jobRunOutcome.getExitStatusCode(), is(-1L));
         assertThat(jobRunOutcome.getOutput(), is(givenContainerOutput));
@@ -144,7 +153,9 @@ class JobRunnerTest {
             "and returns an exit code of -1.")
     void runContainerTimeoutTerminatedException(
             @ForAll String givenContainerId,
-            @ForAll String givenContainerOutput) throws ReadLogsException, StopJobRunException {
+            @ForAll String givenContainerOutput,
+            @ForAll String givenImageName,
+            @ForAll boolean givenRemoveImage) throws ReadLogsException, StopJobRunException {
         DockerAdapter adapterMock = mock(DockerAdapter.class);
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = 0;
@@ -157,7 +168,7 @@ class JobRunnerTest {
                 .thenReturn(givenContainerOutput);
 
         JobRunOutcome jobRunOutcome =
-                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout);
+                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout, givenImageName, givenRemoveImage);
 
         assertThat(jobRunOutcome.getExitStatusCode(), is(-1L));
         assertThat(jobRunOutcome.getOutput(), is(givenContainerOutput));
@@ -172,7 +183,9 @@ class JobRunnerTest {
             "should return an outcome with the same data.")
     void runContainerReadLogsException(
             @ForAll String givenContainerId,
-            @ForAll @LongRange(max = 255) long givenContainerExitCode)
+            @ForAll @LongRange(max = 255) long givenContainerExitCode,
+            @ForAll String givenImageName,
+            @ForAll boolean givenRemoveImage)
             throws RunJobException, ReadLogsException {
         DockerAdapter adapterMock = mock(DockerAdapter.class);
         JobRunner jobRunner = new JobRunner(adapterMock);
@@ -184,7 +197,7 @@ class JobRunnerTest {
                 .thenThrow(new ReadLogsException(new Exception()));
 
         JobRunOutcome jobRunOutcome =
-                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout);
+                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout, givenImageName, givenRemoveImage);
 
         assertThat(jobRunOutcome.getExitStatusCode(), is(givenContainerExitCode));
         assertThat(jobRunOutcome.getOutput(), is(""));
@@ -196,7 +209,9 @@ class JobRunnerTest {
             "and there is a problem starting, " +
             "should return an outcome with exit code -1 and empty output.")
     void runContainerStartException(
-            @ForAll String givenContainerId) throws RunJobException {
+            @ForAll String givenContainerId,
+            @ForAll String givenImageName,
+            @ForAll boolean givenRemoveImage) throws RunJobException {
         DockerAdapter adapterMock = mock(DockerAdapter.class);
         JobRunner jobRunner = new JobRunner(adapterMock);
         long givenTimeoutSeconds = Long.MAX_VALUE;
@@ -205,10 +220,78 @@ class JobRunnerTest {
                 .when(adapterMock).startContainer(givenContainerId);
 
         JobRunOutcome jobRunOutcome =
-                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout);
+                jobRunner.runContainer(givenContainerId, givenTimeoutSeconds, givenKillTimeout, givenImageName, givenRemoveImage);
 
         assertThat(jobRunOutcome.getExitStatusCode(), is(-1L));
         assertThat(jobRunOutcome.getOutput(), is(""));
+    }
+
+    @Property
+    @Label("Given removeImage is true, " +
+            "when running the container, " +
+            "should call dockerAdapter.removeImage with the given image name.")
+    void removeImageCalledWhenTrue(
+            @ForAll String givenContainerId,
+            @ForAll @LongRange(max = 255) long givenContainerExitCode,
+            @ForAll String givenContainerOutput,
+            @ForAll String givenImageName) throws RunJobException, ReadLogsException {
+        DockerAdapter adapterMock = mock(DockerAdapter.class);
+        JobRunner jobRunner = new JobRunner(adapterMock);
+        when(adapterMock.waitForExit(givenContainerId))
+                .thenReturn(givenContainerExitCode);
+        when(adapterMock.readAllLogsUntilExit(givenContainerId))
+                .thenReturn(givenContainerOutput);
+
+        jobRunner.runContainer(givenContainerId, Long.MAX_VALUE, Integer.MAX_VALUE, givenImageName, true);
+
+        verify(adapterMock).removeImage(givenImageName);
+    }
+
+    @Property
+    @Label("Given removeImage is false, " +
+            "when running the container, " +
+            "should not call dockerAdapter.removeImage.")
+    void removeImageNotCalledWhenFalse(
+            @ForAll String givenContainerId,
+            @ForAll @LongRange(max = 255) long givenContainerExitCode,
+            @ForAll String givenContainerOutput,
+            @ForAll String givenImageName) throws RunJobException, ReadLogsException {
+        DockerAdapter adapterMock = mock(DockerAdapter.class);
+        JobRunner jobRunner = new JobRunner(adapterMock);
+        when(adapterMock.waitForExit(givenContainerId))
+                .thenReturn(givenContainerExitCode);
+        when(adapterMock.readAllLogsUntilExit(givenContainerId))
+                .thenReturn(givenContainerOutput);
+
+        jobRunner.runContainer(givenContainerId, Long.MAX_VALUE, Integer.MAX_VALUE, givenImageName, false);
+
+        verify(adapterMock, never()).removeImage(any());
+    }
+
+    @Property
+    @Label("Given removeImage is true, " +
+            "when running the container, " +
+            "and removing the image throws, " +
+            "should still return the outcome.")
+    void removeImageExceptionSwallowed(
+            @ForAll String givenContainerId,
+            @ForAll @LongRange(max = 255) long givenContainerExitCode,
+            @ForAll String givenContainerOutput,
+            @ForAll String givenImageName) throws RunJobException, ReadLogsException {
+        DockerAdapter adapterMock = mock(DockerAdapter.class);
+        JobRunner jobRunner = new JobRunner(adapterMock);
+        when(adapterMock.waitForExit(givenContainerId))
+                .thenReturn(givenContainerExitCode);
+        when(adapterMock.readAllLogsUntilExit(givenContainerId))
+                .thenReturn(givenContainerOutput);
+        doThrow(new RemoveImageException(new Exception()))
+                .when(adapterMock).removeImage(givenImageName);
+
+        JobRunOutcome jobRunOutcome =
+                jobRunner.runContainer(givenContainerId, Long.MAX_VALUE, Integer.MAX_VALUE, givenImageName, true);
+
+        assertThat(jobRunOutcome.getExitStatusCode(), is(givenContainerExitCode));
+        assertThat(jobRunOutcome.getOutput(), is(givenContainerOutput));
     }
 
     @Provide

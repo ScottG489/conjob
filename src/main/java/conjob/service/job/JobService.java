@@ -47,13 +47,13 @@ public class JobService {
         this.imageTagEnsurer = imageTagEnsurer;
     }
 
-    public JobRun runJob(String imageName, String input, String pullStrategyName, boolean useDockerCache, boolean remove) throws SecretsStoreException {
+    public JobRun runJob(String imageName, String input, String pullStrategyName, boolean useDockerCache, boolean remove, boolean removeImage) throws SecretsStoreException {
         imageName = imageTagEnsurer.hasTagOrLatest(imageName);
         PullStrategy pullStrategy = PullStrategy.valueOf(pullStrategyName.toUpperCase());
-        return runJob(imageName, input, pullStrategy, useDockerCache, remove);
+        return runJob(imageName, input, pullStrategy, useDockerCache, remove, removeImage);
     }
 
-    private JobRun runJob(String imageName, String input, PullStrategy pullStrategy, boolean useDockerCache, boolean remove)
+    private JobRun runJob(String imageName, String input, PullStrategy pullStrategy, boolean useDockerCache, boolean remove, boolean removeImage)
             throws SecretsStoreException {
         if (runJobLimiter.isLimitingOrIncrement()) {
             return new JobRun(JobRunConclusion.REJECTED, "", -1);
@@ -76,7 +76,7 @@ public class JobService {
         }
 
         JobRunOutcome outcome = jobRunner
-                .runContainer(jobId, maxTimeoutSeconds, maxKillTimeoutSeconds);
+                .runContainer(jobId, maxTimeoutSeconds, maxKillTimeoutSeconds, imageName, removeImage);
         JobRunConclusion jobRunConclusion = outcomeDeterminer.determineOutcome(outcome);
 
         runJobLimiter.markJobRunComplete();

@@ -38,17 +38,18 @@ class JobResourceTest {
             @ForAll String givenPullStrategy,
             @ForAll boolean givenUseDockerCache,
             @ForAll boolean givenRemove,
+            @ForAll boolean givenRemoveImage,
             @ForAll @UseType JobRun jobRun,
             @ForAll @UseType JobRunResponse jobRunResponse,
             @ForAll("responseMock") Response givenMockResponse) throws SecretsStoreException {
-        when(jobServiceMock.runJob(givenImageName, givenInput, givenPullStrategy, givenUseDockerCache, givenRemove))
+        when(jobServiceMock.runJob(givenImageName, givenInput, givenPullStrategy, givenUseDockerCache, givenRemove, givenRemoveImage))
                 .thenReturn(jobRun);
         when(responseConverterMock.from(jobRun))
                 .thenReturn(jobRunResponse);
         when(responseCreatorMock.createResponseFrom(jobRunResponse))
                 .thenReturn(givenMockResponse);
 
-        Response response = jobResource.handleTextPost(givenImageName, givenInput, givenPullStrategy, givenUseDockerCache, givenRemove);
+        Response response = jobResource.handleTextPost(givenImageName, givenInput, givenPullStrategy, givenUseDockerCache, givenRemove, givenRemoveImage);
 
         assertThat(response, is(givenMockResponse));
     }
@@ -60,17 +61,18 @@ class JobResourceTest {
             @ForAll String givenPullStrategy,
             @ForAll boolean givenUseDockerCache,
             @ForAll boolean givenRemove,
+            @ForAll boolean givenRemoveImage,
             @ForAll @UseType JobRun jobRun,
             @ForAll @UseType JobRunResponse jobRunResponse,
             @ForAll("responseMock") Response givenMockResponse) throws SecretsStoreException {
-        when(jobServiceMock.runJob(givenImageName, givenInput, givenPullStrategy, givenUseDockerCache, givenRemove))
+        when(jobServiceMock.runJob(givenImageName, givenInput, givenPullStrategy, givenUseDockerCache, givenRemove, givenRemoveImage))
                 .thenReturn(jobRun);
         when(responseConverterMock.from(jobRun))
                 .thenReturn(jobRunResponse);
         when(responseCreatorMock.createJsonResponseFrom(jobRunResponse))
                 .thenReturn(givenMockResponse);
 
-        Response response = jobResource.handleJsonPost(givenImageName, givenInput, givenPullStrategy, givenUseDockerCache, givenRemove);
+        Response response = jobResource.handleJsonPost(givenImageName, givenInput, givenPullStrategy, givenUseDockerCache, givenRemove, givenRemoveImage);
 
         assertThat(response, is(givenMockResponse));
     }
@@ -82,17 +84,18 @@ class JobResourceTest {
             @ForAll String givenPullStrategy,
             @ForAll boolean givenUseDockerCache,
             @ForAll boolean givenRemove,
+            @ForAll boolean givenRemoveImage,
             @ForAll @UseType JobRun jobRun,
             @ForAll @UseType JobRunResponse jobRunResponse,
             @ForAll("responseMock") Response givenMockResponse) throws SecretsStoreException {
-        when(jobServiceMock.runJob(givenImageName, givenInput, givenPullStrategy, givenUseDockerCache, givenRemove))
+        when(jobServiceMock.runJob(givenImageName, givenInput, givenPullStrategy, givenUseDockerCache, givenRemove, givenRemoveImage))
                 .thenReturn(jobRun);
         when(responseConverterMock.from(jobRun))
                 .thenReturn(jobRunResponse);
         when(responseCreatorMock.createResponseFrom(jobRunResponse))
                 .thenReturn(givenMockResponse);
 
-        Response response = jobResource.handleTextGet(givenImageName, givenPullStrategy, givenUseDockerCache, givenRemove);
+        Response response = jobResource.handleTextGet(givenImageName, givenPullStrategy, givenUseDockerCache, givenRemove, givenRemoveImage);
 
         assertThat(response, is(givenMockResponse));
     }
@@ -104,17 +107,18 @@ class JobResourceTest {
             @ForAll String givenPullStrategy,
             @ForAll boolean givenUseDockerCache,
             @ForAll boolean givenRemove,
+            @ForAll boolean givenRemoveImage,
             @ForAll @UseType JobRun jobRun,
             @ForAll @UseType JobRunResponse jobRunResponse,
             @ForAll("responseMock") Response givenMockResponse) throws SecretsStoreException {
-        when(jobServiceMock.runJob(givenImageName, givenInput, givenPullStrategy, givenUseDockerCache, givenRemove))
+        when(jobServiceMock.runJob(givenImageName, givenInput, givenPullStrategy, givenUseDockerCache, givenRemove, givenRemoveImage))
                 .thenReturn(jobRun);
         when(responseConverterMock.from(jobRun))
                 .thenReturn(jobRunResponse);
         when(responseCreatorMock.createJsonResponseFrom(jobRunResponse))
                 .thenReturn(givenMockResponse);
 
-        Response response = jobResource.handleJsonGet(givenImageName, givenPullStrategy, givenUseDockerCache, givenRemove);
+        Response response = jobResource.handleJsonGet(givenImageName, givenPullStrategy, givenUseDockerCache, givenRemove, givenRemoveImage);
 
         assertThat(response, is(givenMockResponse));
     }

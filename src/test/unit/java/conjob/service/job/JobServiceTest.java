@@ -77,7 +77,8 @@ class JobServiceTest {
                           @ForAll String givenJobId,
                           @ForAll @UseType JobRunOutcome givenJobRunOutcome,
                           @ForAll JobRunConclusion givenJobRunConclusion,
-                          @ForAll boolean givenRemove) throws SecretsStoreException, CreateJobRunException, JobUpdateException {
+                          @ForAll boolean givenRemove,
+                          @ForAll boolean givenRemoveImage) throws SecretsStoreException, CreateJobRunException, JobUpdateException {
         boolean isLimiting = false;
         long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
         int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
@@ -87,11 +88,11 @@ class JobServiceTest {
         JobRunCreationStrategy mockJobRunCreationStrategy = mock(JobRunCreationStrategy.class);
         mockCommonCallChain(imageName, input, givenDockerCacheVolumeName, givenSecretsVolumeName, givenJobRunConfig, isLimiting, pullStrategy, mockJobRunCreationStrategy, givenRemove);
         when(mockJobRunCreationStrategy.createJobRun(givenJobRunConfig)).thenReturn(givenJobId);
-        when(mockJobRunner.runContainer(givenJobId, maxTimeoutSeconds, maxKillTimeoutSeconds))
+        when(mockJobRunner.runContainer(givenJobId, maxTimeoutSeconds, maxKillTimeoutSeconds, imageName, givenRemoveImage))
                 .thenReturn(givenJobRunOutcome);
         when(mockOutcomeDeterminer.determineOutcome(givenJobRunOutcome)).thenReturn(givenJobRunConclusion);
 
-        JobRun jobRun = jobService.runJob(imageName, input, givenPullStrategyName, true, givenRemove);
+        JobRun jobRun = jobService.runJob(imageName, input, givenPullStrategyName, true, givenRemove, givenRemoveImage);
 
         assertThat(jobRun, is(expectedJobRun));
         verify(mockRunJobLimiter, times(1)).markJobRunComplete();
@@ -111,14 +112,15 @@ class JobServiceTest {
                      @ForAll String givenSecretsVolumeName,
                      @ForAll @UseType JobRunConfig givenJobRunConfig,
                      @ForAll("createOrUpdateJobRunException") JobRunException givenJobRunException,
-                     @ForAll boolean givenRemove) throws SecretsStoreException, CreateJobRunException, JobUpdateException {
+                     @ForAll boolean givenRemove,
+                     @ForAll boolean givenRemoveImage) throws SecretsStoreException, CreateJobRunException, JobUpdateException {
         boolean isLimiting = false;
         PullStrategy pullStrategy = PullStrategy.valueOf(givenPullStrategyName.toUpperCase());
         JobRunCreationStrategy mockJobRunCreationStrategy = mock(JobRunCreationStrategy.class);
         mockCommonCallChain(imageName, input, givenDockerCacheVolumeName, givenSecretsVolumeName, givenJobRunConfig, isLimiting, pullStrategy, mockJobRunCreationStrategy, givenRemove);
         when(mockJobRunCreationStrategy.createJobRun(givenJobRunConfig)).thenThrow(givenJobRunException);
 
-        JobRun jobRun = jobService.runJob(imageName, input, givenPullStrategyName, true, givenRemove);
+        JobRun jobRun = jobService.runJob(imageName, input, givenPullStrategyName, true, givenRemove, givenRemoveImage);
 
         assertThat(jobRun, is(new JobRun(JobRunConclusion.NOT_FOUND, "", -1)));
         verify(mockRunJobLimiter, times(1)).markJobRunComplete();
@@ -132,10 +134,11 @@ class JobServiceTest {
             @ForAll String imageName,
             @ForAll String input,
             @ForAll("pullStrategyNames") String pullStrategyNames,
-            @ForAll boolean givenRemove) throws SecretsStoreException {
+            @ForAll boolean givenRemove,
+            @ForAll boolean givenRemoveImage) throws SecretsStoreException {
         when(mockRunJobLimiter.isLimitingOrIncrement()).thenReturn(true);
 
-        JobRun jobRun = jobService.runJob(imageName, input, pullStrategyNames, true, givenRemove);
+        JobRun jobRun = jobService.runJob(imageName, input, pullStrategyNames, true, givenRemove, givenRemoveImage);
 
         assertThat(jobRun, is(new JobRun(JobRunConclusion.REJECTED, "", -1)));
     }
