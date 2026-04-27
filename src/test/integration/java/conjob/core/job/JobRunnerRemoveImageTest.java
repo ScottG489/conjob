@@ -2,6 +2,7 @@ package conjob.core.job;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.exception.NotFoundException;
+import com.github.dockerjava.api.model.Container;
 import conjob.core.job.exception.CreateJobRunException;
 import conjob.core.job.model.JobRunConfig;
 import net.jqwik.api.*;
@@ -10,6 +11,8 @@ import net.jqwik.api.lifecycle.AfterContainer;
 import net.jqwik.api.lifecycle.AfterTry;
 import net.jqwik.api.lifecycle.BeforeContainer;
 import net.jqwik.api.lifecycle.BeforeTry;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -44,6 +47,17 @@ public class JobRunnerRemoveImageTest {
     @AfterTry
     void tearDown() {
         try {
+            List<Container> containers = dockerClient.listContainersCmd()
+                    .withShowAll(true)
+                    .withAncestorFilter(List.of(TEST_IMAGE))
+                    .exec();
+            for (Container container : containers) {
+                try {
+                    dockerClient.removeContainerCmd(container.getId()).withForce(true).exec();
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {}
+        try {
             if (secretsVolumeName != null && !secretsVolumeName.isBlank())
                 dockerClient.removeVolumeCmd(secretsVolumeName).exec();
         } catch (Exception ignored) {}
@@ -52,7 +66,7 @@ public class JobRunnerRemoveImageTest {
     @Property(tries = 3)
     @Label("Given a completed job run, " +
             "when removing the image after the run, " +
-            "should not exist after removal.")
+            "should be fully removed (not dangling).")
     void removeImageAfterRun(
             @ForAll("existingJob") String jobName,
             @ForAll @WithNull String input,
@@ -64,10 +78,11 @@ public class JobRunnerRemoveImageTest {
         JobRunConfig jobRunConfig =
                 new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache, true);
 
+        String imageId = dockerClient.inspectImageCmd(jobName).exec().getId();
         String jobRunId = dockerAdapter.createJobRun(jobRunConfig);
         jobRunner.runContainer(jobRunId, Long.MAX_VALUE, Integer.MAX_VALUE, jobName, true);
 
-        assertThrows(NotFoundException.class, () -> dockerClient.inspectImageCmd(jobName).exec());
+        assertThrows(NotFoundException.class, () -> dockerClient.inspectImageCmd(imageId).exec());
     }
 
     @Property(tries = 3)

@@ -11,6 +11,7 @@ import java.util.concurrent.*;
 @Slf4j
 public class JobRunner {
     private static final long LOG_COMPLETION_TIMEOUT_SECONDS = 5;
+    private static final int CONTAINER_REMOVAL_TIMEOUT_SECONDS = 30;
 
     private final DockerAdapter dockerAdapter;
 
@@ -57,6 +58,7 @@ public class JobRunner {
         } finally {
             executor.shutdownNow();
             if (removeImage) {
+                dockerAdapter.waitForContainerRemoval(containerId, CONTAINER_REMOVAL_TIMEOUT_SECONDS);
                 try {
                     dockerAdapter.removeImage(imageName);
                 } catch (RemoveImageException e) {
