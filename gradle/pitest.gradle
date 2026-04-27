@@ -1,0 +1,12 @@
+pitest {
+    def includeIntegration = providers.gradleProperty('pitestIntegration').present
+    testSourceSets.set(includeIntegration
+            ? [sourceSets.unitTest, sourceSets.integrationTest]
+            : [sourceSets.unitTest])
+    junit5PluginVersion = '1.2.3'
+    timestampedReports = false
+    // If you want to run all mutators: https://pitest.org/quickstart/mutators/
+//    mutators = ["ALL"]
+    // If you want to run specific tests (faster)
+//    targetTests = ['*JobServiceTest']
+}
