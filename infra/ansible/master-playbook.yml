@@ -6,7 +6,11 @@
     - vars.yml
   pre_tasks:
     - name: Update apt
-      raw: apt update && apt update
+      ansible.builtin.apt:
+        update_cache: yes
+        lock_timeout: 300
+      async: 360
+      poll: 5
 
   tasks:
   # Necessary because we turn it off for python install pre_task
