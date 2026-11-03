@@ -2,14 +2,14 @@ FROM ubuntu:24.04@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
-  git=1:2.43.0-1ubuntu7.3 \
-  openjdk-21-jdk=21.0.10+7-1~24.04 \
+  git=1:2.43.0-1ubuntu7.4 \
+  openjdk-21-jdk=21.0.12.1+1-1~24.04.4 \
   jq=1.7.1-3ubuntu0.24.04.2 \
   ansible=9.2.0+dfsg-0ubuntu5 \
-  curl=8.5.0-2ubuntu10.9 \
+  curl=8.5.0-2ubuntu10.16 \
   apt-transport-https=2.8.3 \
-  ca-certificates=20240203 \
-  gnupg=2.4.4-2ubuntu17.4 \
+  ca-certificates=20260816ubuntu0.24.04.1 \
+  gnupg=2.4.4-2ubuntu17.6 \
   lsb-release=12.0-2 \
   unzip=6.0-28ubuntu4.1
 
