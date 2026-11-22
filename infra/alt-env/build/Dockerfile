@@ -8,7 +8,7 @@ RUN apt-get update && \
   ansible=9.2.0+dfsg-0ubuntu5 \
   curl=8.5.0-2ubuntu10.16 \
   apt-transport-https=2.8.3 \
-  ca-certificates=20260816ubuntu0.24.04.1 \
+  ca-certificates=20260816ubuntu0.24.04.2 \
   gnupg=2.4.4-2ubuntu17.6 \
   lsb-release=12.0-2 \
   unzip=6.0-28ubuntu4.1
