@@ -8,6 +8,7 @@ import conjob.core.job.model.JobRunOutcome;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.LongRange;
 import org.mockito.AdditionalAnswers;
+import testsupport.ExpectedLogs;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -45,6 +46,7 @@ class JobRunnerTest {
     }
 
     @Property
+    @ExpectedLogs(JobRunner.class)
     @Label("Given a container id, " +
             "and an infinite timeout, " +
             "when running the container, " +
@@ -77,6 +79,7 @@ class JobRunnerTest {
     }
 
     @Property
+    @ExpectedLogs(JobRunner.class)
     @Label("Given a container id, " +
             "and an immediate timeout, " +
             "when running the container, " +
@@ -110,6 +113,7 @@ class JobRunnerTest {
     }
 
     @Property
+    @ExpectedLogs(JobRunner.class)
     @Label("Given a container id, " +
             "and an immediate timeout, " +
             "when running the container, " +
@@ -143,6 +147,7 @@ class JobRunnerTest {
     }
 
     @Property
+    @ExpectedLogs(JobRunner.class)
     @Label("Given a container id, " +
             "and an immediate timeout, " +
             "when running the container, " +
@@ -204,6 +209,7 @@ class JobRunnerTest {
     }
 
     @Property
+    @ExpectedLogs(JobRunner.class)
     @Label("Given a container id, " +
             "when running the container, " +
             "and there is a problem starting, " +
@@ -269,6 +275,7 @@ class JobRunnerTest {
     }
 
     @Property
+    @ExpectedLogs(JobRunner.class)
     @Label("Given removeImage is true, " +
             "when running the container, " +
             "and removing the image throws, " +

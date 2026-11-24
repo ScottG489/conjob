@@ -15,6 +15,7 @@ import conjob.core.secrets.SecretsStoreException;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.UseType;
 import net.jqwik.api.lifecycle.BeforeTry;
+import testsupport.ExpectedLogs;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -99,6 +100,7 @@ class JobServiceTest {
     }
 
     @Property
+    @ExpectedLogs(JobService.class)
     @Label("Given a limiter that's not at the limit, " +
             "and creating a job run throws a create or update exception, " +
             "when the job is run, " +

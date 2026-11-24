@@ -11,6 +11,7 @@ import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
 import net.jqwik.api.lifecycle.BeforeTry;
 import org.junit.jupiter.api.BeforeEach;
+import testsupport.ExpectedLogs;
 
 import java.util.concurrent.TimeUnit;
 
@@ -50,6 +51,7 @@ public class DockerAdapterWaitForContainerRemovalTest {
     }
 
     @Property
+    @ExpectedLogs(DockerAdapter.class)
     @Label("Given the wait times out, " +
             "should not throw.")
     void timesOut(
@@ -73,6 +75,7 @@ public class DockerAdapterWaitForContainerRemovalTest {
     }
 
     @Property
+    @ExpectedLogs(DockerAdapter.class)
     @Label("Given the wait is interrupted, " +
             "should not throw and should set the interrupt flag.")
     void interrupted(
@@ -86,6 +89,7 @@ public class DockerAdapterWaitForContainerRemovalTest {
     }
 
     @Property
+    @ExpectedLogs(DockerAdapter.class)
     @Label("Given an unexpected exception during the wait, " +
             "should not throw.")
     void unexpectedException(
