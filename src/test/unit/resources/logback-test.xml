@@ -1,0 +1,13 @@
+<configuration>
+    <!-- Log at INFO and above. Without this file, Logback logs everything at DEBUG until ConJobApplicationTest
+         creates an Application, which makes Dropwizard switch to warnings and errors, so tests that ran before it
+         (e.g. ArchUnitTest) printed thousands of debug lines. -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} -- %msg%n</pattern>
+        </encoder>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>
