@@ -1,6 +1,7 @@
 package conjob.core.job;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.async.ResultCallbackTemplate;
 import conjob.core.job.DockerAdapter;
 import conjob.core.job.exception.ReadLogsException;
 import net.jqwik.api.*;
@@ -8,6 +9,7 @@ import net.jqwik.api.lifecycle.AfterContainer;
 import net.jqwik.api.lifecycle.AfterTry;
 import net.jqwik.api.lifecycle.BeforeContainer;
 import net.jqwik.api.lifecycle.BeforeTry;
+import testsupport.ExpectedLogs;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -60,6 +62,7 @@ public class DockerAdapterReadAllLogsTest {
     }
 
     @Property(tries = 100)
+    @ExpectedLogs(ResultCallbackTemplate.class)
     @Label("Given a container ID that doesn't exist, " +
             "when reading that container's logs, " +
             "should throw a ReadLogsException.")

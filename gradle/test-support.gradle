@@ -1,0 +1,18 @@
+// Test code that the unit and integration tests share, such as ExpectedLogs. Its resources register ExpectedLogsHook
+// for every jqwik property in both.
+sourceSets {
+    testSupport {
+        java.srcDirs = ['src/test/support/java']
+        resources.srcDir file('src/test/support/resources')
+        // For Logback
+        compileClasspath += configurations.runtimeClasspath
+    }
+}
+
+dependencies {
+    // The unit and integration tests each bring their own jqwik at runtime
+    testSupportCompileOnly "net.jqwik:jqwik-api:${unitTestJqwikVersion}"
+
+    unitTestImplementation sourceSets.testSupport.output
+    integrationTestImplementation sourceSets.testSupport.output
+}
