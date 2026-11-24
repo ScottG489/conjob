@@ -13,7 +13,7 @@ conjob:
     limit:
       maxGlobalRequestsPerSecond: ${JOB_LIMIT_REQ:-5}
       maxConcurrentRuns: ${JOB_LIMIT_CONCURRENT:-3}
-      maxTimeoutSeconds: ${JOB_LIMIT_TIMEOUT:-2700}
+      maxTimeoutSeconds: ${JOB_LIMIT_TIMEOUT:-3600}
       maxKillTimeoutSeconds: ${JOB_LIMIT_KILL_TIMEOUT:-300}
 
 server:
