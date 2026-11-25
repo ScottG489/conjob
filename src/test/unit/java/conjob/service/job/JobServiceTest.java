@@ -89,7 +89,7 @@ class JobServiceTest {
         JobRunCreationStrategy mockJobRunCreationStrategy = mock(JobRunCreationStrategy.class);
         mockCommonCallChain(imageName, input, givenDockerCacheVolumeName, givenSecretsVolumeName, givenJobRunConfig, isLimiting, pullStrategy, mockJobRunCreationStrategy, givenRemove);
         when(mockJobRunCreationStrategy.createJobRun(givenJobRunConfig)).thenReturn(givenJobId);
-        when(mockJobRunner.runContainer(givenJobId, maxTimeoutSeconds, maxKillTimeoutSeconds, imageName, givenRemoveImage))
+        when(mockJobRunner.runContainer(givenJobId, maxTimeoutSeconds, maxKillTimeoutSeconds, givenRemoveImage))
                 .thenReturn(givenJobRunOutcome);
         when(mockOutcomeDeterminer.determineOutcome(givenJobRunOutcome)).thenReturn(givenJobRunConclusion);
 
