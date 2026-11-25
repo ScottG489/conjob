@@ -5,11 +5,13 @@ import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Container;
 import conjob.core.job.exception.CreateJobRunException;
 import conjob.core.job.model.JobRunConfig;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import net.jqwik.api.Example;
+import net.jqwik.api.Label;
+import net.jqwik.api.lifecycle.AfterContainer;
+import net.jqwik.api.lifecycle.AfterTry;
+import net.jqwik.api.lifecycle.BeforeContainer;
+import net.jqwik.api.lifecycle.BeforeTry;
+import testsupport.ExpectedLogs;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,26 +36,26 @@ public class JobRunnerConcurrentRemoveImageTest {
     private JobRunner jobRunner;
     private final List<String> imageIdsToRemove = new ArrayList<>();
 
-    @BeforeAll
-    static void beforeAll() {
+    @BeforeContainer
+    static void beforeContainer() {
         dockerClient = DockerClientFactory.createDefaultClient();
     }
 
-    @AfterAll
-    static void afterAll() {
+    @AfterContainer
+    static void afterContainer() {
         try {
             dockerClient.removeImageCmd(TEST_IMAGE).withForce(true).exec();
         } catch (Exception ignored) {}
     }
 
-    @BeforeEach
+    @BeforeTry
     void setUp() throws InterruptedException {
         dockerAdapter = new DockerAdapter(dockerClient, DockerAdapter.Runtime.DEFAULT);
         jobRunner = new JobRunner(dockerAdapter);
         dockerClient.pullImageCmd(TEST_IMAGE).start().awaitCompletion();
     }
 
-    @AfterEach
+    @AfterTry
     void tearDown() {
         try {
             List<Container> containers = dockerClient.listContainersCmd()
@@ -73,7 +75,13 @@ public class JobRunnerConcurrentRemoveImageTest {
         }
     }
 
-    @Test
+    // Jobs that finish while another job still runs the image can't remove it, and the
+    // last two jobs finish together, so one of them finds it already removed.
+    @Example
+    @ExpectedLogs(JobRunner.class)
+    @Label("Given several jobs running the same image at once, " +
+            "when each one removes its image after its run, " +
+            "the image should be fully removed once they all finish.")
     void concurrentRunsRemoveImageFully() throws Exception {
         String imageId = dockerClient.inspectImageCmd(TEST_IMAGE).exec().getId();
         imageIdsToRemove.add(imageId);
@@ -89,7 +97,11 @@ public class JobRunnerConcurrentRemoveImageTest {
         assertThrows(NotFoundException.class, () -> dockerClient.inspectImageCmd(imageId).exec());
     }
 
-    @Test
+    @Example
+    @Label("Given a job running an image, " +
+            "and the image's tag moving to another image that a second job runs, " +
+            "when each job removes its image after its run, " +
+            "both images should be fully removed.")
     void tagMovedDuringRunRemovesBothImages() throws Exception {
         String repository = "conjob-test-moving-tag-" + UUID.randomUUID();
         String movingTag = repository + ":latest";
