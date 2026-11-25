@@ -62,7 +62,7 @@ public class JobService {
         long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
         int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
 
-        JobRunConfig jobRunConfig = getJobRunConfig(imageName, input, useDockerCache, remove);
+        JobRunConfig jobRunConfig = getJobRunConfig(imageName, input, useDockerCache);
         JobRunCreationStrategy jobRunCreationStrategy =
                 jobRunCreationStrategyDeterminer.determineStrategy(pullStrategy);
 
@@ -75,21 +75,24 @@ public class JobService {
             return new JobRun(JobRunConclusion.NOT_FOUND, "", -1);
         }
 
+        // A kept container holds on to its image's layers, so removing the image
+        // only frees space if the container is removed too.
+        boolean removeContainer = remove || removeImage;
         JobRunOutcome outcome = jobRunner
-                .runContainer(jobId, maxTimeoutSeconds, maxKillTimeoutSeconds, removeImage);
+                .runContainer(jobId, maxTimeoutSeconds, maxKillTimeoutSeconds, removeContainer, removeImage);
         JobRunConclusion jobRunConclusion = outcomeDeterminer.determineOutcome(outcome);
 
         runJobLimiter.markJobRunComplete();
         return new JobRun(jobRunConclusion, outcome.getOutput(), outcome.getExitStatusCode());
     }
 
-    private JobRunConfig getJobRunConfig(String imageName, String input, boolean useDockerCache, boolean remove) throws SecretsStoreException {
+    private JobRunConfig getJobRunConfig(String imageName, String input, boolean useDockerCache) throws SecretsStoreException {
         String correspondingSecretsVolumeName = configUtil.translateToSecretsVolumeName(imageName);
         String dockerCacheVolumeName = configUtil.translateToDockerCacheVolumeName(imageName);
         String secretsVolumeName = secretsStore
                 .findSecrets(correspondingSecretsVolumeName)
                 .orElse(null);
 
-        return jobRunConfigCreator.getContainerConfig(imageName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache, remove);
+        return jobRunConfigCreator.getContainerConfig(imageName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache);
     }
 }

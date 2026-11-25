@@ -134,7 +134,7 @@ public class JobRunnerConcurrentRemoveImageTest {
                         return;
                     }
                     jobRunner.runContainer(
-                            containerId, Long.MAX_VALUE, Integer.MAX_VALUE, true);
+                            containerId, Long.MAX_VALUE, Integer.MAX_VALUE, true, true);
                 }));
             }
             start.countDown();
@@ -162,7 +162,7 @@ public class JobRunnerConcurrentRemoveImageTest {
 
     private String createContainer(String image, String cmd) throws CreateJobRunException {
         JobRunConfig jobRunConfig = new JobRunConfig(
-                image, cmd, "cache-" + UUID.randomUUID(), null, false, true);
+                image, cmd, "cache-" + UUID.randomUUID(), null, false);
         return dockerAdapter.createJobRun(jobRunConfig);
     }
 }

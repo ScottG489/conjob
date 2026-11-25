@@ -139,6 +139,18 @@ public class JobRunTest {
     }
 
     @Test
+    public void getRemoveImageWithoutRemoveResponse() {
+        String expectStartsWith = "\nHello from Docker!";
+
+        given()
+            .get(JOB_RUN_PATH + "?image=library/hello-world:latest&remove_image=true")
+        .then()
+            .statusCode(HttpStatus.SC_OK)
+            .contentType(MediaType.TEXT_PLAIN)
+            .body(startsWith(expectStartsWith));
+    }
+
+    @Test
     public void getJsonPostResponses() {
         String echoImage = "scottg489/echo-job:latest";
 

@@ -29,10 +29,9 @@ class JobRunConfigCreatorTest {
             @ForAll @NotEmpty String givenInput,
             @ForAll String givenDockerCacheVolumeName,
             @ForAll String givenSecretsVolumeName,
-            @ForAll boolean givenUseDockerCache,
-            @ForAll boolean givenRemove) {
+            @ForAll boolean givenUseDockerCache) {
         JobRunConfig containerConfig =
-                jobRunConfigCreator.getContainerConfig(givenImageName, givenInput, givenDockerCacheVolumeName, givenSecretsVolumeName, givenUseDockerCache, givenRemove);
+                jobRunConfigCreator.getContainerConfig(givenImageName, givenInput, givenDockerCacheVolumeName, givenSecretsVolumeName, givenUseDockerCache);
 
         assertThat(containerConfig.getJobName(), is(givenImageName));
         assertThat(containerConfig.getInput(), is(givenInput));
@@ -50,10 +49,9 @@ class JobRunConfigCreatorTest {
             @ForAll("nullOrEmpty") String givenInput,
             @ForAll String givenDockerCacheVolumeName,
             @ForAll String givenSecretsVolumeName,
-            @ForAll boolean givenUseDockerCache,
-            @ForAll boolean givenRemove) {
+            @ForAll boolean givenUseDockerCache) {
         JobRunConfig containerConfig =
-                jobRunConfigCreator.getContainerConfig(givenImageName, givenInput, givenDockerCacheVolumeName, givenSecretsVolumeName, givenUseDockerCache, givenRemove);
+                jobRunConfigCreator.getContainerConfig(givenImageName, givenInput, givenDockerCacheVolumeName, givenSecretsVolumeName, givenUseDockerCache);
 
         assertThat(containerConfig.getJobName(), is(givenImageName));
         assertThat(containerConfig.getInput(), is(nullValue()));
