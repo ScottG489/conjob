@@ -4,21 +4,17 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.InspectVolumeResponse;
 import com.github.dockerjava.api.command.WaitContainerResultCallback;
-import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.command.LogContainerResultCallback;
 import conjob.core.job.exception.*;
 import conjob.core.job.model.JobRunConfig;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 // TODO: Create more specific exceptions for when ImageNotFoundException is thrown
-@Slf4j
 public class DockerAdapter {
     private static final String RUNTIME = "sysbox-runc";
     private static final String SECRETS_VOLUME_MOUNT_PATH = "/run/build/secrets";
@@ -41,7 +37,7 @@ public class DockerAdapter {
     }
 
     public String createJobRun(JobRunConfig jobRunConfig) throws CreateJobRunException {
-        HostConfig hostConfig = getHostConfig(jobRunConfig.getDockerCacheVolumeName(), jobRunConfig.getSecretsVolumeName(), jobRunConfig.isUseDockerCache(), jobRunConfig.isRemove());
+        HostConfig hostConfig = getHostConfig(jobRunConfig.getDockerCacheVolumeName(), jobRunConfig.getSecretsVolumeName(), jobRunConfig.isUseDockerCache());
 
         try {
             var createCmd = dockerClient.createContainerCmd(jobRunConfig.getJobName())
@@ -156,25 +152,6 @@ public class DockerAdapter {
         }
     }
 
-    public void waitForContainerRemoval(String containerId, int timeoutSeconds) {
-        try {
-            boolean completed = dockerClient.waitContainerCmd(containerId)
-                    .withCondition(WaitContainerCondition.REMOVED)
-                    .exec(new WaitContainerResultCallback())
-                    .awaitCompletion(timeoutSeconds, TimeUnit.SECONDS);
-            if (!completed) {
-                log.warn("Timed out after {} seconds waiting for container '{}' to be removed", timeoutSeconds, containerId);
-            }
-        } catch (NotFoundException ignored) {
-            // Container already removed; nothing to wait for.
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("Interrupted while waiting for container '{}' to be removed", containerId, e);
-        } catch (Exception e) {
-            log.warn("Problem waiting for container '{}' to be removed: {}", containerId, e.getMessage(), e);
-        }
-    }
-
     public void removeContainer(String containerId) {
         try {
             dockerClient.removeContainerCmd(containerId)
@@ -186,15 +163,11 @@ public class DockerAdapter {
         }
     }
 
-    private HostConfig getHostConfig(String dockerCacheVolumeName, String secretsVolumeName, boolean useDockerCache, boolean remove) {
+    private HostConfig getHostConfig(String dockerCacheVolumeName, String secretsVolumeName, boolean useDockerCache) {
         HostConfig hostConfig = new HostConfig();
 
         if (containerRuntime == Runtime.SYSBOX_RUNC) {
             hostConfig.withRuntime(RUNTIME);
-        }
-
-        if (remove) {
-            hostConfig.withAutoRemove(true);
         }
 
         List<Bind> binds = new ArrayList<>();

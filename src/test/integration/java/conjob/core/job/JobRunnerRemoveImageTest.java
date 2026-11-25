@@ -76,11 +76,11 @@ public class JobRunnerRemoveImageTest {
     ) throws CreateJobRunException {
         this.secretsVolumeName = secretsVolumeName;
         JobRunConfig jobRunConfig =
-                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache, true);
+                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache);
 
         String imageId = dockerClient.inspectImageCmd(jobName).exec().getId();
         String jobRunId = dockerAdapter.createJobRun(jobRunConfig);
-        jobRunner.runContainer(jobRunId, Long.MAX_VALUE, Integer.MAX_VALUE, true);
+        jobRunner.runContainer(jobRunId, Long.MAX_VALUE, Integer.MAX_VALUE, true, true);
 
         assertThrows(NotFoundException.class, () -> dockerClient.inspectImageCmd(imageId).exec());
     }
@@ -98,10 +98,10 @@ public class JobRunnerRemoveImageTest {
     ) throws CreateJobRunException {
         this.secretsVolumeName = secretsVolumeName;
         JobRunConfig jobRunConfig =
-                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache, false);
+                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache);
 
         String jobRunId = dockerAdapter.createJobRun(jobRunConfig);
-        jobRunner.runContainer(jobRunId, Long.MAX_VALUE, Integer.MAX_VALUE, false);
+        jobRunner.runContainer(jobRunId, Long.MAX_VALUE, Integer.MAX_VALUE, false, false);
 
         assertDoesNotThrow(() -> dockerClient.inspectImageCmd(jobName).exec());
     }

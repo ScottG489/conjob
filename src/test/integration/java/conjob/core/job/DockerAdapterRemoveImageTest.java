@@ -19,6 +19,7 @@ public class DockerAdapterRemoveImageTest {
     private static DockerClient dockerClient;
 
     private DockerAdapter dockerAdapter;
+    private String jobRunId;
     private String secretsVolumeName;
 
     @BeforeContainer
@@ -42,6 +43,10 @@ public class DockerAdapterRemoveImageTest {
     @AfterTry
     void tearDown() {
         try {
+            if (jobRunId != null)
+                dockerClient.removeContainerCmd(jobRunId).withForce(true).exec();
+        } catch (Exception ignored) {}
+        try {
             if (secretsVolumeName != null && !secretsVolumeName.isBlank())
                 dockerClient.removeVolumeCmd(secretsVolumeName).exec();
         } catch (Exception ignored) {}
@@ -60,10 +65,11 @@ public class DockerAdapterRemoveImageTest {
     ) throws CreateJobRunException {
         this.secretsVolumeName = secretsVolumeName;
         JobRunConfig jobRunConfig =
-                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache, true);
+                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache);
 
-        String jobRunId = dockerAdapter.createJobRun(jobRunConfig);
+        jobRunId = dockerAdapter.createJobRun(jobRunConfig);
         dockerAdapter.startContainerThenWaitForExit(jobRunId);
+        dockerAdapter.removeContainer(jobRunId);
 
         assertDoesNotThrow(() -> dockerAdapter.removeImage(jobName));
     }
@@ -81,9 +87,9 @@ public class DockerAdapterRemoveImageTest {
     ) throws CreateJobRunException {
         this.secretsVolumeName = secretsVolumeName;
         JobRunConfig jobRunConfig =
-                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache, true);
+                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache);
 
-        String jobRunId = dockerAdapter.createJobRun(jobRunConfig);
+        jobRunId = dockerAdapter.createJobRun(jobRunConfig);
         dockerAdapter.startContainerThenWaitForExit(jobRunId);
 
         assertDoesNotThrow(() -> dockerClient.inspectImageCmd(jobName).exec());

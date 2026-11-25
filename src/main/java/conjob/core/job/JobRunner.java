@@ -1,6 +1,7 @@
 package conjob.core.job;
 
 import conjob.core.job.exception.InspectContainerException;
+import conjob.core.job.exception.RemoveContainerException;
 import conjob.core.job.exception.RemoveImageException;
 import conjob.core.job.exception.RunJobException;
 import conjob.core.job.exception.StopJobRunException;
@@ -12,7 +13,6 @@ import java.util.concurrent.*;
 @Slf4j
 public class JobRunner {
     private static final long LOG_COMPLETION_TIMEOUT_SECONDS = 5;
-    private static final int CONTAINER_REMOVAL_TIMEOUT_SECONDS = 30;
 
     private final DockerAdapter dockerAdapter;
 
@@ -20,24 +20,26 @@ public class JobRunner {
         this.dockerAdapter = dockerAdapter;
     }
 
-    public JobRunOutcome runContainer(String containerId, long timeoutSeconds, int killTimeoutSeconds, boolean removeImage) {
-        // Resolve the image ID before startContainer to avoid two races:
-        // (1) removing by tag instead of ID leaves dangling images under
-        //     concurrent runs of the same image (force only untags; later
-        //     finishers hit NotFoundException), and
-        // (2) inspecting after startContainer would race autoRemove on
-        //     quick-exit jobs (the extra round-trip can let the container
-        //     vanish before wait/log streams are hooked up).
-        String imageId = null;
-        if (removeImage) {
-            try {
-                imageId = dockerAdapter.getContainerImageId(containerId);
-            } catch (InspectContainerException e) {
-                log.warn("Problem looking up image ID for container '{}'; image will not be removed: {}",
-                        containerId, e.getMessage(), e);
+    public JobRunOutcome runContainer(String containerId, long timeoutSeconds, int killTimeoutSeconds, boolean remove, boolean removeImage) {
+        // Remove the image by ID rather than by tag. Other jobs may be running the same
+        // image, or its tag may have moved to a newer image since this container was created.
+        String imageId = removeImage ? findImageId(containerId) : null;
+
+        try {
+            return run(containerId, timeoutSeconds, killTimeoutSeconds);
+        } finally {
+            // The container is only removed here, after its exit code and logs have been read,
+            // and before its image, since a container holds on to its image's layers.
+            if (remove) {
+                removeContainer(containerId);
+            }
+            if (imageId != null) {
+                removeImage(imageId);
             }
         }
+    }
 
+    private JobRunOutcome run(String containerId, long timeoutSeconds, int killTimeoutSeconds) {
         try {
             dockerAdapter.startContainer(containerId);
         } catch (RunJobException e) {
@@ -75,14 +77,32 @@ public class JobRunner {
             return new JobRunOutcome(exitStatusCode, output);
         } finally {
             executor.shutdownNow();
-            if (imageId != null) {
-                dockerAdapter.waitForContainerRemoval(containerId, CONTAINER_REMOVAL_TIMEOUT_SECONDS);
-                try {
-                    dockerAdapter.removeImage(imageId);
-                } catch (RemoveImageException e) {
-                    log.warn("Problem removing image: {}", e.getMessage(), e);
-                }
-            }
+        }
+    }
+
+    private String findImageId(String containerId) {
+        try {
+            return dockerAdapter.getContainerImageId(containerId);
+        } catch (InspectContainerException e) {
+            log.warn("Problem looking up image ID for container '{}'; image will not be removed: {}",
+                    containerId, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    private void removeContainer(String containerId) {
+        try {
+            dockerAdapter.removeContainer(containerId);
+        } catch (RemoveContainerException e) {
+            log.warn("Problem removing container: {}", e.getMessage(), e);
+        }
+    }
+
+    private void removeImage(String imageId) {
+        try {
+            dockerAdapter.removeImage(imageId);
+        } catch (RemoveImageException e) {
+            log.warn("Problem removing image: {}", e.getMessage(), e);
         }
     }
 
