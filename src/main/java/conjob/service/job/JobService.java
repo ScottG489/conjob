@@ -76,7 +76,7 @@ public class JobService {
         }
 
         JobRunOutcome outcome = jobRunner
-                .runContainer(jobId, maxTimeoutSeconds, maxKillTimeoutSeconds, imageName, removeImage);
+                .runContainer(jobId, maxTimeoutSeconds, maxKillTimeoutSeconds, removeImage);
         JobRunConclusion jobRunConclusion = outcomeDeterminer.determineOutcome(outcome);
 
         runJobLimiter.markJobRunComplete();

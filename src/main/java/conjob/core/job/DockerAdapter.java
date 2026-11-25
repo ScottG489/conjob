@@ -148,6 +148,14 @@ public class DockerAdapter {
         }
     }
 
+    public String getContainerImageId(String containerId) {
+        try {
+            return dockerClient.inspectContainerCmd(containerId).exec().getImageId();
+        } catch (Exception e) {
+            throw new InspectContainerException(e);
+        }
+    }
+
     public void waitForContainerRemoval(String containerId, int timeoutSeconds) {
         try {
             boolean completed = dockerClient.waitContainerCmd(containerId)

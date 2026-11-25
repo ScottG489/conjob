@@ -1,5 +1,6 @@
 package conjob.core.job;
 
+import conjob.core.job.exception.InspectContainerException;
 import conjob.core.job.exception.RemoveImageException;
 import conjob.core.job.exception.RunJobException;
 import conjob.core.job.exception.StopJobRunException;
@@ -19,7 +20,24 @@ public class JobRunner {
         this.dockerAdapter = dockerAdapter;
     }
 
-    public JobRunOutcome runContainer(String containerId, long timeoutSeconds, int killTimeoutSeconds, String imageName, boolean removeImage) {
+    public JobRunOutcome runContainer(String containerId, long timeoutSeconds, int killTimeoutSeconds, boolean removeImage) {
+        // Resolve the image ID before startContainer to avoid two races:
+        // (1) removing by tag instead of ID leaves dangling images under
+        //     concurrent runs of the same image (force only untags; later
+        //     finishers hit NotFoundException), and
+        // (2) inspecting after startContainer would race autoRemove on
+        //     quick-exit jobs (the extra round-trip can let the container
+        //     vanish before wait/log streams are hooked up).
+        String imageId = null;
+        if (removeImage) {
+            try {
+                imageId = dockerAdapter.getContainerImageId(containerId);
+            } catch (InspectContainerException e) {
+                log.warn("Problem looking up image ID for container '{}'; image will not be removed: {}",
+                        containerId, e.getMessage(), e);
+            }
+        }
+
         try {
             dockerAdapter.startContainer(containerId);
         } catch (RunJobException e) {
@@ -57,10 +75,10 @@ public class JobRunner {
             return new JobRunOutcome(exitStatusCode, output);
         } finally {
             executor.shutdownNow();
-            if (removeImage) {
+            if (imageId != null) {
                 dockerAdapter.waitForContainerRemoval(containerId, CONTAINER_REMOVAL_TIMEOUT_SECONDS);
                 try {
-                    dockerAdapter.removeImage(imageName);
+                    dockerAdapter.removeImage(imageId);
                 } catch (RemoveImageException e) {
                     log.warn("Problem removing image: {}", e.getMessage(), e);
                 }
