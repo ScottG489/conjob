@@ -13,6 +13,8 @@ import conjob.core.secrets.SecretsStore;
 import conjob.core.secrets.SecretsStoreException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.locks.Lock;
+
 @Slf4j
 public class JobService {
 
@@ -25,6 +27,7 @@ public class JobService {
     private final SecretsStore secretsStore;
     private final OutcomeDeterminer outcomeDeterminer;
     private final ImageTagEnsurer imageTagEnsurer;
+    private final Lock jobStartLock;
 
     public JobService(
             RunJobLimiter runJobLimiter,
@@ -35,7 +38,8 @@ public class JobService {
             JobRunConfigCreator jobRunConfigCreator,
             OutcomeDeterminer outcomeDeterminer,
             ConfigUtil configUtil,
-            ImageTagEnsurer imageTagEnsurer) {
+            ImageTagEnsurer imageTagEnsurer,
+            Lock jobStartLock) {
         this.runJobLimiter = runJobLimiter;
         this.limitConfig = limitConfig;
         this.secretsStore = secretsStore;
@@ -45,6 +49,7 @@ public class JobService {
         this.outcomeDeterminer = outcomeDeterminer;
         this.configUtil = configUtil;
         this.imageTagEnsurer = imageTagEnsurer;
+        this.jobStartLock = jobStartLock;
     }
 
     public JobRun runJob(String imageName, String input, String pullStrategyName, boolean useDockerCache, boolean remove, boolean removeImage) throws SecretsStoreException {
@@ -67,12 +72,18 @@ public class JobService {
                 jobRunCreationStrategyDeterminer.determineStrategy(pullStrategy);
 
         String jobId;
+        // Images aren't removed while this is held, so another job's cleanup can't remove the
+        // image after it's pulled and before the container is created. Once the container
+        // exists, Docker won't remove the image while the container is there.
+        jobStartLock.lock();
         try {
             jobId = jobRunCreationStrategy.createJobRun(jobRunConfig);
         } catch (CreateJobRunException | JobUpdateException ex) {
             log.warn("Problem creating job: {}", ex.getMessage(), ex);
             runJobLimiter.markJobRunComplete();
             return new JobRun(JobRunConclusion.NOT_FOUND, "", -1);
+        } finally {
+            jobStartLock.unlock();
         }
 
         // A kept container holds on to its image's layers, so removing the image

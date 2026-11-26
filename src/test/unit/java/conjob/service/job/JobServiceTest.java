@@ -17,9 +17,12 @@ import net.jqwik.api.constraints.UseType;
 import net.jqwik.api.lifecycle.BeforeTry;
 import testsupport.ExpectedLogs;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collector;
 import java.util.stream.IntStream;
 
@@ -38,6 +41,7 @@ class JobServiceTest {
     private JobConfig.LimitConfig limitConfig;
     private JobService jobService;
     private ImageTagEnsurer mockImageTagEnsurer;
+    private ReentrantReadWriteLock imageLock;
 
     @BeforeTry
     void beforeEach() {
@@ -50,6 +54,7 @@ class JobServiceTest {
         mockOutcomeDeterminer = mock(OutcomeDeterminer.class);
         mockConfigUtil = mock(ConfigUtil.class);
         mockImageTagEnsurer = mock(ImageTagEnsurer.class);
+        imageLock = new ReentrantReadWriteLock();
         jobService = new JobService(
                 mockRunJobLimiter,
                 limitConfig,
@@ -59,7 +64,8 @@ class JobServiceTest {
                 mockJobRunConfigCreator,
                 mockOutcomeDeterminer,
                 mockConfigUtil,
-                mockImageTagEnsurer
+                mockImageTagEnsurer,
+                imageLock.readLock()
         );
     }
 
@@ -153,6 +159,42 @@ class JobServiceTest {
 
         assertThat(jobRun, is(new JobRun(JobRunConclusion.NOT_FOUND, "", -1)));
         verify(mockRunJobLimiter, times(1)).markJobRunComplete();
+        assertThat(imageLock.getReadLockCount(), is(0));
+    }
+
+    @Property
+    @Label("Given a limiter that's not at the limit, " +
+            "when the job is run, " +
+            "should hold the job start lock while creating the job run, " +
+            "and release it before running the container.")
+    void holdJobStartLockWhileCreating(@ForAll String imageName,
+                                       @ForAll String input,
+                                       @ForAll("pullStrategyNames") String givenPullStrategyName,
+                                       @ForAll String givenDockerCacheVolumeName,
+                                       @ForAll String givenSecretsVolumeName,
+                                       @ForAll @UseType JobRunConfig givenJobRunConfig,
+                                       @ForAll String givenJobId,
+                                       @ForAll @UseType JobRunOutcome givenJobRunOutcome,
+                                       @ForAll boolean givenRemove,
+                                       @ForAll boolean givenRemoveImage) throws SecretsStoreException, CreateJobRunException, JobUpdateException {
+        PullStrategy pullStrategy = PullStrategy.valueOf(givenPullStrategyName.toUpperCase());
+        JobRunCreationStrategy mockJobRunCreationStrategy = mock(JobRunCreationStrategy.class);
+        mockCommonCallChain(imageName, input, givenDockerCacheVolumeName, givenSecretsVolumeName, givenJobRunConfig, false, pullStrategy, mockJobRunCreationStrategy);
+        List<Integer> readLocksWhileCreating = new ArrayList<>();
+        List<Integer> readLocksWhileRunning = new ArrayList<>();
+        when(mockJobRunCreationStrategy.createJobRun(givenJobRunConfig)).thenAnswer(invocation -> {
+            readLocksWhileCreating.add(imageLock.getReadHoldCount());
+            return givenJobId;
+        });
+        when(mockJobRunner.runContainer(anyString(), anyLong(), anyInt(), anyBoolean(), anyBoolean())).thenAnswer(invocation -> {
+            readLocksWhileRunning.add(imageLock.getReadHoldCount());
+            return givenJobRunOutcome;
+        });
+
+        jobService.runJob(imageName, input, givenPullStrategyName, true, givenRemove, givenRemoveImage);
+
+        assertThat(readLocksWhileCreating, is(List.of(1)));
+        assertThat(readLocksWhileRunning, is(List.of(0)));
     }
 
     @Property

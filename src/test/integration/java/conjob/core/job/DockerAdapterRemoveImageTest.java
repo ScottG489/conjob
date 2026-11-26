@@ -1,7 +1,9 @@
 package conjob.core.job;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.exception.NotFoundException;
 import conjob.core.job.exception.CreateJobRunException;
+import conjob.core.job.exception.ImageInUseException;
 import conjob.core.job.exception.RemoveImageException;
 import conjob.core.job.model.JobRunConfig;
 import net.jqwik.api.*;
@@ -11,6 +13,10 @@ import net.jqwik.api.lifecycle.AfterTry;
 import net.jqwik.api.lifecycle.BeforeContainer;
 import net.jqwik.api.lifecycle.BeforeTry;
 
+import java.util.UUID;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -21,6 +27,7 @@ public class DockerAdapterRemoveImageTest {
     private DockerAdapter dockerAdapter;
     private String jobRunId;
     private String secretsVolumeName;
+    private String otherTag;
 
     @BeforeContainer
     static void beforeContainer() {
@@ -38,6 +45,7 @@ public class DockerAdapterRemoveImageTest {
     void setUp() throws InterruptedException {
         dockerAdapter = new DockerAdapter(dockerClient, DockerAdapter.Runtime.DEFAULT);
         dockerClient.pullImageCmd(TEST_IMAGE).start().awaitCompletion();
+        TestImageContainers.removeAll(dockerClient, TEST_IMAGE);
     }
 
     @AfterTry
@@ -49,6 +57,10 @@ public class DockerAdapterRemoveImageTest {
         try {
             if (secretsVolumeName != null && !secretsVolumeName.isBlank())
                 dockerClient.removeVolumeCmd(secretsVolumeName).exec();
+        } catch (Exception ignored) {}
+        try {
+            if (otherTag != null)
+                dockerClient.removeImageCmd(otherTag).exec();
         } catch (Exception ignored) {}
     }
 
@@ -93,6 +105,39 @@ public class DockerAdapterRemoveImageTest {
         dockerAdapter.startContainerThenWaitForExit(jobRunId);
 
         assertDoesNotThrow(() -> dockerClient.inspectImageCmd(jobName).exec());
+    }
+
+    @Example
+    @Label("Given an image that a stopped container uses, " +
+            "when removing the image by ID, " +
+            "should throw an ImageInUseException, " +
+            "and the image should still exist.")
+    void removeImageUsedByContainer() {
+        String imageId = dockerClient.inspectImageCmd(TEST_IMAGE).exec().getId();
+        jobRunId = dockerClient.createContainerCmd(TEST_IMAGE).exec().getId();
+
+        assertThrows(ImageInUseException.class, () -> dockerAdapter.removeImage(imageId));
+        assertDoesNotThrow(() -> dockerClient.inspectImageCmd(imageId).exec());
+    }
+
+    @Example
+    @Label("Given an image with two tags, " +
+            "when removing the image by ID, " +
+            "should throw an ImageInUseException, " +
+            "and when removing one tag by name, " +
+            "should remove only that tag.")
+    void removeImageWithTwoTags() {
+        String imageId = dockerClient.inspectImageCmd(TEST_IMAGE).exec().getId();
+        String otherRepository = "conjob-test-other-tag-" + UUID.randomUUID();
+        dockerClient.tagImageCmd(imageId, otherRepository, "latest").exec();
+        otherTag = otherRepository + ":latest";
+
+        assertThrows(ImageInUseException.class, () -> dockerAdapter.removeImage(imageId));
+
+        dockerAdapter.removeImage(otherTag);
+
+        assertThrows(NotFoundException.class, () -> dockerClient.inspectImageCmd(otherTag).exec());
+        assertThat(dockerClient.inspectImageCmd(TEST_IMAGE).exec().getId(), is(imageId));
     }
 
     @Property(tries = 3)

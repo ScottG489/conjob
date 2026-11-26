@@ -2,16 +2,22 @@ package conjob.core.job;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.command.InspectImageResponse;
 import com.github.dockerjava.api.command.InspectVolumeResponse;
 import com.github.dockerjava.api.command.WaitContainerResultCallback;
+import com.github.dockerjava.api.exception.ConflictException;
+import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.command.LogContainerResultCallback;
 import conjob.core.job.exception.*;
+import conjob.core.job.model.ContainerImage;
 import conjob.core.job.model.JobRunConfig;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 // TODO: Create more specific exceptions for when ImageNotFoundException is thrown
@@ -136,17 +142,42 @@ public class DockerAdapter {
         }
     }
 
-    public void removeImage(String imageName) {
+    // Without force, Docker won't remove an image that a container uses, even a stopped one, or
+    // remove an image by ID while it has more than one tag. Given a tag that isn't the image's
+    // last, it removes just that tag.
+    public void removeImage(String imageRef) {
         try {
-            dockerClient.removeImageCmd(imageName).withForce(true).exec();
+            dockerClient.removeImageCmd(imageRef).exec();
+        } catch (ConflictException e) {
+            throw new ImageInUseException(e);
         } catch (Exception e) {
             throw new RemoveImageException(e);
         }
     }
 
-    public String getContainerImageId(String containerId) {
+    public Optional<String> findImageId(String imageRef) {
+        return inspectImage(imageRef).map(InspectImageResponse::getId);
+    }
+
+    public Optional<List<String>> findImageTags(String imageRef) {
+        return inspectImage(imageRef)
+                .map(image -> image.getRepoTags() == null ? List.of() : image.getRepoTags());
+    }
+
+    private Optional<InspectImageResponse> inspectImage(String imageRef) {
         try {
-            return dockerClient.inspectContainerCmd(containerId).exec().getImageId();
+            return Optional.of(dockerClient.inspectImageCmd(imageRef).exec());
+        } catch (NotFoundException e) {
+            return Optional.empty();
+        } catch (Exception e) {
+            throw new InspectImageException(e);
+        }
+    }
+
+    public ContainerImage getContainerImage(String containerId) {
+        try {
+            InspectContainerResponse container = dockerClient.inspectContainerCmd(containerId).exec();
+            return new ContainerImage(container.getImageId(), container.getConfig().getImage());
         } catch (Exception e) {
             throw new InspectContainerException(e);
         }
