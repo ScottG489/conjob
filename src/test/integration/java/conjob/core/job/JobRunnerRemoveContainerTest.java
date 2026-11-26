@@ -13,6 +13,7 @@ import net.jqwik.api.lifecycle.BeforeTry;
 import testsupport.ExpectedLogs;
 
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -43,7 +44,10 @@ public class JobRunnerRemoveContainerTest {
     @BeforeTry
     void setUp() {
         dockerAdapter = new DockerAdapter(dockerClient, DockerAdapter.Runtime.DEFAULT);
-        jobRunner = new JobRunner(dockerAdapter);
+        jobRunner = new JobRunner(
+                dockerAdapter,
+                new ImageRemover(dockerAdapter, new ReentrantReadWriteLock().writeLock()),
+                Runnable::run);
     }
 
     @AfterTry
