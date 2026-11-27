@@ -262,7 +262,7 @@ class ImageRemoverTest {
         assertThat(lock.isWriteLocked(), is(false));
     }
 
-    @Property
+    @Example
     @ExpectedLogs(ImageRemover.class)
     @Label("Given pruning throws, " +
             "when removing dangling images, " +
