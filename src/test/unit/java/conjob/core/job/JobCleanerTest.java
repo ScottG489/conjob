@@ -207,7 +207,7 @@ class JobCleanerTest {
         inOrder.verify(imageRemoverMock).removeDangling();
     }
 
-    @Property
+    @Example
     @ExpectedLogs(JobCleaner.class)
     @Label("Given listing containers throws, " +
             "when sweeping, " +
