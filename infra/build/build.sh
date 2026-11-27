@@ -18,9 +18,10 @@ read -r -d '' JSON_BODY <<- EOM
   }
 EOM
 
+# Not remove_image, since every image build runs docker-build-push:latest.
 curl -v -sS --insecure -w '\n%{http_code}' \
   --data-binary "$JSON_BODY" \
-  "https://alt.conjob.io:18080/job/run?image=$IMAGE_NAME" \
+  "https://alt.conjob.io:18080/job/run?image=$IMAGE_NAME&remove=true" \
   | tee /tmp/foo \
   | sed '$d' && \
   [ "$(tail -1 /tmp/foo)" -eq 200 ]
