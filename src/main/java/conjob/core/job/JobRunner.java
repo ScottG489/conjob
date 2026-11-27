@@ -1,10 +1,7 @@
 package conjob.core.job;
 
-import conjob.core.job.exception.InspectContainerException;
-import conjob.core.job.exception.RemoveContainerException;
 import conjob.core.job.exception.RunJobException;
 import conjob.core.job.exception.StopJobRunException;
-import conjob.core.job.model.ContainerImage;
 import conjob.core.job.model.JobRunOutcome;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,13 +12,11 @@ public class JobRunner {
     private static final long LOG_COMPLETION_TIMEOUT_SECONDS = 5;
 
     private final DockerAdapter dockerAdapter;
-    private final ImageRemover imageRemover;
-    private final Executor cleanupExecutor;
+    private final JobCleaner jobCleaner;
 
-    public JobRunner(DockerAdapter dockerAdapter, ImageRemover imageRemover, Executor cleanupExecutor) {
+    public JobRunner(DockerAdapter dockerAdapter, JobCleaner jobCleaner) {
         this.dockerAdapter = dockerAdapter;
-        this.imageRemover = imageRemover;
-        this.cleanupExecutor = cleanupExecutor;
+        this.jobCleaner = jobCleaner;
     }
 
     public JobRunOutcome runContainer(String containerId, long timeoutSeconds, int killTimeoutSeconds, boolean remove, boolean removeImage) {
@@ -29,31 +24,8 @@ public class JobRunner {
             return run(containerId, timeoutSeconds, killTimeoutSeconds);
         } finally {
             if (remove || removeImage) {
-                cleanUpLater(containerId, remove, removeImage);
+                jobCleaner.cleanUpLater(containerId, remove, removeImage);
             }
-        }
-    }
-
-    // Removing a container and its image can take a while, so it's done in the background
-    // instead of before the job's response is sent.
-    private void cleanUpLater(String containerId, boolean remove, boolean removeImage) {
-        try {
-            cleanupExecutor.execute(() -> cleanUp(containerId, remove, removeImage));
-        } catch (RejectedExecutionException e) {
-            log.warn("Not cleaning up container '{}' since conjob is shutting down", containerId);
-        }
-    }
-
-    private void cleanUp(String containerId, boolean remove, boolean removeImage) {
-        // Find the image through the container rather than by the job's image name, since the
-        // name may have moved to a newer image since the container was created.
-        ContainerImage image = removeImage ? findImage(containerId) : null;
-        // A container holds on to its image's layers, so it's removed first.
-        if (remove) {
-            removeContainer(containerId);
-        }
-        if (image != null) {
-            imageRemover.remove(image);
         }
     }
 
@@ -95,24 +67,6 @@ public class JobRunner {
             return new JobRunOutcome(exitStatusCode, output);
         } finally {
             executor.shutdownNow();
-        }
-    }
-
-    private ContainerImage findImage(String containerId) {
-        try {
-            return dockerAdapter.getContainerImage(containerId);
-        } catch (InspectContainerException e) {
-            log.warn("Problem looking up the image of container '{}'; image will not be removed: {}",
-                    containerId, e.getMessage(), e);
-            return null;
-        }
-    }
-
-    private void removeContainer(String containerId) {
-        try {
-            dockerAdapter.removeContainer(containerId);
-        } catch (RemoveContainerException e) {
-            log.warn("Problem removing container: {}", e.getMessage(), e);
         }
     }
 

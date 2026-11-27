@@ -41,6 +41,7 @@ class JobServiceTest {
     private JobConfig.LimitConfig limitConfig;
     private JobService jobService;
     private ImageTagEnsurer mockImageTagEnsurer;
+    private JobCleaner mockJobCleaner;
     private ReentrantReadWriteLock imageLock;
 
     @BeforeTry
@@ -54,6 +55,7 @@ class JobServiceTest {
         mockOutcomeDeterminer = mock(OutcomeDeterminer.class);
         mockConfigUtil = mock(ConfigUtil.class);
         mockImageTagEnsurer = mock(ImageTagEnsurer.class);
+        mockJobCleaner = mock(JobCleaner.class);
         imageLock = new ReentrantReadWriteLock();
         jobService = new JobService(
                 mockRunJobLimiter,
@@ -65,6 +67,7 @@ class JobServiceTest {
                 mockOutcomeDeterminer,
                 mockConfigUtil,
                 mockImageTagEnsurer,
+                mockJobCleaner,
                 imageLock.readLock()
         );
     }
@@ -160,6 +163,37 @@ class JobServiceTest {
         assertThat(jobRun, is(new JobRun(JobRunConclusion.NOT_FOUND, "", -1)));
         verify(mockRunJobLimiter, times(1)).markJobRunComplete();
         assertThat(imageLock.getReadLockCount(), is(0));
+        // The image may have been pulled before the create failed.
+        verify(mockJobCleaner, times(givenRemoveImage ? 1 : 0)).removeImageLater(imageName);
+    }
+
+    @Property
+    @Label("Given remove and removeImage, " +
+            "when the job is run, " +
+            "should create the container with them, " +
+            "with removeImage implying remove.")
+    void containerConfigHasRemoveFlags(@ForAll String imageName,
+                                       @ForAll String input,
+                                       @ForAll("pullStrategyNames") String givenPullStrategyName,
+                                       @ForAll String givenDockerCacheVolumeName,
+                                       @ForAll String givenSecretsVolumeName,
+                                       @ForAll @UseType JobRunConfig givenJobRunConfig,
+                                       @ForAll String givenJobId,
+                                       @ForAll @UseType JobRunOutcome givenJobRunOutcome,
+                                       @ForAll boolean givenRemove,
+                                       @ForAll boolean givenRemoveImage) throws SecretsStoreException, CreateJobRunException, JobUpdateException {
+        PullStrategy pullStrategy = PullStrategy.valueOf(givenPullStrategyName.toUpperCase());
+        JobRunCreationStrategy mockJobRunCreationStrategy = mock(JobRunCreationStrategy.class);
+        mockCommonCallChain(imageName, input, givenDockerCacheVolumeName, givenSecretsVolumeName, givenJobRunConfig, false, pullStrategy, mockJobRunCreationStrategy);
+        when(mockJobRunCreationStrategy.createJobRun(givenJobRunConfig)).thenReturn(givenJobId);
+        when(mockJobRunner.runContainer(anyString(), anyLong(), anyInt(), anyBoolean(), anyBoolean()))
+                .thenReturn(givenJobRunOutcome);
+
+        jobService.runJob(imageName, input, givenPullStrategyName, true, givenRemove, givenRemoveImage);
+
+        verify(mockJobRunConfigCreator).getContainerConfig(
+                imageName, input, givenDockerCacheVolumeName, null, true, givenRemove || givenRemoveImage, givenRemoveImage);
+        verify(mockJobCleaner, never()).removeImageLater(any());
     }
 
     @Property
@@ -229,7 +263,8 @@ class JobServiceTest {
         when(mockSecretsStore.findSecrets(givenSecretsVolumeName)).thenReturn(Optional.empty());
         when(mockCreationStrategyDeterminer.determineStrategy(pullStrategy))
                 .thenReturn(mockJobRunCreationStrategy);
-        when(mockJobRunConfigCreator.getContainerConfig(imageName, input, givenDockerCacheVolumeName, null, true))
+        when(mockJobRunConfigCreator.getContainerConfig(
+                eq(imageName), eq(input), eq(givenDockerCacheVolumeName), isNull(), eq(true), anyBoolean(), anyBoolean()))
                 .thenReturn(givenJobRunConfig);
     }
 

@@ -13,7 +13,9 @@ import com.github.dockerjava.core.command.LogContainerResultCallback;
 import conjob.core.job.exception.*;
 import conjob.core.job.model.ContainerImage;
 import conjob.core.job.model.JobRunConfig;
+import conjob.core.job.model.StoppedContainer;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,8 @@ import java.util.stream.Collectors;
 public class DockerAdapter {
     private static final String RUNTIME = "sysbox-runc";
     private static final String SECRETS_VOLUME_MOUNT_PATH = "/run/build/secrets";
+    private static final String REMOVE_LABEL = "conjob.remove";
+    private static final String REMOVE_IMAGE_LABEL = "conjob.remove-image";
 
     private final DockerClient dockerClient;
     private final Runtime containerRuntime;
@@ -47,7 +51,10 @@ public class DockerAdapter {
 
         try {
             var createCmd = dockerClient.createContainerCmd(jobRunConfig.getJobName())
-                    .withHostConfig(hostConfig);
+                    .withHostConfig(hostConfig)
+                    .withLabels(Map.of(
+                            REMOVE_LABEL, String.valueOf(jobRunConfig.isRemove()),
+                            REMOVE_IMAGE_LABEL, String.valueOf(jobRunConfig.isRemoveImage())));
 
             if (jobRunConfig.getInput() != null && !jobRunConfig.getInput().isEmpty()) {
                 createCmd.withCmd(jobRunConfig.getInput());
@@ -171,6 +178,48 @@ public class DockerAdapter {
             return Optional.empty();
         } catch (Exception e) {
             throw new InspectImageException(e);
+        }
+    }
+
+    // Containers of jobs run with remove=true that aren't running: they exited, never started,
+    // or are dead.
+    public List<StoppedContainer> listStoppedContainersToRemove() {
+        try {
+            return dockerClient.listContainersCmd()
+                    .withShowAll(true)
+                    .withLabelFilter(Map.of(REMOVE_LABEL, "true"))
+                    .withStatusFilter(List.of("created", "exited", "dead"))
+                    .exec().stream()
+                    .map(container -> findStoppedContainer(container.getId()))
+                    .flatMap(Optional::stream)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new ListContainersException(e);
+        }
+    }
+
+    // Empty if the container was removed since it was listed.
+    private Optional<StoppedContainer> findStoppedContainer(String containerId) {
+        InspectContainerResponse container;
+        try {
+            container = dockerClient.inspectContainerCmd(containerId).exec();
+        } catch (NotFoundException e) {
+            return Optional.empty();
+        }
+        // A container that never started has a zero finish time, so it stopped when it was created.
+        Instant created = Instant.parse(container.getCreated());
+        Instant finished = Instant.parse(container.getState().getFinishedAt());
+        boolean removeImage = "true".equals(container.getConfig().getLabels().get(REMOVE_IMAGE_LABEL));
+        return Optional.of(new StoppedContainer(containerId, removeImage, finished.isAfter(created) ? finished : created));
+    }
+
+    // Removes images that have no tags and that no container uses. Returns the bytes freed.
+    public long pruneDanglingImages() {
+        try {
+            Long spaceReclaimed = dockerClient.pruneCmd(PruneType.IMAGES).withDangling(true).exec().getSpaceReclaimed();
+            return spaceReclaimed == null ? 0 : spaceReclaimed;
+        } catch (Exception e) {
+            throw new RemoveImageException(e);
         }
     }
 

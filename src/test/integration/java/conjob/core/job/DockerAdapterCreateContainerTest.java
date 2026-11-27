@@ -11,7 +11,11 @@ import net.jqwik.api.lifecycle.AfterTry;
 import net.jqwik.api.lifecycle.BeforeContainer;
 import net.jqwik.api.lifecycle.BeforeTry;
 
+import java.util.Map;
+import java.util.UUID;
+
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -55,7 +59,7 @@ public class DockerAdapterCreateContainerTest {
             @ForAll("secretsVolumeName") String secretsVolumeName
     ) throws CreateJobRunException {
         this.secretsVolumeName = secretsVolumeName;
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true, false, false);
         jobRunId = dockerAdapter.createJobRun(jobRunConfig);
 
         assertThat(jobRunId, matchesPattern("[a-f0-9]{64}"));
@@ -70,9 +74,23 @@ public class DockerAdapterCreateContainerTest {
             @ForAll @WithNull String input,
             @ForAll("dockerCacheVolumeName") String dockerCacheVolumeName,
             @ForAll("secretsVolumeName") @WithNull String secretsVolumeName) {
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName,  secretsVolumeName, true);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName,  secretsVolumeName, true, false, false);
 
         assertThrows(CreateJobRunException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
+    }
+
+    @Property(tries = 10)
+    @Label("Given remove and removeImage, " +
+            "when creating a job run, " +
+            "should label the container with them.")
+    void createJobRunLabels(@ForAll boolean remove, @ForAll boolean removeImage) throws CreateJobRunException {
+        JobRunConfig jobRunConfig =
+                new JobRunConfig("tianon/true:latest", null, "cache-" + UUID.randomUUID(), null, false, remove, removeImage);
+        jobRunId = dockerAdapter.createJobRun(jobRunConfig);
+
+        Map<String, String> labels = dockerClient.inspectContainerCmd(jobRunId).exec().getConfig().getLabels();
+        assertThat(labels, hasEntry("conjob.remove", String.valueOf(remove)));
+        assertThat(labels, hasEntry("conjob.remove-image", String.valueOf(removeImage)));
     }
 
     @Provide

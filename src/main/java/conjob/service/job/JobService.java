@@ -27,6 +27,7 @@ public class JobService {
     private final SecretsStore secretsStore;
     private final OutcomeDeterminer outcomeDeterminer;
     private final ImageTagEnsurer imageTagEnsurer;
+    private final JobCleaner jobCleaner;
     private final Lock jobStartLock;
 
     public JobService(
@@ -39,6 +40,7 @@ public class JobService {
             OutcomeDeterminer outcomeDeterminer,
             ConfigUtil configUtil,
             ImageTagEnsurer imageTagEnsurer,
+            JobCleaner jobCleaner,
             Lock jobStartLock) {
         this.runJobLimiter = runJobLimiter;
         this.limitConfig = limitConfig;
@@ -49,6 +51,7 @@ public class JobService {
         this.outcomeDeterminer = outcomeDeterminer;
         this.configUtil = configUtil;
         this.imageTagEnsurer = imageTagEnsurer;
+        this.jobCleaner = jobCleaner;
         this.jobStartLock = jobStartLock;
     }
 
@@ -67,7 +70,10 @@ public class JobService {
         long maxTimeoutSeconds = limitConfig.getMaxTimeoutSeconds();
         int maxKillTimeoutSeconds = Math.toIntExact(limitConfig.getMaxKillTimeoutSeconds());
 
-        JobRunConfig jobRunConfig = getJobRunConfig(imageName, input, useDockerCache);
+        // A kept container holds on to its image's layers, so removing the image
+        // only frees space if the container is removed too.
+        boolean removeContainer = remove || removeImage;
+        JobRunConfig jobRunConfig = getJobRunConfig(imageName, input, useDockerCache, removeContainer, removeImage);
         JobRunCreationStrategy jobRunCreationStrategy =
                 jobRunCreationStrategyDeterminer.determineStrategy(pullStrategy);
 
@@ -80,15 +86,15 @@ public class JobService {
             jobId = jobRunCreationStrategy.createJobRun(jobRunConfig);
         } catch (CreateJobRunException | JobUpdateException ex) {
             log.warn("Problem creating job: {}", ex.getMessage(), ex);
+            if (removeImage) {
+                jobCleaner.removeImageLater(imageName);
+            }
             runJobLimiter.markJobRunComplete();
             return new JobRun(JobRunConclusion.NOT_FOUND, "", -1);
         } finally {
             jobStartLock.unlock();
         }
 
-        // A kept container holds on to its image's layers, so removing the image
-        // only frees space if the container is removed too.
-        boolean removeContainer = remove || removeImage;
         JobRunOutcome outcome = jobRunner
                 .runContainer(jobId, maxTimeoutSeconds, maxKillTimeoutSeconds, removeContainer, removeImage);
         JobRunConclusion jobRunConclusion = outcomeDeterminer.determineOutcome(outcome);
@@ -97,13 +103,13 @@ public class JobService {
         return new JobRun(jobRunConclusion, outcome.getOutput(), outcome.getExitStatusCode());
     }
 
-    private JobRunConfig getJobRunConfig(String imageName, String input, boolean useDockerCache) throws SecretsStoreException {
+    private JobRunConfig getJobRunConfig(String imageName, String input, boolean useDockerCache, boolean remove, boolean removeImage) throws SecretsStoreException {
         String correspondingSecretsVolumeName = configUtil.translateToSecretsVolumeName(imageName);
         String dockerCacheVolumeName = configUtil.translateToDockerCacheVolumeName(imageName);
         String secretsVolumeName = secretsStore
                 .findSecrets(correspondingSecretsVolumeName)
                 .orElse(null);
 
-        return jobRunConfigCreator.getContainerConfig(imageName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache);
+        return jobRunConfigCreator.getContainerConfig(imageName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache, remove, removeImage);
     }
 }

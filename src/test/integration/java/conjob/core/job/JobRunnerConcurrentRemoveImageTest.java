@@ -12,6 +12,7 @@ import net.jqwik.api.lifecycle.BeforeContainer;
 import net.jqwik.api.lifecycle.BeforeTry;
 import testsupport.ExpectedLogs;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -53,8 +54,11 @@ public class JobRunnerConcurrentRemoveImageTest {
         dockerAdapter = new DockerAdapter(dockerClient, DockerAdapter.Runtime.DEFAULT);
         jobRunner = new JobRunner(
                 dockerAdapter,
-                new ImageRemover(dockerAdapter, new ReentrantReadWriteLock().writeLock()),
-                Runnable::run);
+                new JobCleaner(
+                        dockerAdapter,
+                        new ImageRemover(dockerAdapter, new ReentrantReadWriteLock().writeLock()),
+                        Runnable::run,
+                        Clock.systemUTC()));
         dockerClient.pullImageCmd(TEST_IMAGE).start().awaitCompletion();
         TestImageContainers.removeAll(dockerClient, TEST_IMAGE);
     }
@@ -155,7 +159,7 @@ public class JobRunnerConcurrentRemoveImageTest {
 
     private String createContainer(String image, String cmd) throws CreateJobRunException {
         JobRunConfig jobRunConfig = new JobRunConfig(
-                image, cmd, "cache-" + UUID.randomUUID(), null, false);
+                image, cmd, "cache-" + UUID.randomUUID(), null, false, false, false);
         return dockerAdapter.createJobRun(jobRunConfig);
     }
 }

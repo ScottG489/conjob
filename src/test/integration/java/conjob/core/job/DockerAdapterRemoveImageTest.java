@@ -77,7 +77,7 @@ public class DockerAdapterRemoveImageTest {
     ) throws CreateJobRunException {
         this.secretsVolumeName = secretsVolumeName;
         JobRunConfig jobRunConfig =
-                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache);
+                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache, false, false);
 
         jobRunId = dockerAdapter.createJobRun(jobRunConfig);
         dockerAdapter.startContainerThenWaitForExit(jobRunId);
@@ -99,7 +99,7 @@ public class DockerAdapterRemoveImageTest {
     ) throws CreateJobRunException {
         this.secretsVolumeName = secretsVolumeName;
         JobRunConfig jobRunConfig =
-                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache);
+                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache, false, false);
 
         jobRunId = dockerAdapter.createJobRun(jobRunConfig);
         dockerAdapter.startContainerThenWaitForExit(jobRunId);

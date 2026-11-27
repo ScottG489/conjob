@@ -29,13 +29,17 @@ class JobRunConfigCreatorTest {
             @ForAll @NotEmpty String givenInput,
             @ForAll String givenDockerCacheVolumeName,
             @ForAll String givenSecretsVolumeName,
-            @ForAll boolean givenUseDockerCache) {
+            @ForAll boolean givenUseDockerCache,
+            @ForAll boolean givenRemove,
+            @ForAll boolean givenRemoveImage) {
         JobRunConfig containerConfig =
-                jobRunConfigCreator.getContainerConfig(givenImageName, givenInput, givenDockerCacheVolumeName, givenSecretsVolumeName, givenUseDockerCache);
+                jobRunConfigCreator.getContainerConfig(givenImageName, givenInput, givenDockerCacheVolumeName, givenSecretsVolumeName, givenUseDockerCache, givenRemove, givenRemoveImage);
 
         assertThat(containerConfig.getJobName(), is(givenImageName));
         assertThat(containerConfig.getInput(), is(givenInput));
         assertThat(containerConfig.getSecretsVolumeName(), is(givenSecretsVolumeName));
+        assertThat(containerConfig.isRemove(), is(givenRemove));
+        assertThat(containerConfig.isRemoveImage(), is(givenRemoveImage));
     }
 
     @Property
@@ -49,13 +53,17 @@ class JobRunConfigCreatorTest {
             @ForAll("nullOrEmpty") String givenInput,
             @ForAll String givenDockerCacheVolumeName,
             @ForAll String givenSecretsVolumeName,
-            @ForAll boolean givenUseDockerCache) {
+            @ForAll boolean givenUseDockerCache,
+            @ForAll boolean givenRemove,
+            @ForAll boolean givenRemoveImage) {
         JobRunConfig containerConfig =
-                jobRunConfigCreator.getContainerConfig(givenImageName, givenInput, givenDockerCacheVolumeName, givenSecretsVolumeName, givenUseDockerCache);
+                jobRunConfigCreator.getContainerConfig(givenImageName, givenInput, givenDockerCacheVolumeName, givenSecretsVolumeName, givenUseDockerCache, givenRemove, givenRemoveImage);
 
         assertThat(containerConfig.getJobName(), is(givenImageName));
         assertThat(containerConfig.getInput(), is(nullValue()));
         assertThat(containerConfig.getSecretsVolumeName(), is(givenSecretsVolumeName));
+        assertThat(containerConfig.isRemove(), is(givenRemove));
+        assertThat(containerConfig.isRemoveImage(), is(givenRemoveImage));
     }
 
     @Provide

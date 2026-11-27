@@ -15,6 +15,9 @@ conjob:
       maxConcurrentRuns: ${JOB_LIMIT_CONCURRENT:-5}
       maxTimeoutSeconds: ${JOB_LIMIT_TIMEOUT:-1800}
       maxKillTimeoutSeconds: ${JOB_LIMIT_KILL_TIMEOUT:-60}
+    cleanup:
+      # Don't sweep the Docker daemon that the tests run against.
+      sweepInterval: 0 seconds
 
 server:
   registerDefaultExceptionMappers: false
