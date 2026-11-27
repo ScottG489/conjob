@@ -12,6 +12,7 @@ import net.jqwik.api.lifecycle.BeforeContainer;
 import net.jqwik.api.lifecycle.BeforeTry;
 import testsupport.ExpectedLogs;
 
+import java.time.Clock;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -46,8 +47,11 @@ public class JobRunnerRemoveImageTest {
         dockerAdapter = new DockerAdapter(dockerClient, DockerAdapter.Runtime.DEFAULT);
         jobRunner = new JobRunner(
                 dockerAdapter,
-                new ImageRemover(dockerAdapter, new ReentrantReadWriteLock().writeLock()),
-                Runnable::run);
+                new JobCleaner(
+                        dockerAdapter,
+                        new ImageRemover(dockerAdapter, new ReentrantReadWriteLock().writeLock()),
+                        Runnable::run,
+                        Clock.systemUTC()));
         dockerClient.pullImageCmd(TEST_IMAGE).start().awaitCompletion();
         TestImageContainers.removeAll(dockerClient, TEST_IMAGE);
     }
@@ -78,7 +82,7 @@ public class JobRunnerRemoveImageTest {
     ) throws CreateJobRunException {
         this.secretsVolumeName = secretsVolumeName;
         JobRunConfig jobRunConfig =
-                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache);
+                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache, false, false);
 
         String imageId = dockerClient.inspectImageCmd(jobName).exec().getId();
         String jobRunId = dockerAdapter.createJobRun(jobRunConfig);
@@ -100,7 +104,7 @@ public class JobRunnerRemoveImageTest {
     ) throws CreateJobRunException {
         this.secretsVolumeName = secretsVolumeName;
         JobRunConfig jobRunConfig =
-                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache);
+                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, useDockerCache, false, false);
 
         String jobRunId = dockerAdapter.createJobRun(jobRunConfig);
         jobRunner.runContainer(jobRunId, Long.MAX_VALUE, Integer.MAX_VALUE, false, false);
@@ -145,7 +149,7 @@ public class JobRunnerRemoveImageTest {
     }
 
     private JobRunConfig jobRunConfig(String image) {
-        return new JobRunConfig(image, null, "cache-" + UUID.randomUUID(), null, false);
+        return new JobRunConfig(image, null, "cache-" + UUID.randomUUID(), null, false, false, false);
     }
 
     @Provide

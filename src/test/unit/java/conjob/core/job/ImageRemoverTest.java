@@ -5,6 +5,7 @@ import conjob.core.job.exception.InspectImageException;
 import conjob.core.job.exception.RemoveImageException;
 import conjob.core.job.model.ContainerImage;
 import net.jqwik.api.*;
+import net.jqwik.api.constraints.LongRange;
 import net.jqwik.api.constraints.Size;
 import testsupport.ExpectedLogs;
 
@@ -206,6 +207,74 @@ class ImageRemoverTest {
         new ImageRemover(adapterMock, lock.writeLock()).remove(new ContainerImage(givenImageId, givenImageName));
 
         verify(adapterMock, never()).removeImage(any());
+        assertThat(lock.isWriteLocked(), is(false));
+    }
+
+    @Property
+    @Label("Given an image found by name whose only tag is the job's, " +
+            "when removing it by name, " +
+            "should remove it by ID.")
+    void removeByName(
+            @ForAll("imageIds") String givenImageId,
+            @ForAll("tags") String givenImageName) {
+        DockerAdapter adapterMock = mock(DockerAdapter.class);
+        ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        when(adapterMock.findImageId(givenImageName)).thenReturn(Optional.of(givenImageId));
+        when(adapterMock.findImageTags(givenImageId)).thenReturn(Optional.of(List.of(givenImageName)));
+
+        new ImageRemover(adapterMock, lock.writeLock()).removeByName(givenImageName);
+
+        verify(adapterMock).removeImage(givenImageId);
+        assertThat(lock.isWriteLocked(), is(false));
+    }
+
+    @Property
+    @Label("Given no image with a name, " +
+            "when removing it by name, " +
+            "should remove nothing.")
+    void removeByNameMissing(@ForAll("tags") String givenImageName) {
+        DockerAdapter adapterMock = mock(DockerAdapter.class);
+        ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        when(adapterMock.findImageId(givenImageName)).thenReturn(Optional.empty());
+
+        new ImageRemover(adapterMock, lock.writeLock()).removeByName(givenImageName);
+
+        verify(adapterMock, never()).removeImage(any());
+        assertThat(lock.isWriteLocked(), is(false));
+    }
+
+    @Property
+    @ExpectedLogs(ImageRemover.class)
+    @Label("When removing dangling images, " +
+            "should prune them while holding the lock.")
+    void removeDangling(@ForAll @LongRange(min = 0) long givenBytesFreed) {
+        DockerAdapter adapterMock = mock(DockerAdapter.class);
+        ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        List<Boolean> lockedWhilePruning = new ArrayList<>();
+        when(adapterMock.pruneDanglingImages()).thenAnswer(invocation -> {
+            lockedWhilePruning.add(lock.isWriteLockedByCurrentThread());
+            return givenBytesFreed;
+        });
+
+        new ImageRemover(adapterMock, lock.writeLock()).removeDangling();
+
+        assertThat(lockedWhilePruning, is(List.of(true)));
+        assertThat(lock.isWriteLocked(), is(false));
+    }
+
+    @Property
+    @ExpectedLogs(ImageRemover.class)
+    @Label("Given pruning throws, " +
+            "when removing dangling images, " +
+            "should not throw, " +
+            "and should release the lock.")
+    void removeDanglingExceptionSwallowed() {
+        DockerAdapter adapterMock = mock(DockerAdapter.class);
+        ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        when(adapterMock.pruneDanglingImages()).thenThrow(new RemoveImageException(new Exception()));
+
+        new ImageRemover(adapterMock, lock.writeLock()).removeDangling();
+
         assertThat(lock.isWriteLocked(), is(false));
     }
 

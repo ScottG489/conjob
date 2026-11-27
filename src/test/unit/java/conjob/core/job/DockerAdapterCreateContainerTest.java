@@ -39,11 +39,11 @@ public class DockerAdapterCreateContainerTest {
     ) throws CreateJobRunException {
         CreateContainerResponse mockResponse = mock(CreateContainerResponse.class);
 
-        when(mockClient.createContainerCmd(jobName).withHostConfig(any()).exec()).thenReturn(mockResponse);
+        when(mockClient.createContainerCmd(jobName).withHostConfig(any()).withLabels(anyMap()).exec()).thenReturn(mockResponse);
         when(mockResponse.getId()).thenReturn(givenJobRunId);
 
         JobRunConfig jobRunConfig =
-                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true);
+                new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true, false, false);
         String jobRunId = dockerAdapter.createJobRun(jobRunConfig);
 
         assertThat(jobRunId, is(givenJobRunId));
@@ -59,9 +59,9 @@ public class DockerAdapterCreateContainerTest {
             @ForAll @WithNull String dockerCacheVolumeName,
             @ForAll @WithNull String secretsVolumeName
     )  {
-        when(mockClient.createContainerCmd(jobName).withHostConfig(any()).exec()).thenThrow(new RuntimeException(""));
+        when(mockClient.createContainerCmd(jobName).withHostConfig(any()).withLabels(anyMap()).exec()).thenThrow(new RuntimeException(""));
 
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true, false, false);
 
         assertThrows(CreateJobRunException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
     }
@@ -76,9 +76,9 @@ public class DockerAdapterCreateContainerTest {
             @ForAll @WithNull String dockerCacheVolumeName,
             @ForAll @WithNull String secretsVolumeName
     )  {
-        when(mockClient.createContainerCmd(jobName).withHostConfig(any()).exec()).thenThrow(new RuntimeException());
+        when(mockClient.createContainerCmd(jobName).withHostConfig(any()).withLabels(anyMap()).exec()).thenThrow(new RuntimeException());
 
-        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true);
+        JobRunConfig jobRunConfig = new JobRunConfig(jobName, input, dockerCacheVolumeName, secretsVolumeName, true, false, false);
 
         assertThrows(RuntimeException.class, () -> dockerAdapter.createJobRun(jobRunConfig));
     }

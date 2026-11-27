@@ -78,7 +78,7 @@ class ConfigStoreTest {
         Arbitrary<AdminConfig> adminConfig = Arbitraries.forType(AdminConfig.class);
         Arbitrary<AuthConfig> authConfig = Arbitraries.forType(AuthConfig.class);
         Arbitrary<JobConfig> jobConfig = Arbitraries.forType(JobConfig.LimitConfig.class)
-                .map(JobConfig::new);
+                .map(limitConfig -> new JobConfig(limitConfig, new JobConfig.CleanupConfig()));
 
         return Combinators.combine(dockerConfig, adminConfig, authConfig, jobConfig)
                 .as(ConJobConfig::new);

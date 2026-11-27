@@ -36,11 +36,13 @@ import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
+import io.dropwizard.util.Duration;
 import lombok.Getter;
 import org.glassfish.jersey.server.ServerProperties;
 
-import java.util.concurrent.Executor;
+import java.time.Clock;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -77,11 +79,22 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
         DockerClient docker = createDockerClient(configuration);
         DockerAdapter dockerAdapter = new DockerAdapter(docker, configuration.getConjob().getDocker().getContainerRuntime());
 
+        // Jobs hold the read lock while they pull their image and create their container, and
+        // image removals hold the write lock.
+        ReadWriteLock imageLock = new ReentrantReadWriteLock();
+        JobCleaner jobCleaner = new JobCleaner(
+                dockerAdapter,
+                new ImageRemover(dockerAdapter, imageLock.writeLock()),
+                createCleanupExecutor(environment),
+                Clock.systemUTC());
+        scheduleSweeps(environment, jobCleaner, configuration.getConjob().getJob().getCleanup().getSweepInterval());
+
         environment.jersey().register(
                 createJobResource(
                         dockerAdapter,
                         configuration.getConjob().getJob().getLimit(),
-                        createCleanupExecutor(environment)));
+                        jobCleaner,
+                        imageLock.readLock()));
         environment.jersey().register(createSecretsResource(docker));
 
         environment.admin().addTask(
@@ -108,35 +121,39 @@ public class ConJobApplication extends Application<ConJobConfiguration> {
                 .createDockerClient();
     }
 
-    // One thread, so cleanups run one at a time. On a graceful shutdown, Dropwizard gives queued
-    // cleanups a few seconds to finish.
+    // One thread, so cleanups run one at a time in the order they were queued. On a graceful
+    // shutdown, Dropwizard gives queued cleanups a few seconds to finish.
     private ExecutorService createCleanupExecutor(Environment environment) {
         return environment.lifecycle().executorService("job-cleanup-%d")
                 .maxThreads(1)
                 .build();
     }
 
+    private void scheduleSweeps(Environment environment, JobCleaner jobCleaner, Duration sweepInterval) {
+        if (sweepInterval.getQuantity() <= 0) {
+            return;
+        }
+        environment.lifecycle().scheduledExecutorService("job-sweep-%d").build()
+                .scheduleWithFixedDelay(jobCleaner::sweepLater, 0, sweepInterval.getQuantity(), sweepInterval.getUnit());
+    }
+
     private JobResource createJobResource(DockerAdapter dockerAdapter,
                                           JobConfig.LimitConfig limitConfig,
-                                          Executor cleanupExecutor) {
-        // Jobs hold the read lock while they pull their image and create their container, and
-        // image removals hold the write lock.
-        ReadWriteLock imageLock = new ReentrantReadWriteLock();
+                                          JobCleaner jobCleaner,
+                                          Lock jobStartLock) {
         return new JobResource(
                 new JobService(
                         createRunJobLimiter(limitConfig),
                         limitConfig,
                         new SecretsStore(dockerAdapter),
                         new JobRunCreationStrategyDeterminer(dockerAdapter),
-                        new JobRunner(
-                                dockerAdapter,
-                                new ImageRemover(dockerAdapter, imageLock.writeLock()),
-                                cleanupExecutor),
+                        new JobRunner(dockerAdapter, jobCleaner),
                         new JobRunConfigCreator(),
                         new OutcomeDeterminer(),
                         new ConfigUtil(),
                         new ImageTagEnsurer(),
-                        imageLock.readLock()),
+                        jobCleaner,
+                        jobStartLock),
                 new ResponseCreator(),
                 new JobResponseConverter());
     }

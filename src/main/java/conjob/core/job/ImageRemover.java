@@ -28,15 +28,35 @@ public class ImageRemover {
     }
 
     public void remove(ContainerImage image) {
+        removeWithLock("image '" + image.getId() + "'", () -> removeUnlessNeeded(image));
+    }
+
+    // For a job whose container was never created, so the image can only be found by its name.
+    public void removeByName(String imageName) {
+        removeWithLock("image '" + imageName + "'", () -> dockerAdapter.findImageId(imageName)
+                .ifPresent(imageId -> removeUnlessNeeded(new ContainerImage(imageId, imageName))));
+    }
+
+    // Removes images that have no tags and that no container uses, like `docker image prune`.
+    public void removeDangling() {
+        removeWithLock("dangling images", () -> {
+            long bytesFreed = dockerAdapter.pruneDanglingImages();
+            if (bytesFreed > 0) {
+                log.info("Removed dangling images, freeing {} MB", bytesFreed / 1_000_000);
+            }
+        });
+    }
+
+    private void removeWithLock(String images, Runnable removal) {
         if (!lockOnceNoJobIsStarting()) {
             return;
         }
         try {
-            removeUnlessNeeded(image);
+            removal.run();
         } catch (ImageInUseException e) {
-            log.info("Image '{}' is still in use, so it wasn't removed: {}", image.getId(), e.getMessage());
+            log.info("Didn't remove {} since something still uses it: {}", images, e.getMessage());
         } catch (JobRunException e) {
-            log.warn("Problem removing image '{}': {}", image.getId(), e.getMessage(), e);
+            log.warn("Problem removing {}: {}", images, e.getMessage(), e);
         } finally {
             removalLock.unlock();
         }
@@ -71,7 +91,7 @@ public class ImageRemover {
             if (hasJobTag) {
                 dockerAdapter.removeImage(image.getName());
             }
-            log.info("Image '{}' still has other tags, so it wasn't removed", image.getId());
+            log.info("Didn't remove image '{}' since it has other tags", image.getId());
             return;
         }
         dockerAdapter.removeImage(image.getId());

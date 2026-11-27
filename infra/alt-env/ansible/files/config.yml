@@ -15,6 +15,8 @@ conjob:
       maxConcurrentRuns: ${JOB_LIMIT_CONCURRENT:-3}
       maxTimeoutSeconds: ${JOB_LIMIT_TIMEOUT:-3600}
       maxKillTimeoutSeconds: ${JOB_LIMIT_KILL_TIMEOUT:-300}
+    cleanup:
+      sweepInterval: ${JOB_CLEANUP_SWEEP_INTERVAL:-1 hour}
 
 server:
   registerDefaultExceptionMappers: false

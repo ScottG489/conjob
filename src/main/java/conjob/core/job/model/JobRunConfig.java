@@ -10,4 +10,7 @@ public class JobRunConfig {
     String dockerCacheVolumeName;
     String secretsVolumeName;
     boolean useDockerCache;
+    // Recorded on the container as labels, so leftovers can be cleaned up later.
+    boolean remove;
+    boolean removeImage;
 }

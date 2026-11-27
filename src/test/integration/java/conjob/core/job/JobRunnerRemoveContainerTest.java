@@ -12,6 +12,7 @@ import net.jqwik.api.lifecycle.BeforeContainer;
 import net.jqwik.api.lifecycle.BeforeTry;
 import testsupport.ExpectedLogs;
 
+import java.time.Clock;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -46,8 +47,11 @@ public class JobRunnerRemoveContainerTest {
         dockerAdapter = new DockerAdapter(dockerClient, DockerAdapter.Runtime.DEFAULT);
         jobRunner = new JobRunner(
                 dockerAdapter,
-                new ImageRemover(dockerAdapter, new ReentrantReadWriteLock().writeLock()),
-                Runnable::run);
+                new JobCleaner(
+                        dockerAdapter,
+                        new ImageRemover(dockerAdapter, new ReentrantReadWriteLock().writeLock()),
+                        Runnable::run,
+                        Clock.systemUTC()));
     }
 
     @AfterTry
@@ -106,7 +110,7 @@ public class JobRunnerRemoveContainerTest {
 
     private String createJobRun(String input) throws CreateJobRunException {
         return dockerAdapter.createJobRun(
-                new JobRunConfig(ECHO_IMAGE, input, "cache-" + UUID.randomUUID(), null, false));
+                new JobRunConfig(ECHO_IMAGE, input, "cache-" + UUID.randomUUID(), null, false, false, false));
     }
 
     @Provide
