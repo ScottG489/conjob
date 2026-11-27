@@ -30,6 +30,29 @@ setup_credentials() {
   chmod 400 /root/.ssh/mainkeypair.pem
 }
 
+# Waits for the docker daemon started in the background as $1 to answer, for up to a minute.
+# Fails right away, with the end of its log, if the daemon exits first, which it does when
+# another daemon is using the same /var/lib/docker.
+wait_for_dockerd() {
+  local -r DOCKERD_PID=$1
+  local -r DEADLINE=$((SECONDS + 60))
+  # docker info waits on a daemon that's started listening but not answering yet, so it's
+  # given a timeout of its own.
+  until timeout 5 docker info > /dev/null 2>&1; do
+    if ! kill -0 "$DOCKERD_PID" 2> /dev/null; then
+      echo "dockerd exited before it was ready. End of its log:" >&2
+      tail -n 20 /var/log/dockerd.log >&2
+      return 1
+    fi
+    if ((SECONDS >= DEADLINE)); then
+      echo "dockerd wasn't ready after 60 seconds. End of its log:" >&2
+      tail -n 20 /var/log/dockerd.log >&2
+      return 1
+    fi
+    sleep 1
+  done
+}
+
 build_test() {
   local ROOT_DIR
   readonly ROOT_DIR=$(get_git_root_dir)
