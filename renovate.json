@@ -1,6 +1,14 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>ScottG489/renovate-config"],
+  "packageRules": [
+    {
+      "description": "Put the minor, patch and digest updates that automerge into one branch, so a push to master rebases one branch instead of about ten that all start CI builds on the alt server at once",
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchCurrentVersion": "!/^0/",
+      "groupName": "non-major updates"
+    }
+  ],
   "customManagers": [
     {
       "customType": "regex",
