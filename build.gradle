@@ -23,8 +23,8 @@ dependencies {
 
     compileOnly 'org.projectlombok:lombok:1.18.48'
 
-    implementation 'io.dropwizard:dropwizard-core:5.0.1'
-    implementation 'io.dropwizard:dropwizard-auth:5.0.1'
+    implementation 'io.dropwizard:dropwizard-core:5.0.2'
+    implementation 'io.dropwizard:dropwizard-auth:5.0.2'
 
     implementation 'com.github.docker-java:docker-java-core:3.7.1'
     implementation 'com.github.docker-java:docker-java-transport-httpclient5:3.7.1'
