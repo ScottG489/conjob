@@ -92,8 +92,9 @@
     # TODO:   try using a docker env file (--env-file) instead.
     no_log: True
     shell: |
-      docker rm --force {{ container_name }}
+      # Pull first, so the old container keeps running while the new image downloads.
       docker pull {{ image_name }}
+      docker rm --force {{ container_name }}
       docker create \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -p 80:8080 \

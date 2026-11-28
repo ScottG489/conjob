@@ -2,8 +2,10 @@ second_level_domain_name = "conjob-test"
 top_level_domain_name = "io"
 subdomain_name = "api"
 instance_type = "t3.medium"
-spot_type = "persistent"
-instance_interruption_behavior = "stop"
+# One-time, so that terminating the instance of a test env that was never destroyed gets rid of it.
+# A persistent request would launch another instance.
+spot_type = "one-time"
+instance_interruption_behavior = "terminate"
 ami = "ami-0d9fad4f90eb14fc3" # Canonical, Ubuntu, 22.04 LTS, amd64 jammy image build on 2023-04-28
 spot_price = "0.0275"
 volume_size = 16
