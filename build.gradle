@@ -19,9 +19,9 @@ run {
 }
 
 dependencies {
-    annotationProcessor 'org.projectlombok:lombok:1.18.46'
+    annotationProcessor 'org.projectlombok:lombok:1.18.48'
 
-    compileOnly 'org.projectlombok:lombok:1.18.46'
+    compileOnly 'org.projectlombok:lombok:1.18.48'
 
     implementation 'io.dropwizard:dropwizard-core:5.0.1'
     implementation 'io.dropwizard:dropwizard-auth:5.0.1'
