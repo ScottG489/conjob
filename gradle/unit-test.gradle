@@ -23,8 +23,8 @@ task unitTest(type: Test) {
 }
 
 dependencies {
-    unitTestAnnotationProcessor 'org.projectlombok:lombok:1.18.46'
-    unitTestCompileOnly 'org.projectlombok:lombok:1.18.46'
+    unitTestAnnotationProcessor 'org.projectlombok:lombok:1.18.48'
+    unitTestCompileOnly 'org.projectlombok:lombok:1.18.48'
 
     unitTestImplementation "org.mockito:mockito-core:5.23.0"
     unitTestImplementation 'org.mockito:mockito-inline:5.2.0'
